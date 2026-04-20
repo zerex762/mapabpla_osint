@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <title>SKY DEFENSE - Elite OSINT Monitor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <style>
+        :root { 
+            --accent: #00f2ff;
+            --danger: #ff3333;
+            --warning: #ff9d00;
+            --success: #00ff88;
+            --bg-dark: #05070a;
+            --glass: rgba(10, 25, 47, 0.85);
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
+        #map { width: 100%; height: 100vh; filter: brightness(0.7) contrast(1.2); z-index: 1; transition: filter 0.5s; background: #000; }
+
+        .top-ui {
+            position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000;
+            display: flex; justify-content: space-between; pointer-events: none;
+        }
+        .box {
+            background: var(--glass); backdrop-filter: blur(10px);
+            padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(0, 242, 255, 0.2);
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 12px; pointer-events: auto;
+        }
+        .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); }
+
+        #mapNotify {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 3000; background: rgba(0,0,0,0.8); padding: 5px 15px;
+            border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+            border: 1px solid var(--accent); opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+
+        .side-panel {
+            position: absolute; top: 20px; right: -350px; z-index: 2100;
+            background: linear-gradient(145deg, #0a192f, #05070a);
+            width: 290px; padding: 0; border-radius: 12px; transition: 0.4s;
+            border: 1px solid rgba(0, 242, 255, 0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .side-panel.active { right: 20px; }
+        .panel-header { background: rgba(0, 242, 255, 0.1); padding: 15px 20px; border-bottom: 1px solid rgba(0, 242, 255, 0.2); display: flex; justify-content: space-between; align-items: center; }
+        .panel-body { padding: 20px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+        .info-label { color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .info-value { font-family: 'Orbitron', sans-serif; color: #fff; }
+
+        .status-ticker {
+            position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
+            z-index: 2000; background: rgba(0,0,0,0.9); border-radius: 4px;
+            padding: 8px 20px; display: flex; gap: 30px; border: 1px solid rgba(255,255,255,0.1);
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+        }
+        .status-item { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-dot.danger { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: pulse 1s infinite; }
+
+        .bottom-capsule {
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+            z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
+            padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .c-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
+            transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+        .c-btn:hover { background: var(--accent); color: #000; transform: translateY(-2px); }
+        .c-btn.active-green { background: var(--success); color: #000; box-shadow: 0 0 15px var(--success); }
+        .c-btn.active-red { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
+
+        .type-select {
+            background: #0d1218; color: var(--accent); border: 1px solid rgba(0, 242, 255, 0.4);
+            border-radius: 20px; padding: 7px 15px; font-size: 11px;
+            font-weight: 700; outline: none; font-family: 'Orbitron', sans-serif;
+        }
+
+        .uav-icon { filter: drop-shadow(0 0 5px var(--accent)); }
+        .uav-icon img { transition: transform 0.5s ease; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="mapNotify">ШАР КАРТИ ОНОВЛЕНО</div>
+
+<div class="top-ui">
+    <div style="display: flex; gap: 12px;">
+        <div class="box">LMT: <span id="sysTime" class="glow">00:00:00</span></div>
+        <div class="box">SYSTEM: <span class="glow" style="color: var(--success);">ONLINE</span></div>
+    </div>
+    <div class="box">ACTIVE TARGETS: <span id="uavCount" class="glow">0</span></div>
+</div>
+
+<div id="sidePanel" class="side-panel">
+    <div class="panel-header">
+        <span style="font-family: 'Orbitron'; font-weight: 700; color: var(--accent);">TARGET DATA</span>
+        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; opacity: 0.6;"></i>
+    </div>
+    <div class="panel-body">
+        <div class="info-row"><span class="info-label">Identification:</span> <span class="info-value" id="objId">--</span></div>
+        <div class="info-row"><span class="info-label">Classification:</span> <span class="info-value" id="objType">--</span></div>
+        <div class="info-row"><span class="info-label">Coordinates:</span> <span class="info-value" id="objCoords" style="color: var(--accent);">--</span></div>
+        <div class="info-row"><span class="info-label">Bearing:</span> <span class="info-value" id="objAngle">--</span></div>
+        <div style="margin-top: 15px; padding: 10px; background: rgba(0,255,136,0.1); border-radius: 4px; text-align: center; font-size: 10px; color: var(--success); border: 1px solid rgba(0,255,136,0.2);">SIGNAL STRENGTH: OPTIMAL</div>
+    </div>
+</div>
+
+<div class="status-ticker">
+    <div class="status-item"><div class="status-dot"></div> РАКЕТОНОСЦІ: НЕМАЄ ЗАГРОЗИ</div>
+    <div class="status-item"><div class="status-dot"></div> СТРАТ. АВІАЦІЯ: ПАСИВНО</div>
+    <div class="status-item"><div id="shahedDot" class="status-dot"></div> БПЛА / SHAHED: <span id="shahedStatus" style="margin-left: 5px;">0 ОД.</span></div>
+</div>
+
+<div id="map"></div>
+
+<div class="bottom-capsule">
+    <button class="c-btn" onclick="nextTheme()" title="Змінити шар карти"><i class="fas fa-layer-group"></i></button>
+    
+    <select id="typeSelect" class="type-select">
+        <optgroup label="ДРОНИ">
+            <option value="shahed-238-standart">SHAHED-238 (JET)</option>
+            <option value="shahed-vp-standart">SHAHED-136</option>
+            <option value="herbera-standart">GERBERA</option>
+            <option value="fpv-standart">FPV UNIT</option>
+        </optgroup>
+        <optgroup label="РАКЕТИ">
+            <option value="kalibr-standart">КРУЇЗНА РАКЕТА</option>
+        </optgroup>
+    </select>
+
+    <button id="addBtn" class="c-btn"><i class="fas fa-plus-circle"></i></button>
+    <button id="delBtn" class="c-btn"><i class="fas fa-trash-alt"></i></button>
+    
+    <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
+</div>
+
+<script>
+    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('drones');
+
+    setInterval(() => {
+        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+    }, 1000);
+
+    let obs = {}, mode = null, tempPos = null;
+
+    setInterval(() => {
+        const now = Date.now();
+        for (let id in obs) {
+            if (obs[id].data && obs[id].data.dieAt && now > obs[id].data.dieAt) {
+                db.child(id).remove().catch(e => console.log("Auto-del error:", e));
+            }
+        }
+    }, 5000);
+
+    const themes = [
+        { name: "Dark Radar", url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png' },
+        { name: "Satellite View", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+        { name: "Topography", url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
+        { name: "Street Logic", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
+    ];
+    
+    let tIdx = 0;
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([48.4, 32.5], 6);
+    let layer = L.tileLayer(themes[0].url).addTo(map);
+
+    function nextTheme() {
+        tIdx = (tIdx + 1) % themes.length;
+        map.removeLayer(layer);
+        layer = L.tileLayer(themes[tIdx].url).addTo(map);
+        const notify = document.getElementById('mapNotify');
+        notify.innerText = `MODE: ${themes[tIdx].name}`;
+        notify.style.opacity = "1";
+        setTimeout(() => notify.style.opacity = "0", 2000);
+        document.getElementById('map').style.filter = (tIdx === 1) ? "brightness(0.9) contrast(1.1)" : "brightness(0.7) contrast(1.2)";
+    }
+
+    function sync(id, d) {
+        if (!d) return;
+        if (obs[id]) {
+            obs[id].marker.setLatLng([d.lat, d.lng]);
+            obs[id].data = d; 
+            const el = obs[id].marker.getElement();
+            if(el) {
+                const img = el.querySelector('img');
+                // Використовуємо кут з бази даних
+                if(img) img.style.transform = `rotate(${d.angle || 0}deg)`;
+            }
+        } else {
+            const icon = L.divIcon({ 
+                className: 'uav-icon', 
+                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="width:36px; height:36px; transform:rotate(${d.angle || 0}deg);">`, 
+                iconSize: [36, 36],
+                iconAnchor: [18, 18] 
+            });
+            const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
+            marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                if (mode === 'delete') db.child(id).remove();
+                else updateUI(id, d);
+            });
+            obs[id] = { marker, data: d };
+        }
+        updateCounters();
+    }
+
+    function updateCounters() {
+        const count = Object.keys(obs).length;
+        document.getElementById('uavCount').innerText = count;
+        const statusText = document.getElementById('shahedStatus');
+        statusText.innerText = `${count} ОД.`;
+        statusText.style.color = count > 0 ? "var(--danger)" : "white";
+        document.getElementById('shahedDot').className = count > 0 ? 'status-dot danger' : 'status-dot';
+    }
+
+    function updateUI(id, d) {
+        document.getElementById('sidePanel').classList.add('active');
+        document.getElementById('objId').innerText = id.substring(1, 9).toUpperCase();
+        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').split('-')[0].toUpperCase();
+        document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+        document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
+    }
+
+    function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
+
+    map.on('click', (e) => {
+        closeInfo();
+        if (mode === 'add') {
+            if (!tempPos) { 
+                tempPos = e.latlng;
+                L.circleMarker(tempPos, {radius: 5, color: 'var(--accent)'}).addTo(map).fadeOut(500);
+            } 
+            else {
+                // ПРАВИЛЬНИЙ РОЗРАХУНОК КУТА + ЗСУВ 90 ГРАДУСІВ
+                // atan2 повертає радіани, перетворюємо в градуси і додаємо 90
+                let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
+                
+                db.push({ 
+                    lat: tempPos.lat, 
+                    lng: tempPos.lng, 
+                    type: document.getElementById('typeSelect').value, 
+                    angle: angle,
+                    dieAt: Date.now() + (20 * 60 * 1000)
+                });
+                tempPos = null; mode = null; resetNav();
+            }
+        }
+    });
+
+    L.CircleMarker.prototype.fadeOut = function(ms) {
+        let opacity = 1;
+        const interval = setInterval(() => {
+            opacity -= 0.1;
+            this.setStyle({opacity: opacity, fillOpacity: opacity/2});
+            if(opacity <= 0) { clearInterval(interval); map.removeLayer(this); }
+        }, ms/10);
+    };
+
+    document.getElementById('addBtn').onclick = function() { mode = 'add'; resetNav(); this.classList.add('active-green'); };
+    document.getElementById('delBtn').onclick = function() { mode = 'delete'; resetNav(); this.classList.add('active-red'); };
+    function resetNav() { document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
+
+    db.on('child_added', s => sync(s.key, s.val()));
+    db.on('child_changed', s => sync(s.key, s.val()));
+    db.on('child_removed', s => { 
+        if(obs[s.key]) { map.removeLayer(obs[s.key].marker); delete obs[s.key]; }
+        updateCounters();
+        closeInfo();
+    });
+</script>
+</body>
+</html>
