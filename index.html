@@ -28,7 +28,6 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
         #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.7) contrast(1.2); background: #000; }
 
-        /* HUD ELEMENTS */
         .main-crosshair {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.6;
@@ -41,7 +40,6 @@
         .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
         .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
 
-        /* TOP UI */
         .top-ui {
             position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000;
             display: flex; justify-content: space-between; pointer-events: none;
@@ -55,7 +53,6 @@
         }
         .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
 
-        /* OSINT LABEL */
         .osint-label {
             position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
             z-index: 1999; font-family: 'Orbitron'; font-size: 10px;
@@ -63,7 +60,6 @@
             color: rgba(255, 255, 255, 0.3); pointer-events: none;
         }
 
-        /* TARGET PANEL (Зроблено під твій скріншот) */
         .side-panel {
             position: absolute; top: 20px; right: -350px; z-index: 2100;
             background: var(--glass); backdrop-filter: blur(15px);
@@ -83,7 +79,6 @@
         .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; word-break: break-all; line-height: 1.2; }
         .data-accent { color: var(--warning); }
 
-        /* NAVIGATION */
         .bottom-nav {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
@@ -152,7 +147,7 @@
         </div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;">
-                <span class="data-label">Range</span>
+                <span class="data-label">Range / ETA</span>
                 <div class="data-value" id="objRange">--</div>
             </div>
             <div style="width: 50%;">
@@ -190,6 +185,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
+    // Налаштування швидкостей (км/год)
+    const SPEED_MAP = {
+        'shahed-238-standart': 550,
+        'shahed-vp-standart': 185,
+        'herbera-standart': 150,
+        'kalibr-standart': 880
+    };
+
     const themes = [
         { name: "RADAR DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png' },
         { name: "SATELLITE", url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}' },
@@ -220,7 +223,11 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        if (now - (d.timestamp || now) > 30 * 60 * 1000) { db.child(id).remove(); return; }
+        // ПЕРЕВІРКА НА СТАРІСТЬ (20 хв = 1 200 000 мс)
+        if (now - (d.timestamp || now) > 20 * 60 * 1000) { 
+            db.child(id).remove(); 
+            return; 
+        }
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
         const endLat = d.lat + (Math.cos(angleRad) * 0.02);
@@ -229,6 +236,7 @@
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             obs[id].line.setLatLngs([[d.lat, d.lng], [endLat, endLng]]);
+            obs[id].data = d; // Оновлюємо дані
         } else {
             const icon = L.divIcon({ 
                 className: 'uav-icon', 
@@ -254,10 +262,17 @@
         document.getElementById('objType').innerText = d.type.replace('-standart', '').replace('-', ' ').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
+        
         if (userPos) {
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000).toFixed(1);
-            document.getElementById('objRange').innerText = `${distance} KM`;
-        } else { document.getElementById('objRange').innerText = "NO GPS"; }
+            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
+            const speed = SPEED_MAP[d.type] || 200;
+            const timeHours = distance / speed;
+            const timeMinutes = Math.round(timeHours * 60);
+
+            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ${timeMinutes} MIN</span>`;
+        } else { 
+            document.getElementById('objRange').innerText = "NO GPS"; 
+        }
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
@@ -272,6 +287,13 @@
             } else {
                 let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
                 db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle, timestamp: Date.now() });
+                
+                // Сповіщення про створення
+                const notify = document.getElementById('mapNotify');
+                notify.innerText = "TARGET ACQUIRED";
+                notify.style.opacity = 1;
+                setTimeout(() => notify.style.opacity = 0, 1500);
+
                 tempPos = null; mode = null; resetNav();
             }
         }
@@ -299,14 +321,27 @@
     document.getElementById('delBtn').onclick = function() { mode = 'delete'; resetNav(); this.classList.add('active-red'); };
     function resetNav() { document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
 
+    // ОСНОВНИЙ ЦИКЛ ОЧИЩЕННЯ
     setInterval(() => {
+        const now = Date.now();
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+        
+        // ПЕРЕВІРКА ВСІХ ЛОКАЛЬНИХ ОБ'ЄКТІВ
+        for (let id in obs) {
+            if (now - (obs[id].data.timestamp || now) > 20 * 60 * 1000) {
+                db.child(id).remove(); // Видаляємо з бази, child_removed підчистить карту
+            }
+        }
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
     db.on('child_removed', s => { 
-        if(obs[s.key]) { map.removeLayer(obs[s.key].marker); map.removeLayer(obs[s.key].line); delete obs[s.key]; }
+        if(obs[s.key]) { 
+            map.removeLayer(obs[s.key].marker); 
+            map.removeLayer(obs[s.key].line); 
+            delete obs[s.key]; 
+        }
         updateCounters(); closeInfo();
     });
 </script>
