@@ -7,7 +7,8 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
@@ -19,94 +20,102 @@
             --warning: #ff9d00;
             --success: #00ff88;
             --bg-dark: #05070a;
-            --glass: rgba(10, 20, 35, 0.85);
-            --neon-border: rgba(0, 242, 255, 0.3);
+            --glass: rgba(10, 20, 35, 0.8);
+            --neon-border: rgba(0, 242, 255, 0.25);
+            --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
-        #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.8) contrast(1.1); background: #000; }
+        #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.7) contrast(1.2); background: #000; }
 
-        /* ВІЙСЬКОВИЙ ПРИЦІЛ */
+        /* HUD ELEMENTS */
         .main-crosshair {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 44px; height: 44px; z-index: 1500; pointer-events: none; opacity: 0.9;
+            width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.6;
         }
         .main-crosshair span {
-            position: absolute; width: 10px; height: 10px; border-color: var(--accent); border-style: solid;
-            filter: drop-shadow(0 0 4px var(--accent));
+            position: absolute; width: 8px; height: 8px; border-color: var(--accent); border-style: solid;
         }
-        .tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
-        .tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
-        .bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
-        .br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
-        .crosshair-dot {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 3px; height: 3px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px var(--accent);
-        }
+        .tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
+        .tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
+        .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
+        .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
 
-        /* HUD TOP */
+        /* TOP UI */
         .top-ui {
-            position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000;
-            display: flex; justify-content: space-between; pointer-events: none; gap: 10px;
+            position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000;
+            display: flex; justify-content: space-between; pointer-events: none;
         }
+        .status-group { display: flex; gap: 10px; pointer-events: auto; }
         .box {
-            background: var(--glass); backdrop-filter: blur(12px);
-            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--neon-border);
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            display: flex; align-items: center; gap: 8px; pointer-events: auto;
+            background: var(--glass); backdrop-filter: blur(10px);
+            padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neon-border);
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow);
         }
-        .glow { color: var(--accent); text-shadow: 0 0 10px var(--accent); font-family: 'Orbitron'; }
+        .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
 
-        #mapNotify {
-            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
-            z-index: 3000; background: var(--accent); color: #000; padding: 4px 20px;
-            border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase;
-            opacity: 0; transition: 0.4s; pointer-events: none; white-space: nowrap;
+        /* OSINT LABEL */
+        .osint-label {
+            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
+            z-index: 1999; font-family: 'Orbitron'; font-size: 10px;
+            text-transform: uppercase; letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.3); pointer-events: none;
         }
 
-        /* SIDE PANEL */
+        /* TARGET PANEL (Зроблено під твій скріншот) */
         .side-panel {
             position: absolute; top: 20px; right: -350px; z-index: 2100;
-            background: var(--glass); backdrop-filter: blur(20px);
-            width: 280px; border-radius: 15px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--neon-border);
+            background: var(--glass); backdrop-filter: blur(15px);
+            width: 260px; border-radius: 12px; transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow);
         }
         .side-panel.active { right: 20px; }
-        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--neon-border); display: flex; justify-content: space-between; align-items: center; }
-        .panel-body { padding: 20px; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .info-label { color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; }
-        .info-value { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 11px; }
+        .panel-header { 
+            padding: 12px 16px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; letter-spacing: 1px; }
+        .panel-body { padding: 16px; }
+        
+        .data-block { margin-bottom: 12px; }
+        .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; word-break: break-all; line-height: 1.2; }
+        .data-accent { color: var(--warning); }
 
-        /* BOTTOM NAV */
+        /* NAVIGATION */
         .bottom-nav {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
-            padding: 8px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
-            border: 1px solid var(--neon-border); width: fit-content; max-width: 95vw;
+            padding: 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 12px;
+            border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow);
         }
         .c-btn {
-            width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.03); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s;
         }
+        .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
         .c-btn.active-green { background: var(--success); color: #000; box-shadow: 0 0 15px var(--success); }
         .c-btn.active-red { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
 
         .type-select {
             background: #000; color: var(--accent); border: 1px solid var(--neon-border);
-            border-radius: 10px; padding: 10px; font-size: 10px; font-family: 'Orbitron';
-            outline: none; max-width: 130px;
+            border-radius: 8px; padding: 8px; font-size: 10px; font-family: 'Orbitron';
+            outline: none; cursor: pointer;
+        }
+
+        #mapNotify {
+            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+            z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px;
+            border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s;
         }
 
         @media (max-width: 600px) {
-            .top-ui { flex-direction: column; align-items: flex-start; gap: 5px; }
-            .side-panel { width: calc(100% - 30px); top: auto; bottom: 85px; }
-            .side-panel.active { right: 15px; left: 15px; }
-            .c-btn { width: 40px; height: 40px; }
+            .top-ui { flex-direction: column; gap: 8px; }
+            .side-panel { width: calc(100% - 40px); top: auto; bottom: 90px; }
+            .side-panel.active { right: 20px; left: 20px; }
         }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -114,38 +123,55 @@
 <div class="main-crosshair">
     <span class="tl"></span><span class="tr"></span>
     <span class="bl"></span><span class="br"></span>
-    <div class="crosshair-dot"></div>
 </div>
 
-<div id="mapNotify">MODE UPDATED</div>
+<div class="osint-label">Data Stream: OSINT Sources</div>
+<div id="mapNotify">SYSTEM UPDATED</div>
 
 <div class="top-ui">
-    <div style="display: flex; gap: 10px;">
+    <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" class="glow" style="color: var(--danger);">GPS OFF</span></div>
+        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">GPS LNK OFF</span></div>
     </div>
     <div class="box"><i class="fa-solid fa-crosshairs"></i> TARGETS: <span id="uavCount" class="glow">0</span></div>
 </div>
 
 <div id="sidePanel" class="side-panel">
     <div class="panel-header">
-        <span style="font-family: 'Orbitron'; font-weight: 700; color: var(--accent);">TARGET DATA</span>
-        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; opacity: 0.5;"></i>
+        <span>TARGET DATA</span>
+        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
     </div>
     <div class="panel-body">
-        <div class="info-row"><span class="info-label">IDENTIFICATION:</span> <span class="info-value" id="objId">--</span></div>
-        <div class="info-row"><span class="info-label">CLASSIFICATION:</span> <span class="info-value" id="objType">--</span></div>
-        <div class="info-row"><span class="info-label">COORDINATES:</span> <span class="info-value" id="objCoords" style="color: var(--accent);">--</span></div>
-        <div class="info-row"><span class="info-label">RANGE TO ME:</span> <span class="info-value" id="objRange" style="color: var(--warning);">SEARCHING...</span></div>
-        <div class="info-row"><span class="info-label">BEARING:</span> <span class="info-value" id="objAngle">--</span></div>
+        <div class="data-block">
+            <span class="data-label">Type / Class</span>
+            <div class="data-value" id="objType">--</div>
+        </div>
+        <div class="data-block">
+            <span class="data-label">Coordinates</span>
+            <div class="data-value data-accent" id="objCoords">--</div>
+        </div>
+        <div class="data-block" style="display: flex; justify-content: space-between;">
+            <div style="width: 50%;">
+                <span class="data-label">Range</span>
+                <div class="data-value" id="objRange">--</div>
+            </div>
+            <div style="width: 50%;">
+                <span class="data-label">Bearing</span>
+                <div class="data-value" id="objAngle">--</div>
+            </div>
+        </div>
+        <div class="data-block">
+            <span class="data-label">Internal ID</span>
+            <div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div>
+        </div>
     </div>
 </div>
 
 <div id="map"></div>
 
 <div class="bottom-nav">
-    <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
+    <button class="c-btn" onclick="nextTheme()" title="Map Layer"><i class="fa-solid fa-layer-group"></i></button>
+    <button class="c-btn" onclick="locateMe()" title="Find Me"><i class="fa-solid fa-location-crosshairs"></i></button>
     
     <select id="typeSelect" class="type-select">
         <option value="shahed-238-standart">SHAHED-238</option>
@@ -164,11 +190,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
-    // Оновлений масив тем з доданою сірою темою (з містами)
     const themes = [
         { name: "RADAR DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png' },
         { name: "SATELLITE", url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}' },
-        { name: "GRAY OPS (CITIES)", url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' }
+        { name: "GRAY OPS", url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' }
     ];
 
     let tIdx = 0;
@@ -178,33 +203,28 @@
     let userPos = null;
     let userMarker = null;
 
-    function locateMe() {
-        map.locate({setView: true, maxZoom: 10});
-    }
+    function locateMe() { map.locate({setView: true, maxZoom: 10}); }
 
     map.on('locationfound', (e) => {
         userPos = e.latlng;
-        document.getElementById('gpsStatus').innerText = "GPS LIVE";
+        document.getElementById('gpsStatus').innerText = "GPS LNK LIVE";
         document.getElementById('gpsStatus').style.color = "var(--success)";
-        
         if (userMarker) map.removeLayer(userMarker);
         userMarker = L.circleMarker(userPos, {
-            radius: 8, color: '#00f2ff', fillColor: '#00f2ff', fillOpacity: 0.5
-        }).addTo(map).bindPopup("Ваша позиція");
-    });
-
-    map.on('locationerror', () => {
-        alert("Доступ до GPS заборонено або не знайдено");
+            radius: 6, color: '#fff', weight: 2, fillColor: '#00f2ff', fillOpacity: 0.8
+        }).addTo(map);
     });
 
     let obs = {}, mode = null, tempPos = null;
 
     function sync(id, d) {
         if (!d) return;
+        const now = Date.now();
+        if (now - (d.timestamp || now) > 30 * 60 * 1000) { db.child(id).remove(); return; }
+
         const angleRad = (d.angle - 90) * Math.PI / 180;
-        const distLine = 0.02; 
-        const endLat = d.lat + (Math.cos(angleRad) * distLine);
-        const endLng = d.lng + (Math.sin(angleRad) * distLine);
+        const endLat = d.lat + (Math.cos(angleRad) * 0.02);
+        const endLng = d.lng + (Math.sin(angleRad) * 0.02);
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
@@ -212,11 +232,11 @@
         } else {
             const icon = L.divIcon({ 
                 className: 'uav-icon', 
-                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="width:32px; height:32px; transform:rotate(${d.angle || 0}deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">`, 
-                iconSize: [32, 32], iconAnchor: [16, 16] 
+                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="width:28px; height:28px; transform:rotate(${d.angle || 0}deg); filter: drop-shadow(0 0 5px rgba(0,242,255,0.4));">`, 
+                iconSize: [28, 28], iconAnchor: [14, 14] 
             });
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], [endLat, endLng]], { color: '#ff9d00', weight: 2, dashArray: '5, 10' }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], [endLat, endLng]], { color: 'rgba(255,157,0,0.5)', weight: 1.5, dashArray: '4, 6' }).addTo(map);
 
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
@@ -230,23 +250,17 @@
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('objId').innerText = id.substring(1, 8).toUpperCase();
-        document.getElementById('objType').innerText = d.type.split('-')[0].toUpperCase();
-        document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+        document.getElementById('objId').innerText = id;
+        document.getElementById('objType').innerText = d.type.replace('-standart', '').replace('-', ' ').toUpperCase();
+        document.getElementById('objCoords').innerText = `${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
-
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000).toFixed(1);
             document.getElementById('objRange').innerText = `${distance} KM`;
-        } else {
-            document.getElementById('objRange').innerText = "GPS REQ.";
-        }
+        } else { document.getElementById('objRange').innerText = "NO GPS"; }
     }
 
-    function updateCounters() {
-        document.getElementById('uavCount').innerText = Object.keys(obs).length;
-    }
-
+    function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
 
     map.on('click', (e) => {
@@ -254,10 +268,10 @@
         if (mode === 'add') {
             if (!tempPos) { 
                 tempPos = e.latlng;
-                L.circleMarker(tempPos, {radius: 5, color: '#00f2ff'}).addTo(map).fadeOut(500);
+                L.circleMarker(tempPos, {radius: 4, color: '#00f2ff'}).addTo(map).fadeOut(400);
             } else {
                 let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
-                db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle });
+                db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle, timestamp: Date.now() });
                 tempPos = null; mode = null; resetNav();
             }
         }
@@ -271,15 +285,12 @@
         }, ms/10);
     };
 
-    // Оновлена функція перемикання тем з повідомленням
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
         layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        
-        // Повідомлення про зміну теми
         const notify = document.getElementById('mapNotify');
-        notify.innerText = themes[tIdx].name;
+        notify.innerText = `LAYER: ${themes[tIdx].name}`;
         notify.style.opacity = 1;
         setTimeout(() => notify.style.opacity = 0, 1500);
     }
