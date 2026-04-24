@@ -169,10 +169,23 @@
     <button class="c-btn" onclick="locateMe()" title="Find Me"><i class="fa-solid fa-location-crosshairs"></i></button>
     
     <select id="typeSelect" class="type-select">
-        <option value="shahed-238-standart">SHAHED-238</option>
-        <option value="shahed-vp-standart">SHAHED-136</option>
-        <option value="herbera-standart">GERBERA</option>
-        <option value="kalibr-standart">MISSILE</option>
+        <optgroup label="БПЛА">
+            <option value="shahed-vp-standart">Shahed-136 (VP)</option>
+            <option value="shahed-238-standart">Shahed-238 (Jet)</option>
+            <option value="geran5-standart">Geran-5</option>
+            <option value="herbera-standart">Gerbera</option>
+            <option value="italmas1-standart">Italmas</option>
+            <option value="orlan-10-standart">Orlan-10</option>
+            <option value="lancet-standart">Lancet</option>
+            <option value="molniya-standart">Molniya</option>
+            <option value="fpv-standart">FPV Drone</option>
+        </optgroup>
+        <optgroup label="РАКЕТИ / АВІАЦІЯ">
+            <option value="kalibr-standart">Крилаті ракети</option>
+            <option value="iskander-k-standart">Іскандер-К</option>
+            <option value="tu-95ms-standart">Tu-95MS</option>
+            <option value="il78m-standart">IL-78M</option>
+        </optgroup>
     </select>
 
     <button id="addBtn" class="c-btn"><i class="fas fa-plus"></i></button>
@@ -185,12 +198,21 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
-    // Налаштування швидкостей (км/год)
+    // Швидкості для OSINT розрахунку ETA
     const SPEED_MAP = {
-        'shahed-238-standart': 550,
         'shahed-vp-standart': 185,
+        'shahed-238-standart': 550,
+        'geran5-standart': 150,
         'herbera-standart': 150,
-        'kalibr-standart': 880
+        'italmas1-standart': 140,
+        'orlan-10-standart': 120,
+        'lancet-standart': 110,
+        'molniya-standart': 90,
+        'fpv-standart': 80,
+        'kalibr-standart': 880,
+        'iskander-k-standart': 900,
+        'tu-95ms-standart': 750,
+        'il78m-standart': 800
     };
 
     const themes = [
@@ -223,28 +245,29 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        // ПЕРЕВІРКА НА СТАРІСТЬ (20 хв = 1 200 000 мс)
+        
+        // Перевірка на "простроченість" (20 хвилин)
         if (now - (d.timestamp || now) > 20 * 60 * 1000) { 
             db.child(id).remove(); 
             return; 
         }
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
-        const endLat = d.lat + (Math.cos(angleRad) * 0.02);
-        const endLng = d.lng + (Math.sin(angleRad) * 0.02);
+        const endLat = d.lat + (Math.cos(angleRad) * 0.025);
+        const endLng = d.lng + (Math.sin(angleRad) * 0.025);
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             obs[id].line.setLatLngs([[d.lat, d.lng], [endLat, endLng]]);
-            obs[id].data = d; // Оновлюємо дані
+            obs[id].data = d;
         } else {
             const icon = L.divIcon({ 
                 className: 'uav-icon', 
-                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="width:28px; height:28px; transform:rotate(${d.angle || 0}deg); filter: drop-shadow(0 0 5px rgba(0,242,255,0.4));">`, 
-                iconSize: [28, 28], iconAnchor: [14, 14] 
+                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="width:32px; height:32px; transform:rotate(${d.angle || 0}deg); filter: drop-shadow(0 0 5px rgba(0,242,255,0.6));">`, 
+                iconSize: [32, 32], iconAnchor: [16, 16] 
             });
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], [endLat, endLng]], { color: 'rgba(255,157,0,0.5)', weight: 1.5, dashArray: '4, 6' }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], [endLat, endLng]], { color: 'rgba(255,157,0,0.6)', weight: 2, dashArray: '5, 10' }).addTo(map);
 
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
@@ -288,7 +311,6 @@
                 let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
                 db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle, timestamp: Date.now() });
                 
-                // Сповіщення про створення
                 const notify = document.getElementById('mapNotify');
                 notify.innerText = "TARGET ACQUIRED";
                 notify.style.opacity = 1;
@@ -321,15 +343,14 @@
     document.getElementById('delBtn').onclick = function() { mode = 'delete'; resetNav(); this.classList.add('active-red'); };
     function resetNav() { document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
 
-    // ОСНОВНИЙ ЦИКЛ ОЧИЩЕННЯ
+    // Основний цикл очищення та оновлення годинника
     setInterval(() => {
         const now = Date.now();
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
         
-        // ПЕРЕВІРКА ВСІХ ЛОКАЛЬНИХ ОБ'ЄКТІВ
         for (let id in obs) {
             if (now - (obs[id].data.timestamp || now) > 20 * 60 * 1000) {
-                db.child(id).remove(); // Видаляємо з бази, child_removed підчистить карту
+                db.child(id).remove();
             }
         }
     }, 1000);
