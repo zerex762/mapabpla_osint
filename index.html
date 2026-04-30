@@ -33,7 +33,7 @@
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; transition: 1s ease-out;
+            align-items: center; justify-content: center; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
         .boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
@@ -46,24 +46,31 @@
         .logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* Privacy Modal */
+        /* Privacy Modal & Animation */
         #privacy-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 9000; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.8); z-index: 9000; display: none;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
+
+        @keyframes modalFlyIn {
+            0% { transform: scale(0.8) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
         .policy-box {
             background: var(--glass); border: 1px solid var(--accent);
             padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;
             text-align: center; box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
+            animation: modalFlyIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+
         .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin: 0 0 15px 0; letter-spacing: 2px; }
         
         .policy-content {
             text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.7);
             max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
             background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);
-            scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
         }
         .policy-content strong { color: var(--accent); }
 
@@ -75,18 +82,17 @@
         .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
 
         /* Map Styles */
-        #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
+        #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; transition: filter 0.5s; }
         #map::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(0, 242, 255, 0.02) 0px, rgba(0, 242, 255, 0.02) 1px, transparent 1px, transparent 2px);
             pointer-events: none; z-index: 1000;
         }
 
-        /* Icons & UI */
+        /* UI Elements */
         .uav-icon img {
             width: 32px; height: 32px;
             filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
-            transition: transform 0.3s ease-out;
         }
         .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
@@ -135,7 +141,7 @@
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">System Booting...</div>
+        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
@@ -145,14 +151,16 @@
     <div class="policy-box">
         <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
         <div class="policy-content">
-            <p><strong>1. ВИКОРИСТАННЯ ГЕОПОЗИЦІЇ:</strong> Додаток запитує доступ до вашого місцезнаходження виключно для розрахунку відстані до повітряних об'єктів та обчислення ETA (часу прибуття).</p>
-            <p><strong>2. КОНФІДЕНЦІЙНІСТЬ:</strong> Ваші координати обробляються локально у вашому браузері. Ми НЕ зберігаємо, НЕ передаємо та НЕ збираємо дані про ваше переміщення на сервери Firebase або третім особам.</p>
-            <p><strong>3. ДЖЕРЕЛА ДАНИХ:</strong> Вся інформація базується на OSINT-моніторингу відкритих джерел. Дані можуть мати затримку.</p>
-            <p><strong>4. ВІДМОВА ВІД ВІДПОВІДАЛЬНОСТІ:</strong> Цей додаток є допоміжним інструментом. Завжди дотримуйтесь офіційних вказівок Повітряних Сил та ДСНС України.</p>
+            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
+            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
+            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
+            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
         </div>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ПРОДОВЖИТИ</button>
+        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
 </div>
+
+<div id="map"></div>
 
 <div class="main-crosshair">
     <span class="tl"></span><span class="tr"></span>
@@ -185,8 +193,6 @@
     </div>
 </div>
 
-<div id="map"></div>
-
 <div class="bottom-nav">
     <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
@@ -216,39 +222,51 @@
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
         layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        
+        showNotify("LAYER: " + themes[tIdx].name);
+    }
+
+    function showNotify(text) {
         const notify = document.getElementById('mapNotify');
-        notify.innerText = "LAYER: " + themes[tIdx].name;
+        notify.innerText = text;
         notify.style.opacity = "1";
         setTimeout(() => notify.style.opacity = "0", 1500);
     }
 
-    // Logic for Privacy
+    // ЛОГИКА ЗАГРУЗКИ И ПОЛИТИКИ
     window.addEventListener('load', () => {
+        // Имитируем загрузку систем (2.5 сек)
         setTimeout(() => {
-            document.getElementById('splash-screen').style.opacity = '0';
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0'; // Плавно гасим splash
+            
             setTimeout(() => {
-                document.getElementById('splash-screen').style.display = 'none';
+                splash.style.display = 'none'; // Удаляем splash
+                
+                // Проверяем, нужно ли показывать политику
                 if (!localStorage.getItem('policyAccepted')) {
                     showPrivacy();
                 } else {
                     locateMe();
+                    showNotify("SYSTEM READY");
                 }
-            }, 1000);
-        }, 3000);
+            }, 800); // Время совпадает с transition в CSS
+        }, 2600);
     });
 
     function showPrivacy() {
         document.getElementById('privacy-modal').style.display = 'flex';
+        document.getElementById('map').style.filter = 'blur(10px)';
     }
 
     function acceptPolicy() {
         localStorage.setItem('policyAccepted', 'true');
         document.getElementById('privacy-modal').style.display = 'none';
+        document.getElementById('map').style.filter = 'none';
+        showNotify("PROTOCOL ACCEPTED");
         locateMe();
     }
 
-    // Firebase Init
+    // Firebase
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
