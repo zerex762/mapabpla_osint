@@ -2,10 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="utf-8">
-    <!-- Мета-теги для базової анонімності -->
-    <meta name="referrer" content="no-referrer">
-    <meta name="robots" content="noindex, nofollow">
-    <title>SKY DEFENSE - Elite OSINT Monitor</title>
+    <title>SKY DEFENSE - Strategic Monitor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -28,7 +25,6 @@
             --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        /* Заборона виділення тексту для анонімності */
         * { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
@@ -93,7 +89,6 @@
         .c-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; }
         .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
         
-        /* Стилізація вимкнених кнопок для режиму View Only */
         .c-btn.disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
         #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px; border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s; }
@@ -105,21 +100,21 @@
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Блокування правої кнопки миші -->
+<body oncontextmenu="return false;">
 
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Initializing systems...</div>
+        <div class="boot-text" id="bootStatus">System Booting...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
 
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2>СИСТЕМА МОНІТОРИНГУ</h2>
-        <p>Для коректного розрахунку ETA та вашої безпеки потрібен доступ до геопозиції. Дані не зберігаються.</p>
-        <button class="accept-btn" onclick="acceptPolicy()">ПІДТВЕРДИТИ ДОСТУП</button>
+        <h2>INITIALIZATION</h2>
+        <p>Для розрахунку навігаційних параметрів та ETA необхідний доступ до геопозиції.</p>
+        <button class="accept-btn" onclick="acceptPolicy()">ПРОДОВЖИТИ</button>
     </div>
 </div>
 
@@ -128,53 +123,48 @@
     <span class="bl"></span><span class="br"></span>
 </div>
 
-<div class="osint-label">Data Stream: OSINT Sources</div>
-<div id="mapNotify">SYSTEM UPDATED</div>
+<div class="osint-label">Direct Data Feed</div>
+<div id="mapNotify">SYNC COMPLETED</div>
 
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">GPS LNK OFF</span></div>
+        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
     </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> TARGETS: <span id="uavCount" class="glow">0</span></div>
+    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
 </div>
 
 <div id="sidePanel" class="side-panel">
     <div class="panel-header">
-        <span>TARGET DATA</span>
+        <span>TRACKING INFO</span>
         <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
     </div>
     <div class="panel-body">
-        <div class="data-block"><span class="data-label">Type / Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Coordinates</span><div class="data-value data-accent" id="objCoords">--</div></div>
+        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
+        <div class="data-block"><span class="data-label">Position</span><div class="data-value data-accent" id="objCoords">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width: 50%;"><span class="data-label">Bearing</span><div class="data-value" id="objAngle">--</div></div>
+            <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
         </div>
-        <div class="data-block"><span class="data-label">Internal ID</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
+        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
     </div>
 </div>
 
 <div id="map"></div>
 
 <div class="bottom-nav">
-    <button class="c-btn" onclick="nextTheme()" title="Map Layer"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" onclick="locateMe()" title="Find Me"><i class="fa-solid fa-location-crosshairs"></i></button>
-    
-    <!-- Ці кнопки тепер декоративні або для виводу повідомлення про заборону -->
-    <button id="addBtn" class="c-btn disabled" title="Додавання заборонено"><i class="fas fa-plus"></i></button>
-    <button id="delBtn" class="c-btn disabled" title="Видалення заборонено"><i class="fas fa-trash-can"></i></button>
+    <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
+    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
+    <button id="addBtn" class="c-btn disabled"><i class="fas fa-plus"></i></button>
+    <button id="delBtn" class="c-btn disabled"><i class="fas fa-trash-can"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
 <script>
-    // --- ЗАХИСТ ВІД ANALYTICS / INSPECT ---
     (function() {
         const block = () => {
             console.clear();
-            console.log("%cSECURITY ALERT: Access Denied", "color: red; font-size: 20px; font-weight: bold;");
         };
-        // Обмеження F12 та Ctrl+Shift+I
         document.onkeydown = (e) => {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74))) {
                 block(); return false;
@@ -182,9 +172,8 @@
         };
     })();
 
-    // --- КЕРУВАННЯ ЗАСТАВКОЮ ---
     window.addEventListener('load', () => {
-        const statuses = ["Loading Map...", "Securing Connection...", "Finalizing UI..."];
+        const statuses = ["Syncing...", "Fetching Data...", "Ready"];
         let i = 0;
         const interval = setInterval(() => {
             if(document.getElementById('bootStatus')) document.getElementById('bootStatus').innerText = statuses[i];
@@ -213,7 +202,6 @@
         locateMe();
     }
 
-    // --- FIREBASE CONFIG (БЕЗ ЗМІН) ---
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
@@ -231,7 +219,7 @@
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false,
-        maxBounds: [[43, 21], [53, 41]], // Обмеження карти тільки Україною для економії ресурсів
+        maxBounds: [[43, 21], [53, 41]], 
         minZoom: 5
     }).setView([48.4, 32.5], 6);
     
@@ -243,7 +231,7 @@
 
     map.on('locationfound', (e) => {
         userPos = e.latlng;
-        document.getElementById('gpsStatus').innerText = "GPS LNK LIVE";
+        document.getElementById('gpsStatus').innerText = "LINK ACTIVE";
         document.getElementById('gpsStatus').style.color = "var(--success)";
         if (userMarker) map.removeLayer(userMarker);
         userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#00f2ff', fillOpacity: 0.8 }).addTo(map);
@@ -254,7 +242,6 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        // Авто-очищення старих даних (старше 30 хв) для запобігання перевантаження DOM
         if (now - (d.timestamp || now) > 30 * 60 * 1000) return;
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
@@ -285,7 +272,7 @@
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('objId').innerText = "HIDDEN_" + id.substring(0,5); // Часткове приховування ID
+        document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
         document.getElementById('objType').innerText = d.type.replace('-standart', '').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
@@ -299,10 +286,8 @@
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
 
-    // --- VIEW ONLY MODE (БЛОКУВАННЯ КЛІКІВ ДЛЯ ДОДАВАННЯ) ---
     map.on('click', () => {
         closeInfo();
-        // В Main UI нічого не відбувається при кліку на карту
     });
 
     function nextTheme() {
@@ -311,15 +296,13 @@
         layer = L.tileLayer(themes[tIdx].url).addTo(map);
     }
 
-    // Відключаємо логіку кнопок додавання
-    document.getElementById('addBtn').onclick = () => { alert("Режим редагування обмежено адміністратором."); };
-    document.getElementById('delBtn').onclick = () => { alert("Видалення об'єктів доступне лише через консоль управління."); };
+    document.getElementById('addBtn').onclick = () => { console.log("Protected"); };
+    document.getElementById('delBtn').onclick = () => { console.log("Protected"); };
 
     setInterval(() => {
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
     }, 1000);
 
-    // Стрім даних (Тільки читання)
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
     db.on('child_removed', s => { 
