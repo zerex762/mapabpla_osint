@@ -26,85 +26,74 @@
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
-        #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.7) contrast(1.2); background: #000; }
-
-        .main-crosshair {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.6;
-        }
-        .main-crosshair span {
-            position: absolute; width: 8px; height: 8px; border-color: var(--accent); border-style: solid;
-        }
-        .tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
-        .tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
-        .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
-        .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
-
-        .top-ui {
-            position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000;
-            display: flex; justify-content: space-between; pointer-events: none;
-        }
-        .status-group { display: flex; gap: 10px; pointer-events: auto; }
-        .box {
-            background: var(--glass); backdrop-filter: blur(10px);
-            padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neon-border);
-            font-size: 11px; font-weight: 600; text-transform: uppercase;
-            display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow);
-        }
-        .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
-
-        .osint-label {
-            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
-            z-index: 1999; font-family: 'Orbitron'; font-size: 10px;
-            text-transform: uppercase; letter-spacing: 3px;
-            color: rgba(255, 255, 255, 0.3); pointer-events: none;
-        }
-
-        .side-panel {
-            position: absolute; top: 20px; right: -350px; z-index: 2100;
-            background: var(--glass); backdrop-filter: blur(15px);
-            width: 260px; border-radius: 12px; transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow);
-        }
-        .side-panel.active { right: 20px; }
-        .panel-header { 
-            padding: 12px 16px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; letter-spacing: 1px; }
-        .panel-body { padding: 16px; }
         
+        /* --- АНІМОВАНА ЗАСТАВКА --- */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: 1s ease-out;
+        }
+        .boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
+        .boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .progress-bar { width: 100%; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; overflow: hidden; }
+        .progress-fill { 
+            width: 0%; height: 100%; background: var(--accent); 
+            box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; 
+        }
+        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+        .logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* --- МОДАЛКА ПОЛІТИКИ --- */
+        #privacy-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9000; display: none;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .policy-box {
+            background: var(--glass); border: 1px solid var(--accent);
+            padding: 30px; border-radius: 15px; max-width: 400px; text-align: center;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin-top: 0; }
+        .policy-box p { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.8); }
+        .accept-btn {
+            background: transparent; border: 1px solid var(--accent); color: var(--accent);
+            padding: 10px 30px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
+            margin-top: 20px; font-weight: bold;
+        }
+        .accept-btn:hover { background: var(--accent); color: #000; }
+
+        /* --- КАРТА ТА ІНТЕРФЕЙС --- */
+        #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.7) contrast(1.2); background: #000; }
+        .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.4; }
+        .main-crosshair span { position: absolute; width: 8px; height: 8px; border-color: var(--accent); border-style: solid; }
+        .tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; } .tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
+        .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; } .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
+
+        .top-ui { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; }
+        .status-group { display: flex; gap: 10px; pointer-events: auto; }
+        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
+        .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
+        .osint-label { position: absolute; top: 75px; left: 50%; transform: translateX(-50%); z-index: 1999; font-family: 'Orbitron'; font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: rgba(255, 255, 255, 0.3); pointer-events: none; }
+
+        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 260px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
+        .side-panel.active { right: 20px; }
+        .panel-header { padding: 12px 16px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); display: flex; justify-content: space-between; align-items: center; }
+        .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; }
+        .panel-body { padding: 16px; }
         .data-block { margin-bottom: 12px; }
         .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; word-break: break-all; line-height: 1.2; }
-        .data-accent { color: var(--warning); }
+        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; }
 
-        .bottom-nav {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
-            z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
-            padding: 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 12px;
-            border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow);
-        }
-        .c-btn {
-            width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
-            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s;
-        }
+        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
+        .c-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; }
         .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
         .c-btn.active-green { background: var(--success); color: #000; box-shadow: 0 0 15px var(--success); }
         .c-btn.active-red { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
+        .type-select { background: #000; color: var(--accent); border: 1px solid var(--neon-border); border-radius: 8px; padding: 8px; font-size: 10px; font-family: 'Orbitron'; outline: none; }
 
-        .type-select {
-            background: #000; color: var(--accent); border: 1px solid var(--neon-border);
-            border-radius: 8px; padding: 8px; font-size: 10px; font-family: 'Orbitron';
-            outline: none; cursor: pointer;
-        }
-
-        #mapNotify {
-            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
-            z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px;
-            border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s;
-        }
+        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px; border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s; }
 
         @media (max-width: 600px) {
             .top-ui { flex-direction: column; gap: 8px; }
@@ -114,6 +103,25 @@
     </style>
 </head>
 <body>
+
+<!-- ЕКРАН ЗАСТАВКИ -->
+<div id="splash-screen">
+    <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
+    <div class="boot-loader">
+        <div class="boot-text" id="bootStatus">Initializing systems...</div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+</div>
+
+<!-- МОДАЛКА ПОЛІТИКИ -->
+<div id="privacy-modal">
+    <div class="policy-box">
+        <h2>СИСТЕМА МОНІТОРИНГУ</h2>
+        <p>Для коректного розрахунку ETA (часу прильоту) та вашої безпеки, системі потрібен доступ до вашої геопозиції. Ми не зберігаємо ваші дані на сервері.</p>
+        <p style="font-size: 10px; opacity: 0.6;">Продовжуючи, ви погоджуєтесь на OSINT-обробку публічних даних.</p>
+        <button class="accept-btn" onclick="acceptPolicy()">ПІДТВЕРДИТИ ДОСТУП</button>
+    </div>
+</div>
 
 <div class="main-crosshair">
     <span class="tl"></span><span class="tr"></span>
@@ -194,25 +202,47 @@
 </div>
 
 <script>
+    // --- КЕРУВАННЯ ЗАСТАВКОЮ ТА ПОЛІТИКОЮ ---
+    window.addEventListener('load', () => {
+        const statuses = ["Loading Map...", "Connecting Firebase...", "Syncing OSINT...", "System Ready"];
+        let i = 0;
+        const interval = setInterval(() => {
+            document.getElementById('bootStatus').innerText = statuses[i];
+            i++;
+            if(i >= statuses.length) clearInterval(interval);
+        }, 600);
+
+        setTimeout(() => {
+            document.getElementById('splash-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+                checkPrivacy();
+            }, 1000);
+        }, 3000);
+    });
+
+    function checkPrivacy() {
+        if (!localStorage.getItem('policyAccepted')) {
+            document.getElementById('privacy-modal').style.display = 'flex';
+        }
+    }
+
+    function acceptPolicy() {
+        localStorage.setItem('policyAccepted', 'true');
+        document.getElementById('privacy-modal').style.display = 'none';
+        locateMe(); // Автоматично запитуємо геолокацію після згоди
+    }
+
+    // --- ОСНОВНИЙ ФУНКЦІОНАЛ ---
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
-    // Швидкості для OSINT розрахунку ETA
     const SPEED_MAP = {
-        'shahed-vp-standart': 185,
-        'shahed-238-standart': 550,
-        'geran5-standart': 150,
-        'herbera-standart': 150,
-        'italmas1-standart': 140,
-        'orlan-10-standart': 120,
-        'lancet-standart': 110,
-        'molniya-standart': 90,
-        'fpv-standart': 80,
-        'kalibr-standart': 880,
-        'iskander-k-standart': 900,
-        'tu-95ms-standart': 750,
-        'il78m-standart': 800
+        'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'geran5-standart': 150,
+        'herbera-standart': 150, 'italmas1-standart': 140, 'orlan-10-standart': 120,
+        'lancet-standart': 110, 'molniya-standart': 90, 'fpv-standart': 80,
+        'kalibr-standart': 880, 'iskander-k-standart': 900, 'tu-95ms-standart': 750, 'il78m-standart': 800
     };
 
     const themes = [
@@ -235,9 +265,7 @@
         document.getElementById('gpsStatus').innerText = "GPS LNK LIVE";
         document.getElementById('gpsStatus').style.color = "var(--success)";
         if (userMarker) map.removeLayer(userMarker);
-        userMarker = L.circleMarker(userPos, {
-            radius: 6, color: '#fff', weight: 2, fillColor: '#00f2ff', fillOpacity: 0.8
-        }).addTo(map);
+        userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#00f2ff', fillOpacity: 0.8 }).addTo(map);
     });
 
     let obs = {}, mode = null, tempPos = null;
@@ -245,12 +273,7 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        
-        // Перевірка на "простроченість" (20 хвилин)
-        if (now - (d.timestamp || now) > 20 * 60 * 1000) { 
-            db.child(id).remove(); 
-            return; 
-        }
+        if (now - (d.timestamp || now) > 20 * 60 * 1000) { db.child(id).remove(); return; }
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
         const endLat = d.lat + (Math.cos(angleRad) * 0.025);
@@ -285,17 +308,11 @@
         document.getElementById('objType').innerText = d.type.replace('-standart', '').replace('-', ' ').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
-        
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const speed = SPEED_MAP[d.type] || 200;
-            const timeHours = distance / speed;
-            const timeMinutes = Math.round(timeHours * 60);
-
+            const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
             document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ${timeMinutes} MIN</span>`;
-        } else { 
-            document.getElementById('objRange').innerText = "NO GPS"; 
-        }
+        } else { document.getElementById('objRange').innerText = "NO GPS"; }
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
@@ -310,12 +327,10 @@
             } else {
                 let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
                 db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle, timestamp: Date.now() });
-                
                 const notify = document.getElementById('mapNotify');
                 notify.innerText = "TARGET ACQUIRED";
                 notify.style.opacity = 1;
                 setTimeout(() => notify.style.opacity = 0, 1500);
-
                 tempPos = null; mode = null; resetNav();
             }
         }
@@ -333,36 +348,23 @@
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
         layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        const notify = document.getElementById('mapNotify');
-        notify.innerText = `LAYER: ${themes[tIdx].name}`;
-        notify.style.opacity = 1;
-        setTimeout(() => notify.style.opacity = 0, 1500);
+        const n = document.getElementById('mapNotify');
+        n.innerText = `LAYER: ${themes[tIdx].name}`; n.style.opacity = 1;
+        setTimeout(() => n.style.opacity = 0, 1500);
     }
 
     document.getElementById('addBtn').onclick = function() { mode = 'add'; resetNav(); this.classList.add('active-green'); };
     document.getElementById('delBtn').onclick = function() { mode = 'delete'; resetNav(); this.classList.add('active-red'); };
     function resetNav() { document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
 
-    // Основний цикл очищення та оновлення годинника
     setInterval(() => {
-        const now = Date.now();
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-        
-        for (let id in obs) {
-            if (now - (obs[id].data.timestamp || now) > 20 * 60 * 1000) {
-                db.child(id).remove();
-            }
-        }
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
     db.on('child_removed', s => { 
-        if(obs[s.key]) { 
-            map.removeLayer(obs[s.key].marker); 
-            map.removeLayer(obs[s.key].line); 
-            delete obs[s.key]; 
-        }
+        if(obs[s.key]) { map.removeLayer(obs[s.key].marker); map.removeLayer(obs[s.key].line); delete obs[s.key]; }
         updateCounters(); closeInfo();
     });
 </script>
