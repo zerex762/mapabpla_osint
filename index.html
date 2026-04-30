@@ -2,12 +2,12 @@
 <html lang="uk">
 <head>
     <meta charset="utf-8">
-    <title>SKY DEFENSE - Tactical OSINT Monitor</title>
+    <title>SKY DEFENSE - Tactical OSINT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -15,268 +15,285 @@
     
     <style>
         :root { 
-            --accent: #ffb300; /* ТЕПЛИЙ БУРШТИНОВИЙ */
-            --danger: #ff4400;
-            --success: #aaff00;
-            --bg-dark: #080805;
-            --glass: rgba(15, 12, 8, 0.9);
-            --border: rgba(255, 179, 0, 0.2);
-            --shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            --accent: #ff9d00; /* ЯНТАРНЫЙ ВМЕСТО СИНЕГО */
+            --danger: #ff3333;
+            --success: #00ff88;
+            --bg-dark: #0a0a05;
+            --glass: rgba(15, 12, 5, 0.85);
+            --neon-border: rgba(255, 157, 0, 0.3);
+            --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Share Tech Mono', monospace; overflow: hidden; color: #d4d4d4; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Share Tech Mono', monospace; overflow: hidden; color: #eee; }
         
-        /* --- ТЕРМІНАЛЬНА ЗАСТАВКА --- */
+        /* --- ТЕРМИНАЛЬНАЯ ЗАСТАВКА --- */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; transition: 1.2s cubic-bezier(0.8, 0, 0.2, 1);
+            align-items: center; justify-content: center; transition: 1.5s cubic-bezier(0.7, 0, 0.3, 1);
         }
-        .boot-wrap { width: 320px; }
-        .logo-static { font-family: 'Orbitron'; font-size: 22px; color: var(--accent); letter-spacing: 6px; margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,179,0,0.5); }
-        .boot-logs { font-size: 10px; color: var(--accent); height: 80px; overflow: hidden; line-height: 1.4; opacity: 0.8; margin-bottom: 10px; }
-        .progress-bar { width: 100%; height: 2px; background: rgba(255, 179, 0, 0.1); position: relative; }
-        .progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); animation: load 3.5s forwards cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+        .boot-container { width: 300px; }
+        .terminal-text { 
+            font-size: 9px; color: var(--accent); margin-bottom: 15px; 
+            height: 60px; overflow: hidden; line-height: 1.2;
+        }
+        .logo-anim { font-size: 28px; font-family: 'Orbitron'; color: var(--accent); margin-bottom: 25px; letter-spacing: 5px; text-shadow: 0 0 15px var(--accent); }
+        .progress-bar { width: 100%; height: 3px; background: rgba(255, 157, 0, 0.1); border-radius: 2px; position: relative; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 20px var(--accent); animation: load 3.5s cubic-bezier(0.1, 0, 0.2, 1) forwards; }
+        
+        @keyframes load { 0% { width: 0%; } 30% { width: 45%; } 60% { width: 70%; } 100% { width: 100%; } }
 
-        /* --- ПОЛІТИКА --- */
+        /* --- МОДАЛКА ПОЛІТИКИ --- */
         #privacy-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96); z-index: 9500; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.95); z-index: 9000; display: none;
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
         }
         .policy-box {
             background: var(--glass); border: 1px solid var(--accent);
-            padding: 40px; border-radius: 2px; max-width: 460px; position: relative;
+            padding: 35px; border-radius: 4px; max-width: 450px; text-align: left;
+            box-shadow: 0 0 50px rgba(255, 157, 0, 0.1);
         }
-        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .policy-box p { font-size: 12px; line-height: 1.6; margin-bottom: 15px; color: #aaa; }
-        .btn-action {
+        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 16px; margin: 0 0 20px 0; border-bottom: 1px solid var(--neon-border); padding-bottom: 10px; }
+        .policy-box p { font-size: 12px; line-height: 1.7; color: #ccc; margin-bottom: 15px; }
+        .accept-btn {
             width: 100%; background: transparent; border: 1px solid var(--accent); color: var(--accent);
             padding: 12px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
-            text-transform: uppercase; font-size: 11px; letter-spacing: 2px;
+            margin-top: 20px; letter-spacing: 2px; font-size: 12px;
         }
-        .btn-action:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px rgba(255,179,0,0.4); }
+        .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
 
-        /* --- ІНТЕРФЕЙС ТА КАРТА --- */
-        #map { width: 100%; height: 100%; z-index: 1; filter: brightness(0.5) contrast(1.2) sepia(0.2); background: #000; }
+        /* --- КАРТА ТА ІНТЕРФЕЙС --- */
+        #map { width: 100%; height: 100%; z-index: 1; filter: sepia(0.3) brightness(0.6) contrast(1.1) hue-rotate(-10deg); background: #000; }
         
-        .ui-overlay { position: absolute; z-index: 2000; pointer-events: none; }
-        .top-bar { top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; }
-        .stat-box { background: var(--glass); padding: 8px 16px; border: 1px solid var(--border); pointer-events: auto; display: flex; align-items: center; gap: 10px; font-size: 11px; }
-        .accent-txt { color: var(--accent); font-family: 'Orbitron'; text-shadow: 0 0 5px var(--accent); }
+        .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; z-index: 1500; pointer-events: none; opacity: 0.3; }
+        .main-crosshair:before, .main-crosshair:after { content: ''; position: absolute; background: var(--accent); }
+        .main-crosshair:before { top: 50%; left: 0; width: 100%; height: 1px; }
+        .main-crosshair:after { left: 50%; top: 0; width: 1px; height: 100%; }
 
-        .side-panel { 
-            position: absolute; top: 20px; right: -350px; z-index: 2500; 
-            background: var(--glass); width: 280px; border-left: 2px solid var(--accent);
-            transition: 0.4s ease-in-out; pointer-events: auto;
-        }
-        .side-panel.active { right: 0; }
-        .panel-content { padding: 25px; }
-        .data-label { font-size: 9px; text-transform: uppercase; color: var(--accent); opacity: 0.6; display: block; margin-bottom: 4px; }
-        .data-val { font-family: 'Orbitron'; font-size: 14px; margin-bottom: 18px; color: #fff; }
+        .top-ui { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; }
+        .box { background: var(--glass); padding: 8px 15px; border-radius: 2px; border: 1px solid var(--neon-border); font-size: 11px; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+        .glow { color: var(--accent); text-shadow: 0 0 5px var(--accent); font-family: 'Orbitron'; }
 
-        .bottom-ui { bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; background: var(--glass); padding: 8px; border: 1px solid var(--border); pointer-events: auto; }
-        .ctrl-btn { width: 44px; height: 44px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .ctrl-btn:hover { border-color: var(--accent); background: rgba(255,179,0,0.1); }
-        .ctrl-btn.active-green { border-color: var(--success); color: var(--success); }
-        .ctrl-btn.active-red { border-color: var(--danger); color: var(--danger); }
+        .side-panel { position: absolute; top: 20px; right: -400px; z-index: 2100; background: var(--glass); width: 280px; transition: 0.5s ease; border: 1px solid var(--neon-border); }
+        .side-panel.active { right: 20px; }
+        .panel-header { padding: 15px; border-bottom: 1px solid var(--neon-border); background: rgba(255, 157, 0, 0.05); }
+        .panel-body { padding: 20px; }
+        .data-label { color: var(--accent); font-size: 9px; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .data-value { font-family: 'Orbitron'; font-size: 14px; margin-bottom: 15px; }
 
-        select.type-sel { background: #000; color: var(--accent); border: 1px solid var(--border); padding: 0 10px; font-family: 'Orbitron'; font-size: 10px; outline: none; }
+        .bottom-nav { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); padding: 10px; display: flex; gap: 15px; border: 1px solid var(--neon-border); }
+        .c-btn { width: 45px; height: 45px; background: rgba(255,255,255,0.03); border: 1px solid var(--neon-border); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .c-btn:hover { background: var(--accent); color: #000; }
+        .c-btn.active-green { border-color: var(--success); color: var(--success); box-shadow: 0 0 10px var(--success); }
+        .c-btn.active-red { border-color: var(--danger); color: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        
+        .type-select { background: #000; color: var(--accent); border: 1px solid var(--neon-border); padding: 10px; font-family: 'Orbitron'; font-size: 10px; outline: none; }
 
-        .uav-icon i { color: var(--accent); text-shadow: 0 0 10px var(--accent); font-size: 20px; }
-        #notify { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 4px 20px; font-weight: 900; font-size: 10px; opacity: 0; transition: 0.3s; z-index: 3000; }
+        #mapNotify { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="splash-screen">
-    <div class="logo-static">SKY DEFENSE</div>
-    <div class="boot-wrap">
-        <div class="boot-logs" id="logs"></div>
+    <div class="logo-anim">SKY DEFENSE</div>
+    <div class="boot-container">
+        <div class="terminal-text" id="bootLogs"></div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
 
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2>СИСТЕМА ТАКТИЧНОГО МОНІТОРИНГУ</h2>
-        <p>Для розрахунку ETA (орієнтовного часу підльоту) та векторів загрози, системі потрібен доступ до координат вашого пристрою.</p>
-        <p>Ми використовуємо OSINT-дані з відкритих джерел. Ваші геодані обробляються виключно у браузері та не зберігаються на сервері.</p>
-        <button class="btn-action" onclick="confirmAccess()">ІНІЦІАЛІЗУВАТИ ТЕРМІНАЛ</button>
+        <h2>STRATEGIC MONITORING PROTOCOL</h2>
+        <p>Для активації системи раннього сповіщення та розрахунку векторів загрози (ETA), програмі необхідний доступ до координат вашого термінала.</p>
+        <p>Ми використовуємо OSINT-технології для обробки публічних даних. Ваша точна локація обробляється локально і не передається на сторонні сервери.</p>
+        <button class="accept-btn" onclick="acceptPolicy()">INITIALIZE SYSTEM</button>
     </div>
 </div>
 
-<div id="notify">SYSTEM UPDATED</div>
+<div class="main-crosshair"></div>
 
-<div class="ui-overlay top-bar">
-    <div class="stat-box">
-        <i class="fa-solid fa-clock" style="color:var(--accent)"></i>
-        <span id="clock" class="accent-txt">00:00:00</span>
-    </div>
-    <div class="stat-box">
-        <i class="fa-solid fa-radar" style="color:var(--accent)"></i>
-        <span>ОБ'ЄКТІВ:</span>
-        <span id="counter" class="accent-txt">0</span>
-    </div>
+<div id="mapNotify">EVENT LOG UPDATED</div>
+
+<div class="top-ui">
+    <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
+    <div class="box"><i class="fa-solid fa-microchip"></i> TARGETS: <span id="uavCount" class="glow">0</span></div>
 </div>
 
-<div id="details" class="side-panel">
-    <div class="panel-content">
-        <span class="data-label">Тип об'єкта</span>
-        <div id="d-type" class="data-val">--</div>
-        <span class="data-label">Азимут руху</span>
-        <div id="d-angle" class="data-val">--</div>
-        <span class="data-label">Дистанція / ETA</span>
-        <div id="d-eta" class="data-val" style="color:var(--accent)">--</div>
-        <span class="data-label">System ID</span>
-        <div id="d-id" style="font-size:9px; opacity:0.5;">--</div>
-        <button class="btn-action" style="margin-top:10px" onclick="closeDetails()">ЗАКРИТИ</button>
+<div id="sidePanel" class="side-panel">
+    <div class="panel-header">
+        <span class="glow">OBJECT TRACKING</span>
+    </div>
+    <div class="panel-body">
+        <span class="data-label">Class</span>
+        <div class="data-value" id="objType">--</div>
+        <span class="data-label">Vector / Angle</span>
+        <div class="data-value" id="objAngle">--</div>
+        <span class="data-label">Distance to base</span>
+        <div class="data-value" id="objRange" style="color: var(--accent);">--</div>
+        <span class="data-label">Global UID</span>
+        <div class="data-value" id="objId" style="font-size: 10px; opacity: 0.5;">--</div>
+        <button class="accept-btn" style="margin-top:10px;" onclick="closeInfo()">DISMISS</button>
     </div>
 </div>
 
 <div id="map"></div>
 
-<div class="ui-overlay bottom-ui">
-    <button class="ctrl-btn" onclick="toggleTheme()"><i class="fa-solid fa-map"></i></button>
-    <button class="ctrl-btn" onclick="findMe()"><i class="fa-solid fa-crosshairs"></i></button>
+<div class="bottom-nav">
+    <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
+    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     
-    <select id="objType" class="type-sel">
-        <option value="shahed">SHAHED-136</option>
-        <option value="shahed-jet">SHAHED-238 (JET)</option>
-        <option value="missile">CRUISE MISSILE</option>
-        <option value="scout">RECON UAV</option>
+    <select id="typeSelect" class="type-select">
+        <option value="shahed-vp-standart">SHAHED-136</option>
+        <option value="shahed-238-standart">SHAHED-238 (JET)</option>
+        <option value="kalibr-standart">CRUISE MISSILE</option>
+        <option value="balistic-standart">BALISTIC UNIT</option>
+        <option value="fpv-standart">FPV STRIKE</option>
     </select>
 
-    <button id="addMode" class="ctrl-btn"><i class="fa-solid fa-plus"></i></button>
-    <button id="delMode" class="ctrl-btn"><i class="fa-solid fa-trash-can"></i></button>
+    <button id="addBtn" class="c-btn"><i class="fas fa-plus"></i></button>
+    <button id="delBtn" class="c-btn"><i class="fas fa-trash"></i></button>
 </div>
 
 <script>
-    // --- ЕФЕКТ ЗАГРУЗКИ ---
-    const logData = [
-        "> Завантаження тактичного ядра...",
-        "> Синхронізація з Firebase...",
-        "> Аналіз OSINT-потоків...",
-        "> Калібрування мапи...",
-        "> Система готова до роботи."
+    // --- УЛУЧШЕННАЯ ЗАГРУЗКА ---
+    const logs = [
+        "> Booting SkyDefense OS v4.2...",
+        "> Loading kernel modules...",
+        "> Establishing Firebase link...",
+        "> Handshaking with OSINT API...",
+        "> Decrypting satellite stream...",
+        "> Calibrating radar arrays...",
+        "> System integrity: 100%",
+        "> Accessing tactical map..."
     ];
 
-    window.onload = () => {
-        let i = 0;
-        const logBox = document.getElementById('logs');
+    window.addEventListener('load', () => {
+        let logIdx = 0;
+        const logContainer = document.getElementById('bootLogs');
         const interval = setInterval(() => {
-            if(i < logData.length) {
-                const p = document.createElement('div');
-                p.innerText = logData[i];
-                logBox.appendChild(p);
-                i++;
-            } else clearInterval(interval);
-        }, 500);
+            const line = document.createElement('div');
+            line.innerText = logs[logIdx];
+            logContainer.appendChild(line);
+            logIdx++;
+            if(logIdx >= logs.length) clearInterval(interval);
+        }, 400);
 
         setTimeout(() => {
-            document.getElementById('splash-screen').style.opacity = '0';
+            document.getElementById('splash-screen').style.transform = 'translateY(-100%)';
             setTimeout(() => {
                 document.getElementById('splash-screen').style.display = 'none';
-                if(!localStorage.getItem('access')) document.getElementById('privacy-modal').style.display = 'flex';
-            }, 1200);
-        }, 3800);
-    };
-
-    function confirmAccess() {
-        localStorage.setItem('access', 'true');
-        document.getElementById('privacy-modal').style.display = 'none';
-        findMe();
-    }
-
-    // --- ЛОГІКА МАПИ ---
-    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('active_targets');
-
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([48.5, 31.2], 6);
-    let currentTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-    let myPos = null;
-    let targets = {}, mode = null, startPos = null;
-
-    function findMe() { map.locate({setView: true, maxZoom: 9}); }
-    map.on('locationfound', (e) => { 
-        myPos = e.latlng;
-        L.circleMarker(myPos, { radius: 5, color: '#fff', weight: 2, fillColor: var(--accent), fillOpacity: 1 }).addTo(map);
+                if (!localStorage.getItem('policyAccepted')) {
+                    document.getElementById('privacy-modal').style.display = 'flex';
+                }
+            }, 1500);
+        }, 4000);
     });
 
-    function updateTarget(id, data) {
-        if (!data) return;
-        const angle = (data.angle - 90) * Math.PI / 180;
-        const vector = [[data.lat, data.lng], [data.lat + Math.cos(angle)*0.5, data.lng + Math.sin(angle)*0.5]];
+    function acceptPolicy() {
+        localStorage.setItem('policyAccepted', 'true');
+        document.getElementById('privacy-modal').style.display = 'none';
+        locateMe();
+    }
 
-        if (targets[id]) {
-            targets[id].marker.setLatLng([data.lat, data.lng]);
-            targets[id].line.setLatLngs(vector);
+    // --- ЛОГИКА КАРТЫ (ЦВЕТА И ТЕМЫ) ---
+    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('drones');
+
+    const themes = [
+        { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' }, // Dark Matter
+        { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' } // Standard
+    ];
+    let tIdx = 0;
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([48.4, 32.5], 6);
+    let layer = L.tileLayer(themes[0].url).addTo(map);
+
+    let userPos = null;
+    let obs = {}, mode = null, tempPos = null;
+
+    function locateMe() { map.locate({setView: true, maxZoom: 10}); }
+    map.on('locationfound', (e) => { userPos = e.latlng; });
+
+    function sync(id, d) {
+        if (!d) return;
+        const angleRad = (d.angle - 90) * Math.PI / 180;
+        const endLat = d.lat + (Math.cos(angleRad) * 0.4);
+        const endLng = d.lng + (Math.sin(angleRad) * 0.4);
+
+        if (obs[id]) {
+            obs[id].marker.setLatLng([d.lat, d.lng]);
+            obs[id].line.setLatLngs([[d.lat, d.lng], [endLat, endLng]]);
         } else {
-            const icon = L.divIcon({
-                className: 'uav-icon',
-                html: `<div style="transform:rotate(${data.angle}deg)"><i class="fa-solid fa-location-arrow"></i></div>`,
-                iconSize: [20, 20], iconAnchor: [10, 10]
+            const icon = L.divIcon({ 
+                className: 'uav-icon', 
+                html: `<div style="transform:rotate(${d.angle}deg); color:var(--accent); font-size:24px; text-shadow:0 0 10px var(--accent);"><i class="fa-solid fa-location-arrow"></i></div>`, 
+                iconSize: [30, 30], iconAnchor: [15, 15] 
             });
-            const marker = L.marker([data.lat, data.lng], {icon}).addTo(map);
-            const line = L.polyline(vector, {color: 'var(--accent)', weight: 1, dashArray: '5, 10', opacity: 0.4}).addTo(map);
+            const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], [endLat, endLng]], { color: 'var(--accent)', weight: 1, dashArray: '4, 8', opacity: 0.5 }).addTo(map);
 
             marker.on('click', () => {
-                if (mode === 'del') db.child(id).remove();
-                else showDetails(id, data);
+                if (mode === 'delete') db.child(id).remove();
+                else updateUI(id, d);
             });
-            targets[id] = { marker, line };
+            obs[id] = { marker, line, data: d };
         }
-        document.getElementById('counter').innerText = Object.keys(targets).length;
+        document.getElementById('uavCount').innerText = Object.keys(obs).length;
     }
 
-    function showDetails(id, d) {
-        document.getElementById('details').classList.add('active');
-        document.getElementById('d-type').innerText = d.type.toUpperCase();
-        document.getElementById('d-angle').innerText = Math.round(d.angle) + "°";
-        document.getElementById('d-id').innerText = id;
-        if(myPos) {
-            const dist = (map.distance(myPos, [d.lat, d.lng])/1000).toFixed(1);
-            document.getElementById('d-eta').innerText = `${dist} KM / ~${Math.round(dist/3)} МВ`;
+    function updateUI(id, d) {
+        document.getElementById('sidePanel').classList.add('active');
+        document.getElementById('objId').innerText = id.substring(0, 12);
+        document.getElementById('objType').innerText = d.type.split('-')[0].toUpperCase();
+        document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
+        if (userPos) {
+            const dist = (map.distance(userPos, [d.lat, d.lng]) / 1000).toFixed(1);
+            document.getElementById('objRange').innerText = `${dist} KM`;
         }
     }
 
-    function closeDetails() { document.getElementById('details').classList.remove('active'); }
+    function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
 
     map.on('click', (e) => {
         if (mode === 'add') {
-            if (!startPos) {
-                startPos = e.latlng;
-                showNotify("ВКАЖІТЬ НАПРЯМОК");
+            if (!tempPos) { 
+                tempPos = e.latlng;
+                L.circleMarker(tempPos, {radius: 5, color: 'var(--accent)'}).addTo(map);
             } else {
-                const angle = (Math.atan2(e.latlng.lng - startPos.lng, e.latlng.lat - startPos.lat) * 180 / Math.PI) + 90;
-                db.push({ lat: startPos.lat, lng: startPos.lng, angle: angle, type: document.getElementById('objType').value });
-                startPos = null; mode = null; resetBtns();
-                showNotify("ОБ'ЄКТ ДОДАНО");
+                let angle = (Math.atan2(e.latlng.lng - tempPos.lng, e.latlng.lat - tempPos.lat) * 180 / Math.PI) + 90;
+                db.push({ lat: tempPos.lat, lng: tempPos.lng, type: document.getElementById('typeSelect').value, angle: angle, timestamp: Date.now() });
+                tempPos = null; mode = null; resetNav();
+                showNotify("TARGET CREATED");
             }
         }
     });
 
-    function showNotify(t) {
-        const n = document.getElementById('notify');
-        n.innerText = t; n.style.opacity = 1;
+    function showNotify(txt) {
+        const n = document.getElementById('mapNotify');
+        n.innerText = txt; n.style.opacity = 1;
         setTimeout(() => n.style.opacity = 0, 2000);
     }
 
-    document.getElementById('addMode').onclick = function() { mode = 'add'; resetBtns(); this.classList.add('active-green'); };
-    document.getElementById('delMode').onclick = function() { mode = 'del'; resetBtns(); this.classList.add('active-red'); };
-    function resetBtns() { document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
+    function nextTheme() {
+        tIdx = (tIdx + 1) % themes.length;
+        map.removeLayer(layer);
+        layer = L.tileLayer(themes[tIdx].url).addTo(map);
+    }
+
+    document.getElementById('addBtn').onclick = function() { mode = 'add'; resetNav(); this.classList.add('active-green'); };
+    document.getElementById('delBtn').onclick = function() { mode = 'delete'; resetNav(); this.classList.add('active-red'); };
+    function resetNav() { document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active-green', 'active-red')); }
 
     setInterval(() => {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('uk-UA', {hour12: false});
+        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
     }, 1000);
 
-    db.on('child_added', s => updateTarget(s.key, s.val()));
-    db.on('child_removed', s => {
-        if(targets[s.key]) { map.removeLayer(targets[s.key].marker); map.removeLayer(targets[s.key].line); delete targets[s.key]; }
-        document.getElementById('counter').innerText = Object.keys(targets).length;
+    db.on('child_added', s => sync(s.key, s.val()));
+    db.on('child_removed', s => { 
+        if(obs[s.key]) { map.removeLayer(obs[s.key].marker); map.removeLayer(obs[s.key].line); delete obs[s.key]; }
+        document.getElementById('uavCount').innerText = Object.keys(obs).length;
     });
 </script>
 </body>
