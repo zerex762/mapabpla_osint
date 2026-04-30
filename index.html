@@ -20,15 +20,16 @@
             --warning: #ff9d00;
             --success: #00ff88;
             --bg-dark: #05070a;
-            --glass: rgba(10, 20, 35, 0.8);
+            --glass: rgba(10, 20, 35, 0.85);
             --neon-border: rgba(0, 242, 255, 0.25);
             --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        * { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+        * { -webkit-user-select: none; -moz-user-select: none; user-select: none; box-sizing: border-box; }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
         
+        /* Splash Screen */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; flex-direction: column;
@@ -45,54 +46,49 @@
         .logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+        /* Privacy Modal */
         #privacy-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9000; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.95); z-index: 9000; display: none;
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
         }
         .policy-box {
             background: var(--glass); border: 1px solid var(--accent);
-            padding: 30px; border-radius: 15px; max-width: 400px; text-align: center;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;
+            text-align: center; box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
         }
-        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin-top: 0; }
-        .policy-box p { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.8); }
+        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin: 0 0 15px 0; letter-spacing: 2px; }
+        
+        .policy-content {
+            text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.7);
+            max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);
+            scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+        }
+        .policy-content strong { color: var(--accent); }
+
         .accept-btn {
             background: transparent; border: 1px solid var(--accent); color: var(--accent);
-            padding: 10px 30px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
-            margin-top: 20px; font-weight: bold;
+            padding: 12px 40px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
+            font-weight: bold; letter-spacing: 1px;
         }
-        .accept-btn:hover { background: var(--accent); color: #000; }
+        .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
 
-        #map { width: 100%; height: 100%; z-index: 1; background: #000; transition: filter 0.3s; position: relative; }
-
+        /* Map Styles */
+        #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
         #map::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 242, 255, 0.03) 0px, rgba(0, 242, 255, 0.03) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 1000;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0, 242, 255, 0.02) 0px, rgba(0, 242, 255, 0.02) 1px, transparent 1px, transparent 2px);
+            pointer-events: none; z-index: 1000;
         }
 
-        /* Виправлена анімація та стилі іконок */
-        .uav-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        /* Icons & UI */
         .uav-icon img {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
             transition: transform 0.3s ease-out;
         }
-
-        .active-uav img {
-            animation: targetPulse 2s infinite ease-in-out;
-        }
-
+        .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
             0%, 100% { filter: invert(1) brightness(2) drop-shadow(0 0 2px var(--accent)); }
             50% { filter: invert(1) brightness(3) drop-shadow(0 0 10px var(--accent)); }
@@ -105,34 +101,37 @@
 
         .top-ui { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; }
         .status-group { display: flex; gap: 10px; pointer-events: auto; }
-        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
+        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
         .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
-        .osint-label { position: absolute; top: 75px; left: 50%; transform: translateX(-50%); z-index: 1999; font-family: 'Orbitron'; font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: rgba(255, 255, 255, 0.3); pointer-events: none; }
 
-        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 260px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
+        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 280px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
         .side-panel.active { right: 20px; }
-        .panel-header { padding: 12px 16px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); display: flex; justify-content: space-between; align-items: center; }
+        .panel-header { padding: 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); display: flex; justify-content: space-between; align-items: center; }
         .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; }
-        .panel-body { padding: 16px; }
-        .data-block { margin-bottom: 12px; }
-        .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; }
+        .panel-body { padding: 20px; }
+        .data-block { margin-bottom: 15px; }
+        .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; letter-spacing: 1px; }
+        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
 
-        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-        .c-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; }
-        .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
+        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
+        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; }
+        .c-btn:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--accent); color: var(--accent); }
 
-        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px; border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none;}
+        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
+
+        .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
+        .privacy-link:hover { opacity: 1; color: var(--accent); }
 
         @media (max-width: 600px) {
             .top-ui { flex-direction: column; gap: 8px; }
-            .side-panel { width: calc(100% - 40px); top: auto; bottom: 90px; }
+            .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
             .side-panel.active { right: 20px; left: 20px; }
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
+<!-- Splash Screen -->
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
@@ -141,11 +140,17 @@
     </div>
 </div>
 
+<!-- Privacy Policy Modal -->
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2>INITIALIZATION</h2>
-        <p>Для розрахунку навігаційних параметрів та ETA необхідний доступ до геопозиції.</p>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРОДОВЖИТИ</button>
+        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
+        <div class="policy-content">
+            <p><strong>1. ВИКОРИСТАННЯ ГЕОПОЗИЦІЇ:</strong> Додаток запитує доступ до вашого місцезнаходження виключно для розрахунку відстані до повітряних об'єктів та обчислення ETA (часу прибуття).</p>
+            <p><strong>2. КОНФІДЕНЦІЙНІСТЬ:</strong> Ваші координати обробляються локально у вашому браузері. Ми НЕ зберігаємо, НЕ передаємо та НЕ збираємо дані про ваше переміщення на сервери Firebase або третім особам.</p>
+            <p><strong>3. ДЖЕРЕЛА ДАНИХ:</strong> Вся інформація базується на OSINT-моніторингу відкритих джерел. Дані можуть мати затримку.</p>
+            <p><strong>4. ВІДМОВА ВІД ВІДПОВІДАЛЬНОСТІ:</strong> Цей додаток є допоміжним інструментом. Завжди дотримуйтесь офіційних вказівок Повітряних Сил та ДСНС України.</p>
+        </div>
+        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ПРОДОВЖИТИ</button>
     </div>
 </div>
 
@@ -154,7 +159,6 @@
     <span class="bl"></span><span class="br"></span>
 </div>
 
-<div class="osint-label">Direct Data Feed</div>
 <div id="mapNotify">SYNC COMPLETED</div>
 
 <div class="top-ui">
@@ -172,7 +176,7 @@
     </div>
     <div class="panel-body">
         <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value data-accent" id="objCoords">--</div></div>
+        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
             <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
@@ -189,11 +193,13 @@
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
+<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
+
 <script>
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-        { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
-        { name: "GREY MODE", url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png' }
+        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+        { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
     ];
 
     let tIdx = 0;
@@ -215,25 +221,25 @@
         notify.innerText = "LAYER: " + themes[tIdx].name;
         notify.style.opacity = "1";
         setTimeout(() => notify.style.opacity = "0", 1500);
-
-        const mapEl = document.getElementById('map');
-        mapEl.style.filter = (themes[tIdx].name === "GREY MODE") ? "grayscale(1) brightness(0.9)" : "none";
     }
 
+    // Logic for Privacy
     window.addEventListener('load', () => {
         setTimeout(() => {
             document.getElementById('splash-screen').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('splash-screen').style.display = 'none';
-                checkPrivacy();
+                if (!localStorage.getItem('policyAccepted')) {
+                    showPrivacy();
+                } else {
+                    locateMe();
+                }
             }, 1000);
         }, 3000);
     });
 
-    function checkPrivacy() {
-        if (!localStorage.getItem('policyAccepted')) {
-            document.getElementById('privacy-modal').style.display = 'flex';
-        }
+    function showPrivacy() {
+        document.getElementById('privacy-modal').style.display = 'flex';
     }
 
     function acceptPolicy() {
@@ -242,6 +248,7 @@
         locateMe();
     }
 
+    // Firebase Init
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
@@ -249,8 +256,6 @@
     const SPEED_MAP = {
         'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
     };
-
-    // Запасна іконка, якщо основна не знайдена
     const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 
     let userPos = null;
@@ -270,10 +275,8 @@
 
     function sync(id, d) {
         if (!d) return;
-        
         const now = Date.now();
-        const dataAge = (now - (d.timestamp || now)) / 1000 / 60;
-        if (dataAge > 20) {
+        if ((now - (d.timestamp || now)) / 1000 / 60 > 20) {
             removeObject(id);
             return;
         }
@@ -289,23 +292,14 @@
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
-            // Виправлена структура іконки з обробкою помилок
             const icon = L.divIcon({ 
                 className: 'uav-icon active-uav', 
-                html: `<img src="${d.type}.png" 
-                        onerror="this.onerror=null; this.src='${FALLBACK_ICON}';" 
-                        style="transform:rotate(${d.angle || 0}deg);">`, 
-                iconSize: [32, 32], 
-                iconAnchor: [16, 16] 
+                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
+                iconSize: [32, 32], iconAnchor: [16, 16] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-                color: 'var(--accent)', 
-                weight: 1, 
-                opacity: 0.5,
-                dashArray: '2, 5' 
-            }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
 
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
@@ -336,7 +330,7 @@
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
             const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ${timeMinutes} MIN</span>`;
+            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
         }
     }
 
@@ -348,15 +342,6 @@
     setInterval(() => {
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
     }, 1000);
-
-    setInterval(() => {
-        const now = Date.now();
-        for (let id in obs) {
-            if (now - (obs[id].data.timestamp || now) > 20 * 60 * 1000) {
-                removeObject(id);
-            }
-        }
-    }, 30000);
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
