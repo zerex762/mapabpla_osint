@@ -66,7 +66,6 @@
 
         #map { width: 100%; height: 100%; z-index: 1; background: #000; transition: filter 0.3s; position: relative; }
 
-        /* Эффект сканирования радарной сетки */
         #map::after {
             content: '';
             position: absolute;
@@ -76,19 +75,27 @@
             z-index: 1000;
         }
 
-        /* Анимация пульсации иконок */
-        @keyframes targetPulse {
-            0% { transform: scale(1); filter: invert(1) brightness(2) drop-shadow(0 0 2px var(--accent)); }
-            50% { transform: scale(1.1); filter: invert(1) brightness(3) drop-shadow(0 0 10px var(--accent)); }
-            100% { transform: scale(1); filter: invert(1) brightness(2) drop-shadow(0 0 2px var(--accent)); }
+        /* Виправлена анімація та стилі іконок */
+        .uav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .uav-icon img {
             width: 32px;
             height: 32px;
-            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent)) !important;
+            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
+            transition: transform 0.3s ease-out;
+        }
+
+        .active-uav img {
             animation: targetPulse 2s infinite ease-in-out;
-            transition: all 0.3s ease;
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { filter: invert(1) brightness(2) drop-shadow(0 0 2px var(--accent)); }
+            50% { filter: invert(1) brightness(3) drop-shadow(0 0 10px var(--accent)); }
         }
 
         .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.4; }
@@ -115,7 +122,7 @@
         .c-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; }
         .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
 
-        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px; border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s; }
+        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 4px 15px; border-radius: 4px; font-size: 9px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none;}
 
         @media (max-width: 600px) {
             .top-ui { flex-direction: column; gap: 8px; }
@@ -210,11 +217,7 @@
         setTimeout(() => notify.style.opacity = "0", 1500);
 
         const mapEl = document.getElementById('map');
-        if (themes[tIdx].name === "GREY MODE") {
-            mapEl.style.filter = "grayscale(1) brightness(0.9)";
-        } else {
-            mapEl.style.filter = "none";
-        }
+        mapEl.style.filter = (themes[tIdx].name === "GREY MODE") ? "grayscale(1) brightness(0.9)" : "none";
     }
 
     window.addEventListener('load', () => {
@@ -247,6 +250,9 @@
         'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
     };
 
+    // Запасна іконка, якщо основна не знайдена
+    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+
     let userPos = null;
     let userMarker = null;
 
@@ -265,7 +271,6 @@
     function sync(id, d) {
         if (!d) return;
         
-        // Очистка данных старее 20 минут
         const now = Date.now();
         const dataAge = (now - (d.timestamp || now)) / 1000 / 60;
         if (dataAge > 20) {
@@ -273,7 +278,6 @@
             return;
         }
 
-        // Расчет вектора движения (хвост тянется назад)
         const angleRad = (d.angle - 90) * Math.PI / 180;
         const vectorLen = 0.015; 
         const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
@@ -281,13 +285,16 @@
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             const img = obs[id].marker.getElement()?.querySelector('img');
-            if (img) img.style.transform = `rotate(${d.angle}deg)`;
+            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
+            // Виправлена структура іконки з обробкою помилок
             const icon = L.divIcon({ 
-                className: 'uav-icon', 
-                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/583/583360.png'" style="transform:rotate(${d.angle || 0}deg);">`, 
+                className: 'uav-icon active-uav', 
+                html: `<img src="${d.type}.png" 
+                        onerror="this.onerror=null; this.src='${FALLBACK_ICON}';" 
+                        style="transform:rotate(${d.angle || 0}deg);">`, 
                 iconSize: [32, 32], 
                 iconAnchor: [16, 16] 
             });
@@ -323,9 +330,9 @@
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
         document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
-        document.getElementById('objType').innerText = d.type.replace('-standart', '').toUpperCase();
+        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace('-standart', '').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-        document.getElementById('objAngle').innerText = `${Math.round(d.angle)}°`;
+        document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
             const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
@@ -342,7 +349,6 @@
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
     }, 1000);
 
-    // Фоновая очистка объектов каждые 30 секунд
     setInterval(() => {
         const now = Date.now();
         for (let id in obs) {
