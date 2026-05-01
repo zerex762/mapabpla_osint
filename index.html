@@ -4,109 +4,188 @@
     <meta charset="utf-8">
     <title>SKY DEFENSE - SYSTEM LOCKED</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --accent: #00f2ff;
             --danger: #ff3333;
+            --danger-glow: rgba(255, 51, 51, 0.4);
             --bg-dark: #05070a;
+            --panel-bg: rgba(10, 15, 25, 0.9);
         }
 
         body, html { 
             margin: 0; padding: 0; height: 100%; width: 100%; 
-            background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; 
+            background: var(--bg-dark); font-family: 'Rajdhani', sans-serif; overflow: hidden; 
         }
 
         /* Экран блокировки */
         #system-lock {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #0a0f18 0%, #000 100%);
+            background: radial-gradient(circle at center, #0a101a 0%, #000 100%);
             z-index: 10000; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
+            perspective: 1000px;
         }
 
-        /* Сетка на фоне для атмосферы */
+        /* Анимированная сетка */
         #system-lock::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px; pointer-events: none;
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(45deg);
+            animation: grid-move 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes grid-move {
+            from { transform: rotateX(45deg) translateY(0); }
+            to { transform: rotateX(45deg) translateY(50px); }
+        }
+
+        /* Эффект сканирующей линии */
+        .scanner-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            box-shadow: 0 0 15px var(--accent);
+            animation: scan 4s linear infinite;
+            z-index: 5; opacity: 0.3;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
         }
 
         .lock-container {
-            position: relative; z-index: 1; padding: 40px;
-            border: 1px solid rgba(255, 51, 51, 0.3);
-            background: rgba(10, 15, 25, 0.8);
-            border-radius: 20px; backdrop-filter: blur(10px);
-            box-shadow: 0 0 50px rgba(255, 51, 51, 0.1);
+            position: relative; z-index: 10; padding: 50px;
+            border: 1px solid rgba(255, 51, 51, 0.2);
+            background: var(--panel-bg);
+            border-radius: 4px; /* Более строгий военный стиль */
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 51, 51, 0.05);
+            max-width: 450px;
+            clip-path: polygon(0 15px, 15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
         }
 
         .lock-icon {
-            font-size: 60px; color: var(--danger); margin-bottom: 20px;
-            animation: pulse-red 2s infinite;
+            font-size: 50px; color: var(--danger); margin-bottom: 25px;
+            filter: drop-shadow(0 0 10px var(--danger-glow));
+            animation: glitch-icon 3s infinite;
         }
 
-        h1 { font-family: 'Orbitron'; color: #fff; margin: 0 0 10px 0; letter-spacing: 3px; font-size: 22px; }
-        p { color: rgba(255,255,255,0.6); font-size: 14px; max-width: 300px; margin-bottom: 30px; line-height: 1.5; }
+        h1 { 
+            font-family: 'Orbitron'; color: #fff; margin: 0 0 15px 0; 
+            letter-spacing: 5px; font-size: 24px; text-transform: uppercase;
+        }
 
+        .status-badge {
+            display: inline-block; padding: 4px 12px; background: var(--danger);
+            color: #000; font-weight: 700; font-size: 12px; border-radius: 2px;
+            margin-bottom: 20px; letter-spacing: 1px;
+            animation: blink 1s steps(2) infinite;
+        }
+
+        p { 
+            color: rgba(255,255,255,0.7); font-size: 16px; margin-bottom: 35px; 
+            line-height: 1.6; font-weight: 300;
+        }
+
+        /* Кнопка в стиле терминала */
         .unlock-btn {
             background: transparent; border: 1px solid var(--accent); color: var(--accent);
-            padding: 12px 30px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
-            font-size: 12px; font-weight: bold; letter-spacing: 2px;
+            padding: 15px 45px; font-family: 'Orbitron'; cursor: pointer; transition: 0.4s;
+            font-size: 13px; font-weight: bold; letter-spacing: 3px;
+            position: relative; overflow: hidden;
+            text-transform: uppercase;
         }
+
+        .unlock-btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .unlock-btn:hover::before { left: 100%; }
 
         .unlock-btn:hover {
-            background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent);
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+            letter-spacing: 5px;
         }
 
-        @keyframes pulse-red {
-            0%, 100% { transform: scale(1); opacity: 1; text-shadow: 0 0 0px var(--danger); }
-            50% { transform: scale(1.1); opacity: 0.7; text-shadow: 0 0 20px var(--danger); }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        @keyframes glitch-icon {
+            0% { transform: translate(0); }
+            2% { transform: translate(-2px, 2px); }
+            4% { transform: translate(2px, -2px); }
+            6% { transform: translate(0); }
+            100% { transform: translate(0); }
         }
 
-        /* Заглушка для карты (чтобы было видно, что она сзади, но закрыта) */
+        /* Задний фон */
         #map-placeholder {
-            width: 100%; height: 100%; filter: blur(20px) grayscale(1);
+            width: 100%; height: 100%; filter: blur(30px) brightness(0.3);
             background: url('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/6/22/35');
-            background-size: cover;
+            background-size: cover; scale: 1.1;
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+
+<div class="scanner-line"></div>
 
 <!-- Экран временного закрытия -->
 <div id="system-lock">
     <div class="lock-container">
-        <div class="lock-icon"><i class="fas fa-shield-halved"></i></div>
-        <h1>КАРТА ЗАКРИТА</h1>
-        <p>Доступ до стратегічного моніторингу тимчасово обмежено адміністратором або через технічне обслуговування.</p>
+        <div class="lock-icon">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
         
-        <!-- Кнопка «Разблокировать» (только для тебя или по паролю) -->
-        <button class="unlock-btn" onclick="unlockSystem()">АВТОРИЗАЦІЯ</button>
+        <div class="status-badge">ACCESS DENIED</div>
+        
+        <h1>СИСТЕМА OFFLINE</h1>
+        
+        <p>
+            Доступ до супутникового моніторингу заблоковано. <br>
+            <span style="font-size: 12px; opacity: 0.6;">Виконуються регламентні роботи зі стабілізації каналу зв'язку.</span>
+        </p>
+        
+        <button class="unlock-btn" onclick="unlockSystem()">
+            <i class="fas fa-key" style="margin-right: 10px;"></i> Авторизація
+        </button>
+    </div>
+    
+    <div style="position: absolute; bottom: 20px; color: rgba(255,255,255,0.2); font-size: 10px; font-family: 'Orbitron'; letter-spacing: 2px;">
+        SKY DEFENSE PROTOCOL v4.0.2
     </div>
 </div>
 
-<!-- Задний фон для вида -->
 <div id="map-placeholder"></div>
 
 <script>
     function unlockSystem() {
-        // Здесь можно добавить проверку пароля:
-        // let pass = prompt("Введіть код доступу:");
-        // if(pass === "1234") { ... }
+        const btn = document.querySelector('.unlock-btn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ПЕРЕВІРКА...';
+        btn.style.borderColor = "#666";
+        btn.style.color = "#666";
 
-        const lockScreen = document.getElementById('system-lock');
-        lockScreen.style.transition = "1s ease-out";
-        lockScreen.style.opacity = "0";
-        lockScreen.style.transform = "scale(1.2)";
-        
         setTimeout(() => {
-            lockScreen.style.display = "none";
-            alert("Систему розблоковано. Завантаження даних...");
-            // Тут можно добавить перенаправление на твою реальную карту
-            // window.location.href = "твой_файл_карты.html";
-        }, 1000);
+            const lockScreen = document.getElementById('system-lock');
+            lockScreen.style(transition = "1.5s cubic-bezier(0.7, 0, 0.3, 1)");
+            lockScreen.style.opacity = "0";
+            lockScreen.style.filter = "blur(20px)";
+            lockScreen.style.transform = "scale(1.1)";
+            
+            setTimeout(() => {
+                lockScreen.style.display = "none";
+                console.log("System Decrypted. Welcome, Operator.");
+            }, 1500);
+        }, 1200);
     }
 </script>
 
