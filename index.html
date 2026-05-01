@@ -160,7 +160,6 @@
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <!-- НОВИЙ БЛОК ОНЛАЙНУ -->
         <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
         <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
     </div>
@@ -265,35 +264,31 @@
         showNotify("SYSTEM READY");
     }
 
-    // FIREBASE INITIALIZATION
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
-    // --- ЛОГІКА РЕАЛЬНОГО ОНЛАЙНУ ---
     const onlineDisplay = document.getElementById('onlineCount');
     const presenceRef = firebase.database().ref('presence');
     const connectedRef = firebase.database().ref('.info/connected');
 
     connectedRef.on('value', (snap) => {
         if (snap.val() === true) {
-            // Створюємо запис для цієї сесії
             const con = presenceRef.push(true);
-            // Видаляємо запис автоматично при відключенні
             con.onDisconnect().remove();
         }
     });
 
-    // Оновлюємо цифру на екрані при будь-яких змінах у гілці presence
     presenceRef.on('value', (snap) => {
         onlineDisplay.innerText = snap.numChildren() || 0;
     });
-    // ---------------------------------
 
     const SPEED_MAP = {
         'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
     };
-    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+
+    // ФІКС: тепер за замовчуванням беремо твою іконку невідомого об'єкта
+    const FALLBACK_ICON = 'unknown-standart.png';
 
     let userPos = null;
     let userMarker = null;
@@ -345,9 +340,10 @@
                 interactive: false
             }).addTo(map);
 
+            // ФІКС: додаємо "-standart.png" до типу та ставимо локальний onerror
             const icon = L.divIcon({ 
                 className: 'uav-icon active-uav', 
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
+                html: `<img src="${d.type}-standart.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
                 iconSize: [32, 32], iconAnchor: [16, 16] 
             });
 
@@ -388,7 +384,8 @@
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
+            const speed = SPEED_MAP[d.type + '-standart'] || 200;
+            const timeMinutes = Math.round(distance / speed * 60);
             document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
         }
     }
