@@ -66,7 +66,7 @@
             max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
             background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);
         }
-        .policy-content strong { color: var(--accent); }
+        .policy-box strong { color: var(--accent); }
         .accept-btn {
             background: transparent; border: 1px solid var(--accent); color: var(--accent);
             padding: 12px 40px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
@@ -160,7 +160,6 @@
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <!-- НОВИЙ БЛОК ОНЛАЙНУ -->
         <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
         <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
     </div>
@@ -265,30 +264,24 @@
         showNotify("SYSTEM READY");
     }
 
-    // FIREBASE INITIALIZATION
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
-    // --- ЛОГІКА РЕАЛЬНОГО ОНЛАЙНУ ---
     const onlineDisplay = document.getElementById('onlineCount');
     const presenceRef = firebase.database().ref('presence');
     const connectedRef = firebase.database().ref('.info/connected');
 
     connectedRef.on('value', (snap) => {
         if (snap.val() === true) {
-            // Створюємо запис для цієї сесії
             const con = presenceRef.push(true);
-            // Видаляємо запис автоматично при відключенні
             con.onDisconnect().remove();
         }
     });
 
-    // Оновлюємо цифру на екрані при будь-яких змінах у гілці presence
     presenceRef.on('value', (snap) => {
         onlineDisplay.innerText = snap.numChildren() || 0;
     });
-    // ---------------------------------
 
     const SPEED_MAP = {
         'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
@@ -300,7 +293,7 @@
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
-        map.locate({setView: true, maxZoom: 10}); 
+        map.locate({setView: false, maxZoom: 10}); 
     }
 
     map.on('locationfound', (e) => {
@@ -315,11 +308,10 @@
 
     function sync(id, d) {
         if (!d) return;
+        
+        // Зберігаємо об'єкт у локальний масив
         const now = Date.now();
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 20) {
-            removeObject(id);
-            return;
-        }
+        const dataTime = d.timestamp || now;
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
         const vectorLen = 0.015; 
@@ -334,6 +326,7 @@
             if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
+            obs[id].lastUpdate = now; // Оновлюємо час останнього сигналу
         } else {
             const circle = L.circle([d.lat, d.lng], {
                 radius: errorRadius,
@@ -364,7 +357,7 @@
                 updateUI(id, d);
             });
 
-            obs[id] = { marker, line, circle, data: d };
+            obs[id] = { marker, line, circle, data: d, lastUpdate: now };
         }
         updateCounters();
     }
@@ -376,9 +369,25 @@
             map.removeLayer(obs[id].circle);
             delete obs[id];
             updateCounters();
-            closeInfo();
+            if (document.getElementById('sidePanel').classList.contains('active')) closeInfo();
         }
     }
+
+    // --- GARBAGE COLLECTOR (Авто-видалення застарілих даних) ---
+    setInterval(() => {
+        const now = Date.now();
+        const EXPIRY_TIME = 20 * 60 * 1000; // 20 хвилин у мілісекундах
+
+        Object.keys(obs).forEach(id => {
+            // Перевіряємо або час у даних (timestamp), або час останнього оновлення в додатку
+            const objectTimestamp = obs[id].data.timestamp || obs[id].lastUpdate;
+            if (now - objectTimestamp > EXPIRY_TIME) {
+                console.log(`System: Object ${id} expired. Removing...`);
+                removeObject(id);
+            }
+        });
+    }, 10000); // Перевірка кожні 10 секунд
+    // --------------------------------------------------------
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
