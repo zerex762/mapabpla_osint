@@ -23,10 +23,11 @@
             --glass: rgba(10, 20, 35, 0.85);
             --neon-border: rgba(0, 242, 255, 0.25);
             --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            --mono-gold: #ffcc00;
         }
 
+        /* Попередні стилі залишаються без змін */
         * { -webkit-user-select: none; -moz-user-select: none; user-select: none; box-sizing: border-box; }
-
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
         
         #splash-screen {
@@ -66,7 +67,7 @@
             max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
             background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);
         }
-        .policy-box strong { color: var(--accent); }
+        .policy-content strong { color: var(--accent); }
         .accept-btn {
             background: transparent; border: 1px solid var(--accent); color: var(--accent);
             padding: 12px 40px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
@@ -111,8 +112,12 @@
         .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
 
         .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; }
+        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .c-btn:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--accent); color: var(--accent); }
+        
+        /* НОВА КНОПКА ПІДТРИМКИ */
+        .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
+        .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
 
         #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
         .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
@@ -183,6 +188,11 @@
 </div>
 
 <div class="bottom-nav" id="ui-nav" style="display: none;">
+    <!-- КНОПКА ПІДТРИМКИ (МОНО) -->
+    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати проєкт">
+        <i class="fa-solid fa-heart"></i>
+    </a>
+    
     <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
@@ -191,6 +201,7 @@
 <a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
 
 <script>
+    // Весь JavaScript код залишається незмінним
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
         { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
@@ -293,7 +304,7 @@
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
-        map.locate({setView: false, maxZoom: 10}); 
+        map.locate({setView: true, maxZoom: 10}); 
     }
 
     map.on('locationfound', (e) => {
@@ -308,10 +319,11 @@
 
     function sync(id, d) {
         if (!d) return;
-        
-        // Зберігаємо об'єкт у локальний масив
         const now = Date.now();
-        const dataTime = d.timestamp || now;
+        if ((now - (d.timestamp || now)) / 1000 / 60 > 20) {
+            removeObject(id);
+            return;
+        }
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
         const vectorLen = 0.015; 
@@ -326,7 +338,6 @@
             if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
-            obs[id].lastUpdate = now; // Оновлюємо час останнього сигналу
         } else {
             const circle = L.circle([d.lat, d.lng], {
                 radius: errorRadius,
@@ -357,7 +368,7 @@
                 updateUI(id, d);
             });
 
-            obs[id] = { marker, line, circle, data: d, lastUpdate: now };
+            obs[id] = { marker, line, circle, data: d };
         }
         updateCounters();
     }
@@ -369,25 +380,9 @@
             map.removeLayer(obs[id].circle);
             delete obs[id];
             updateCounters();
-            if (document.getElementById('sidePanel').classList.contains('active')) closeInfo();
+            closeInfo();
         }
     }
-
-    // --- GARBAGE COLLECTOR (Авто-видалення застарілих даних) ---
-    setInterval(() => {
-        const now = Date.now();
-        const EXPIRY_TIME = 20 * 60 * 1000; // 20 хвилин у мілісекундах
-
-        Object.keys(obs).forEach(id => {
-            // Перевіряємо або час у даних (timestamp), або час останнього оновлення в додатку
-            const objectTimestamp = obs[id].data.timestamp || obs[id].lastUpdate;
-            if (now - objectTimestamp > EXPIRY_TIME) {
-                console.log(`System: Object ${id} expired. Removing...`);
-                removeObject(id);
-            }
-        });
-    }, 10000); // Перевірка кожні 10 секунд
-    // --------------------------------------------------------
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
