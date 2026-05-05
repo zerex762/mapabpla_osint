@@ -81,16 +81,25 @@
             pointer-events: none; z-index: 1000;
         }
 
-        .uav-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* ТЕКСТ НАД ЦІЛЛЮ */
+        .uav-label {
+            background: rgba(10, 8, 5, 0.9) !important;
+            border: 1px solid var(--accent) !important;
+            color: var(--accent) !important;
+            font-family: 'Orbitron', sans-serif !important;
+            font-size: 10px !important;
+            font-weight: bold !important;
+            padding: 2px 6px !important;
+            border-radius: 4px !important;
+            box-shadow: 0 0 10px rgba(255, 157, 0, 0.4) !important;
+            white-space: nowrap !important;
         }
-        .uav-timer {
-            font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--accent);
-            text-shadow: 0 0 5px #000, 0 0 10px var(--accent); background: rgba(0,0,0,0.6);
-            padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; pointer-events: none;
-        }
+        /* Прибираємо стандартну стрілочку Leaflet */
+        .leaflet-tooltip-top:before { border-top-color: var(--accent) !important; }
+
         .uav-icon img {
-            width: 32px; height: 32px; filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
+            width: 32px; height: 32px;
+            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
         }
         .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
@@ -120,8 +129,7 @@
         .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
         .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .c-btn:hover { background: rgba(255, 157, 0, 0.1); border-color: var(--accent); color: var(--accent); }
-        .lang-btn { font-family: 'Orbitron'; font-weight: bold; font-size: 12px; }
-
+        
         .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
         .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
 
@@ -141,17 +149,20 @@
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">ІНІЦІАЛІЗАЦІЯ СИСТЕМИ...</div>
+        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
 
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2 id="policyTitle">ПРОТОКОЛ БЕЗПЕКИ</h2>
-        <div class="policy-content" id="policyContent">
-            </div>
-        <button class="accept-btn" onclick="acceptPolicy()" id="policyBtn">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
+        <div class="policy-content">
+            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей.</p>
+            <p><strong>2. ПРИВАТНІСТЬ:</strong> Ми не зберігаємо ваше місцезнаходження на серверах.</p>
+            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу.</p>
+        </div>
+        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
 </div>
 
@@ -167,30 +178,29 @@
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> <span id="lblOnline">ONLINE</span>: <span id="onlineCount" class="glow">1</span></div>
+        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
         <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
     </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> <span id="lblActive">ACTIVE</span>: <span id="uavCount" class="glow">0</span></div>
+    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
 </div>
 
 <div id="sidePanel" class="side-panel">
     <div class="panel-header">
-        <span id="lblTrackInfo">TRACKING INFO</span>
+        <span>TRACKING INFO</span>
         <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
     </div>
     <div class="panel-body">
-        <div class="data-block"><span class="data-label" id="lblClass">Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label" id="lblPosition">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
+        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
+        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width: 50%;"><span class="data-label" id="lblCourse">Course</span><div class="data-value" id="objAngle">--</div></div>
+            <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
         </div>
-        <div class="data-block"><span class="data-label" id="lblRef">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
+        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
     </div>
 </div>
 
 <div class="bottom-nav" id="ui-nav" style="display: none;">
-    <button class="c-btn lang-btn" onclick="toggleLang()" id="btnLang">UA</button>
     <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn">
         <i class="fa-solid fa-heart"></i>
     </a>
@@ -199,78 +209,10 @@
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
-<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()" id="lblPrivacyLink">PRIVACY & SECURITY PROTOCOL</a>
-
 <script>
-    const translations = {
-        ua: {
-            boot1: "ЗАВАНТАЖЕННЯ МОДУЛІВ OSINT...",
-            boot2: "ВСТАНОВЛЕННЯ МОДУЛІВ СИСТЕМИ...",
-            policyTitle: "ПРОТОКОЛ БЕЗПЕКИ",
-            policyContent: `<p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-                            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-                            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
-                            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>`,
-            policyBtn: "ПРИЙНЯТИ ТА ЗАПУСТИТИ",
-            online: "ОНЛАЙН",
-            active: "АКТИВНО",
-            trackInfo: "ДАНІ ТРЕКІНГУ",
-            class: "Клас",
-            position: "Позиція",
-            course: "Курс",
-            ref: "ID Об'єкта",
-            privacyLink: "ПРОТОКОЛ ПРИВАТНОСТІ ТА БЕЗПЕКИ",
-            sysReady: "СИСТЕМА ГОТОВА",
-            gpsActive: "ЗВ'ЯЗОК АКТИВНИЙ"
-        },
-        en: {
-            boot1: "LOADING OSINT MODULES...",
-            boot2: "INSTALLING SYSTEM MODULES...",
-            policyTitle: "SECURITY PROTOCOL",
-            policyContent: `<p><strong>1. GEOLOCATION:</strong> Access required for range calculation and ETA estimates.</p>
-                            <p><strong>2. PRIVACY:</strong> Data processed locally. We do not store your location on servers.</p>
-                            <p><strong>3. SOURCES:</strong> Data based on OSINT monitoring; potential errors possible.</p>
-                            <p><strong>4. RULE:</strong> Not an official alert source. Follow Air Force commands.</p>`,
-            policyBtn: "ACCEPT AND LAUNCH",
-            online: "ONLINE",
-            active: "ACTIVE",
-            trackInfo: "TRACKING INFO",
-            class: "Class",
-            position: "Position",
-            course: "Course",
-            ref: "Reference ID",
-            privacyLink: "PRIVACY & SECURITY PROTOCOL",
-            sysReady: "SYSTEM READY",
-            gpsActive: "LINK ACTIVE"
-        }
-    };
-
-    let currentLang = localStorage.getItem('skyLang') || 'ua';
-    const EXPIRATION_MS = 30 * 60 * 1000; // 30 хвилин
-
-    function updateLanguage() {
-        const lang = translations[currentLang];
-        document.getElementById('policyTitle').innerText = lang.policyTitle;
-        document.getElementById('policyContent').innerHTML = lang.policyContent;
-        document.getElementById('policyBtn').innerText = lang.policyBtn;
-        document.getElementById('lblOnline').innerText = lang.online;
-        document.getElementById('lblActive').innerText = lang.active;
-        document.getElementById('lblTrackInfo').innerText = lang.trackInfo;
-        document.getElementById('lblClass').innerText = lang.class;
-        document.getElementById('lblPosition').innerText = lang.position;
-        document.getElementById('lblCourse').innerText = lang.course;
-        document.getElementById('lblRef').innerText = lang.ref;
-        document.getElementById('lblPrivacyLink').innerText = lang.privacyLink;
-        document.getElementById('btnLang').innerText = currentLang.toUpperCase();
-        if (userPos) document.getElementById('gpsStatus').innerText = lang.gpsActive;
-    }
-
-    function toggleLang() {
-        currentLang = currentLang === 'ua' ? 'en' : 'ua';
-        localStorage.setItem('skyLang', currentLang);
-        updateLanguage();
-        showNotify(currentLang === 'ua' ? "МОВА: УКР" : "LANGUAGE: EN");
-    }
+    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('drones');
 
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
@@ -278,11 +220,7 @@
     ];
 
     let tIdx = 0;
-    const map = L.map('map', { 
-        zoomControl: false, attributionControl: false, 
-        maxBounds: [[43, 21], [53, 41]], minZoom: 5 
-    }).setView([48.4, 32.5], 6);
-    
+    const map = L.map('map', { zoomControl: false, attributionControl: false, minZoom: 5 }).setView([48.4, 32.5], 6);
     let layer = L.tileLayer(themes[0].url).addTo(map);
 
     function nextTheme() {
@@ -293,188 +231,111 @@
     }
 
     function showNotify(text) {
-        const notify = document.getElementById('mapNotify');
-        notify.innerText = text; notify.style.opacity = "1";
-        setTimeout(() => notify.style.opacity = "0", 1500);
+        const n = document.getElementById('mapNotify');
+        n.innerText = text; n.style.opacity = "1";
+        setTimeout(() => n.style.opacity = "0", 1500);
     }
 
-    window.addEventListener('load', () => {
-        updateLanguage();
-        const splash = document.getElementById('splash-screen');
-        const bootStatus = document.getElementById('bootStatus');
-        setTimeout(() => { bootStatus.innerText = translations[currentLang].boot1; }, 800);
-        setTimeout(() => { bootStatus.innerText = translations[currentLang].boot2; }, 1800);
-        setTimeout(() => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                if (!localStorage.getItem('policyAccepted')) showPrivacy(); else fullStartup();
-            }, 800);
-        }, 2800);
-    });
-
-    function showPrivacy() {
-        document.getElementById('privacy-modal').style.display = 'flex';
-        document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
+    // ЛОГІКА ЧАСУ ІСНУВАННЯ
+    function getLifetimeString(timestamp) {
+        const diff = Math.floor((Date.now() - (timestamp || Date.now())) / 1000);
+        const m = Math.floor(diff / 60).toString().padStart(2, '0');
+        const s = (diff % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
     }
 
-    function acceptPolicy() {
-        localStorage.setItem('policyAccepted', 'true');
-        document.getElementById('privacy-modal').style.display = 'none';
-        document.getElementById('map').style.filter = 'none';
-        fullStartup();
-    }
-
-    function fullStartup() {
-        document.getElementById('ui-nav').style.display = 'flex';
-        locateMe();
-        showNotify(translations[currentLang].sysReady);
-    }
-
-    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('drones');
-
-    const onlineDisplay = document.getElementById('onlineCount');
-    const presenceRef = firebase.database().ref('presence');
-    const connectedRef = firebase.database().ref('.info/connected');
-
-    connectedRef.on('value', (snap) => {
-        if (snap.val() === true) {
-            const con = presenceRef.push(true);
-            con.onDisconnect().remove();
-        }
-    });
-
-    presenceRef.on('value', (snap) => {
-        onlineDisplay.innerText = snap.numChildren() || 0;
-    });
-
-    const SPEED_MAP = {
-        'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
-    };
-    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
-
-    let userPos = null;
-    let userMarker = null;
     let obs = {};
-
-    function locateMe() { 
-        if (!localStorage.getItem('policyAccepted')) return;
-        map.locate({setView: true, maxZoom: 10}); 
-    }
-
-    map.on('locationfound', (e) => {
-        userPos = e.latlng;
-        document.getElementById('gpsStatus').innerText = translations[currentLang].gpsActive;
-        document.getElementById('gpsStatus').style.color = "var(--success)";
-        if (userMarker) map.removeLayer(userMarker);
-        userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#ff9d00', fillOpacity: 0.8 }).addTo(map);
-    });
-
-    function getTimeString(timestamp) {
-        if (!timestamp) return "0м";
-        const diff = Math.floor((Date.now() - timestamp) / 1000 / 60);
-        return diff < 60 ? diff + "м" : Math.floor(diff / 60) + "г " + (diff % 60) + "м";
-    }
 
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        
-        // --- ПЕРЕВІРКА НА АВТОВИДАЛЕННЯ (30 ХВ) ---
-        if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
-            removeObject(id);
-            return;
-        }
+        if ((now - (d.timestamp || now)) / 1000 / 60 > 30) { removeObject(id); return; }
 
         const angleRad = (d.angle - 90) * Math.PI / 180;
-        const vectorLen = 0.015; 
-        const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
-        const errorRadius = d.accuracy || 5000; 
-        const timeStr = getTimeString(d.timestamp);
+        const tailEnd = [d.lat - Math.cos(angleRad) * 0.015, d.lng - Math.sin(angleRad) * 0.015];
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             obs[id].circle.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setRadius(errorRadius);
-            
-            const el = obs[id].marker.getElement();
-            if (el) {
-                const timerEl = el.querySelector('.uav-timer');
-                if (timerEl) timerEl.innerText = timeStr;
-                const img = el.querySelector('img');
-                if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
-            }
+            obs[id].marker.setTooltipContent(getLifetimeString(d.timestamp));
+            const img = obs[id].marker.getElement()?.querySelector('img');
+            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
-            const circle = L.circle([d.lat, d.lng], {
-                radius: errorRadius, color: 'var(--accent)', weight: 1, fillColor: 'var(--accent)', fillOpacity: 0.1, dashArray: '5, 10', interactive: false
-            }).addTo(map);
-
+            const circle = L.circle([d.lat, d.lng], { radius: d.accuracy || 5000, color: 'var(--accent)', weight: 1, fillOpacity: 0.1 }).addTo(map);
             const icon = L.divIcon({ 
-                className: 'uav-container active-uav', 
-                html: `<div class="uav-timer">${timeStr}</div><div class="uav-icon"><img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);"></div>`, 
-                iconSize: [40, 50], iconAnchor: [20, 40] 
+                className: 'uav-icon active-uav', 
+                html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2503/2503508.png';" style="transform:rotate(${d.angle || 0}deg);">`, 
+                iconSize: [32, 32], iconAnchor: [16, 16] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
+            
+            // ДОДАЄМО ТЕКСТ ТАЙМЕРА НАД МАРКЕРОМ
+            marker.bindTooltip(getLifetimeString(d.timestamp), {
+                permanent: true,
+                direction: 'top',
+                className: 'uav-label',
+                offset: [0, -15]
+            }).addTo(map);
 
-            marker.on('click', (e) => { L.DomEvent.stopPropagation(e); updateUI(id, d); });
+            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
+            marker.on('click', () => updateUI(id, d));
             obs[id] = { marker, line, circle, data: d };
         }
         updateCounters();
     }
 
-    // --- ЦИКЛ ОЧИЩЕННЯ: Перевірка кожну хвилину ---
+    // ОНОВЛЕННЯ ТАЙМЕРІВ ЩОСЕКУНДИ
     setInterval(() => {
-        const now = Date.now();
-        for (let id in obs) {
-            const d = obs[id].data;
-            if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
-                removeObject(id);
-            } else {
-                // Оновлення тексту таймера на іконці
-                const el = obs[id].marker.getElement();
-                if (el) {
-                    const timerEl = el.querySelector('.uav-timer');
-                    if (timerEl) timerEl.innerText = getTimeString(d.timestamp);
-                }
+        Object.keys(obs).forEach(id => {
+            if(obs[id] && obs[id].data.timestamp) {
+                obs[id].marker.setTooltipContent(getLifetimeString(obs[id].data.timestamp));
             }
-        }
-    }, 60000);
+        });
+        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+    }, 1000);
 
     function removeObject(id) {
         if(obs[id]) {
-            map.removeLayer(obs[id].marker);
-            map.removeLayer(obs[id].line);
-            map.removeLayer(obs[id].circle);
-            delete obs[id];
-            updateCounters();
-            closeInfo();
+            map.removeLayer(obs[id].marker); map.removeLayer(obs[id].line); map.removeLayer(obs[id].circle);
+            delete obs[id]; updateCounters();
         }
     }
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
         document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
-        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace('-standart', '').toUpperCase();
+        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
-        if (userPos) {
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const speed = (SPEED_MAP[d.type] || 200);
-            const timeMinutes = Math.round(distance / speed * 60);
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
-        }
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
-    map.on('click', () => { closeInfo(); });
-    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false }); }, 1000);
+    
+    // Splash & Startup
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('splash-screen').style.display = 'none';
+            if (!localStorage.getItem('policyAccepted')) {
+                document.getElementById('privacy-modal').style.display = 'flex';
+            } else { fullStartup(); }
+        }, 2600);
+    });
+
+    function acceptPolicy() {
+        localStorage.setItem('policyAccepted', 'true');
+        document.getElementById('privacy-modal').style.display = 'none';
+        fullStartup();
+    }
+
+    function fullStartup() {
+        document.getElementById('ui-nav').style.display = 'flex';
+        map.locate({setView: true, maxZoom: 8});
+        showNotify("SYSTEM READY");
+    }
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
@@ -482,4 +343,3 @@
 </script>
 </body>
 </html>
-
