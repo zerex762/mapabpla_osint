@@ -134,7 +134,7 @@
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
+        <div class="boot-text" id="bootStatus">ІНІЦІАЛІЗАЦІЯ СИСТЕМИ...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
@@ -202,8 +202,8 @@
     // --- L10N SYSTEM ---
     const translations = {
         ua: {
-            boot1: "Завантаження модулів OSINT...",
-            boot2: "Встановлення супутникового зв'язку...",
+            boot1: "ЗАВАНТАЖЕННЯ МОДУЛІВ OSINT...",
+            boot2: "ВСТАНОВЛЕННЯ МОДУЛІВ СИСТЕМИ...",
             policyTitle: "ПРОТОКОЛ БЕЗПЕКИ",
             policyContent: `<p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
                             <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
@@ -222,8 +222,8 @@
             gpsActive: "ЗВ'ЯЗОК АКТИВНИЙ"
         },
         en: {
-            boot1: "Loading OSINT Modules...",
-            boot2: "Establishing Satellite Link...",
+            boot1: "LOADING OSINT MODULES...",
+            boot2: "INSTALLING SYSTEM MODULES...",
             policyTitle: "SECURITY PROTOCOL",
             policyContent: `<p><strong>1. GEOLOCATION:</strong> Access required for range calculation and ETA estimates.</p>
                             <p><strong>2. PRIVACY:</strong> Data processed locally. We do not store your location on servers.</p>
@@ -307,8 +307,16 @@
         updateLanguage();
         const splash = document.getElementById('splash-screen');
         const bootStatus = document.getElementById('bootStatus');
-        setTimeout(() => bootStatus.innerText = translations[currentLang].boot1, 1000);
-        setTimeout(() => bootStatus.innerText = translations[currentLang].boot2, 2000);
+        
+        // Послідовність зміни тексту при завантаженні
+        setTimeout(() => {
+            bootStatus.innerText = translations[currentLang].boot1;
+        }, 800);
+        
+        setTimeout(() => {
+            bootStatus.innerText = translations[currentLang].boot2;
+        }, 1800);
+
         setTimeout(() => {
             splash.style.opacity = '0';
             setTimeout(() => {
@@ -319,7 +327,7 @@
                     fullStartup();
                 }
             }, 800);
-        }, 2600);
+        }, 2800);
     });
 
     function showPrivacy() {
