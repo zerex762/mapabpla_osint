@@ -81,6 +81,25 @@
             pointer-events: none; z-index: 1000;
         }
 
+        /* Стилі для іконки та таймера */
+        .uav-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .uav-timer {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            color: var(--accent);
+            text-shadow: 0 0 5px #000, 0 0 10px var(--accent);
+            background: rgba(0,0,0,0.6);
+            padding: 1px 4px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
         .uav-icon img {
             width: 32px; height: 32px;
             filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
@@ -308,7 +327,6 @@
         const splash = document.getElementById('splash-screen');
         const bootStatus = document.getElementById('bootStatus');
         
-        // Послідовність зміни тексту при завантаженні
         setTimeout(() => {
             bootStatus.innerText = translations[currentLang].boot1;
         }, 800);
@@ -395,10 +413,18 @@
 
     let obs = {};
 
+    // Функція для розрахунку часу існування
+    function getTimeString(timestamp) {
+        if (!timestamp) return "0м";
+        const diff = Math.floor((Date.now() - timestamp) / 1000 / 60); // різниця в хвилинах
+        return diff < 60 ? diff + "м" : Math.floor(diff / 60) + "г " + (diff % 60) + "м";
+    }
+
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 20) {
+        // Видаляємо старі цілі (якщо більше 40 хвилин немає оновлень)
+        if ((now - (d.timestamp || now)) / 1000 / 60 > 40) {
             removeObject(id);
             return;
         }
@@ -408,12 +434,23 @@
         const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
         const errorRadius = d.accuracy || 5000; 
 
+        const timeStr = getTimeString(d.timestamp);
+
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             obs[id].circle.setLatLng([d.lat, d.lng]);
             obs[id].circle.setRadius(errorRadius);
-            const img = obs[id].marker.getElement()?.querySelector('img');
-            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
+            
+            const el = obs[id].marker.getElement();
+            if (el) {
+                // Оновлюємо таймер
+                const timerEl = el.querySelector('.uav-timer');
+                if (timerEl) timerEl.innerText = timeStr;
+                // Оновлюємо поворот іконки
+                const img = el.querySelector('img');
+                if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
+            }
+            
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
@@ -427,10 +464,17 @@
                 interactive: false
             }).addTo(map);
 
+            // Контейнер з таймером та іконкою
             const icon = L.divIcon({ 
-                className: 'uav-icon active-uav', 
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
-                iconSize: [32, 32], iconAnchor: [16, 16] 
+                className: 'uav-container active-uav', 
+                html: `
+                    <div class="uav-timer">${timeStr}</div>
+                    <div class="uav-icon">
+                        <img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">
+                    </div>
+                `, 
+                iconSize: [40, 50], 
+                iconAnchor: [20, 40] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
@@ -451,6 +495,17 @@
         updateCounters();
     }
 
+    // Оновлення таймерів на існуючих об'єктах кожну хвилину
+    setInterval(() => {
+        for (let id in obs) {
+            const el = obs[id].marker.getElement();
+            if (el) {
+                const timerEl = el.querySelector('.uav-timer');
+                if (timerEl) timerEl.innerText = getTimeString(obs[id].data.timestamp);
+            }
+        }
+    }, 60000);
+
     function removeObject(id) {
         if(obs[id]) {
             map.removeLayer(obs[id].marker);
@@ -470,7 +525,8 @@
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
+            const speed = (SPEED_MAP[d.type] || 200);
+            const timeMinutes = Math.round(distance / speed * 60);
             document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
         }
     }
@@ -491,4 +547,3 @@
 
 </body>
 </html>
-
