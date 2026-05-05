@@ -81,28 +81,16 @@
             pointer-events: none; z-index: 1000;
         }
 
-        /* Стилі для іконки та таймера */
         .uav-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .uav-timer {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 9px;
-            color: var(--accent);
-            text-shadow: 0 0 5px #000, 0 0 10px var(--accent);
-            background: rgba(0,0,0,0.6);
-            padding: 1px 4px;
-            border-radius: 4px;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            pointer-events: none;
+            font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--accent);
+            text-shadow: 0 0 5px #000, 0 0 10px var(--accent); background: rgba(0,0,0,0.6);
+            padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; pointer-events: none;
         }
         .uav-icon img {
-            width: 32px; height: 32px;
-            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
+            width: 32px; height: 32px; filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
         }
         .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
@@ -162,11 +150,7 @@
     <div class="policy-box">
         <h2 id="policyTitle">ПРОТОКОЛ БЕЗПЕКИ</h2>
         <div class="policy-content" id="policyContent">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
-            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
-        </div>
+            </div>
         <button class="accept-btn" onclick="acceptPolicy()" id="policyBtn">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
 </div>
@@ -218,7 +202,6 @@
 <a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()" id="lblPrivacyLink">PRIVACY & SECURITY PROTOCOL</a>
 
 <script>
-    // --- L10N SYSTEM ---
     const translations = {
         ua: {
             boot1: "ЗАВАНТАЖЕННЯ МОДУЛІВ OSINT...",
@@ -263,6 +246,7 @@
     };
 
     let currentLang = localStorage.getItem('skyLang') || 'ua';
+    const EXPIRATION_MS = 30 * 60 * 1000; // 30 хвилин
 
     function updateLanguage() {
         const lang = translations[currentLang];
@@ -278,10 +262,7 @@
         document.getElementById('lblRef').innerText = lang.ref;
         document.getElementById('lblPrivacyLink').innerText = lang.privacyLink;
         document.getElementById('btnLang').innerText = currentLang.toUpperCase();
-        
-        if (userPos) {
-            document.getElementById('gpsStatus').innerText = lang.gpsActive;
-        }
+        if (userPos) document.getElementById('gpsStatus').innerText = lang.gpsActive;
     }
 
     function toggleLang() {
@@ -291,19 +272,15 @@
         showNotify(currentLang === 'ua' ? "МОВА: УКР" : "LANGUAGE: EN");
     }
 
-    // --- CORE LOGIC ---
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-        { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
+        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
     ];
 
     let tIdx = 0;
     const map = L.map('map', { 
-        zoomControl: false, 
-        attributionControl: false,
-        maxBounds: [[43, 21], [53, 41]], 
-        minZoom: 5
+        zoomControl: false, attributionControl: false, 
+        maxBounds: [[43, 21], [53, 41]], minZoom: 5 
     }).setView([48.4, 32.5], 6);
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
@@ -317,8 +294,7 @@
 
     function showNotify(text) {
         const notify = document.getElementById('mapNotify');
-        notify.innerText = text;
-        notify.style.opacity = "1";
+        notify.innerText = text; notify.style.opacity = "1";
         setTimeout(() => notify.style.opacity = "0", 1500);
     }
 
@@ -326,24 +302,13 @@
         updateLanguage();
         const splash = document.getElementById('splash-screen');
         const bootStatus = document.getElementById('bootStatus');
-        
-        setTimeout(() => {
-            bootStatus.innerText = translations[currentLang].boot1;
-        }, 800);
-        
-        setTimeout(() => {
-            bootStatus.innerText = translations[currentLang].boot2;
-        }, 1800);
-
+        setTimeout(() => { bootStatus.innerText = translations[currentLang].boot1; }, 800);
+        setTimeout(() => { bootStatus.innerText = translations[currentLang].boot2; }, 1800);
         setTimeout(() => {
             splash.style.opacity = '0';
             setTimeout(() => {
                 splash.style.display = 'none';
-                if (!localStorage.getItem('policyAccepted')) {
-                    showPrivacy();
-                } else {
-                    fullStartup();
-                }
+                if (!localStorage.getItem('policyAccepted')) showPrivacy(); else fullStartup();
             }, 800);
         }, 2800);
     });
@@ -351,18 +316,13 @@
     function showPrivacy() {
         document.getElementById('privacy-modal').style.display = 'flex';
         document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
-        document.getElementById('map').style.pointerEvents = 'none';
     }
 
     function acceptPolicy() {
         localStorage.setItem('policyAccepted', 'true');
-        document.getElementById('privacy-modal').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('privacy-modal').style.display = 'none';
-            document.getElementById('map').style.filter = 'none';
-            document.getElementById('map').style.pointerEvents = 'auto';
-            fullStartup();
-        }, 500);
+        document.getElementById('privacy-modal').style.display = 'none';
+        document.getElementById('map').style.filter = 'none';
+        fullStartup();
     }
 
     function fullStartup() {
@@ -397,6 +357,7 @@
 
     let userPos = null;
     let userMarker = null;
+    let obs = {};
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
@@ -411,20 +372,18 @@
         userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#ff9d00', fillOpacity: 0.8 }).addTo(map);
     });
 
-    let obs = {};
-
-    // Функція для розрахунку часу існування
     function getTimeString(timestamp) {
         if (!timestamp) return "0м";
-        const diff = Math.floor((Date.now() - timestamp) / 1000 / 60); // різниця в хвилинах
+        const diff = Math.floor((Date.now() - timestamp) / 1000 / 60);
         return diff < 60 ? diff + "м" : Math.floor(diff / 60) + "г " + (diff % 60) + "м";
     }
 
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        // Видаляємо старі цілі (якщо більше 40 хвилин немає оновлень)
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 40) {
+        
+        // --- ПЕРЕВІРКА НА АВТОВИДАЛЕННЯ (30 ХВ) ---
+        if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
             removeObject(id);
             return;
         }
@@ -433,7 +392,6 @@
         const vectorLen = 0.015; 
         const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
         const errorRadius = d.accuracy || 5000; 
-
         const timeStr = getTimeString(d.timestamp);
 
         if (obs[id]) {
@@ -443,65 +401,47 @@
             
             const el = obs[id].marker.getElement();
             if (el) {
-                // Оновлюємо таймер
                 const timerEl = el.querySelector('.uav-timer');
                 if (timerEl) timerEl.innerText = timeStr;
-                // Оновлюємо поворот іконки
                 const img = el.querySelector('img');
                 if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             }
-            
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
             const circle = L.circle([d.lat, d.lng], {
-                radius: errorRadius,
-                color: 'var(--accent)',
-                weight: 1,
-                fillColor: 'var(--accent)',
-                fillOpacity: 0.1,
-                dashArray: '5, 10',
-                interactive: false
+                radius: errorRadius, color: 'var(--accent)', weight: 1, fillColor: 'var(--accent)', fillOpacity: 0.1, dashArray: '5, 10', interactive: false
             }).addTo(map);
 
-            // Контейнер з таймером та іконкою
             const icon = L.divIcon({ 
                 className: 'uav-container active-uav', 
-                html: `
-                    <div class="uav-timer">${timeStr}</div>
-                    <div class="uav-icon">
-                        <img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">
-                    </div>
-                `, 
-                iconSize: [40, 50], 
-                iconAnchor: [20, 40] 
+                html: `<div class="uav-timer">${timeStr}</div><div class="uav-icon"><img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);"></div>`, 
+                iconSize: [40, 50], iconAnchor: [20, 40] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-                color: 'var(--accent)', 
-                weight: 1, 
-                opacity: 0.4, 
-                dashArray: '2, 5' 
-            }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
 
-            marker.on('click', (e) => {
-                L.DomEvent.stopPropagation(e);
-                updateUI(id, d);
-            });
-
+            marker.on('click', (e) => { L.DomEvent.stopPropagation(e); updateUI(id, d); });
             obs[id] = { marker, line, circle, data: d };
         }
         updateCounters();
     }
 
-    // Оновлення таймерів на існуючих об'єктах кожну хвилину
+    // --- ЦИКЛ ОЧИЩЕННЯ: Перевірка кожну хвилину ---
     setInterval(() => {
+        const now = Date.now();
         for (let id in obs) {
-            const el = obs[id].marker.getElement();
-            if (el) {
-                const timerEl = el.querySelector('.uav-timer');
-                if (timerEl) timerEl.innerText = getTimeString(obs[id].data.timestamp);
+            const d = obs[id].data;
+            if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
+                removeObject(id);
+            } else {
+                // Оновлення тексту таймера на іконці
+                const el = obs[id].marker.getElement();
+                if (el) {
+                    const timerEl = el.querySelector('.uav-timer');
+                    if (timerEl) timerEl.innerText = getTimeString(d.timestamp);
+                }
             }
         }
     }, 60000);
@@ -533,17 +473,12 @@
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
-
     map.on('click', () => { closeInfo(); });
-
-    setInterval(() => {
-        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-    }, 1000);
+    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false }); }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
     db.on('child_removed', s => removeObject(s.key));
 </script>
-
 </body>
 </html>
