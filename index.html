@@ -81,7 +81,6 @@
             pointer-events: none; z-index: 1000;
         }
 
-        /* ТЕКСТ НАД ЦІЛЛЮ */
         .uav-label {
             background: rgba(10, 8, 5, 0.9) !important;
             border: 1px solid var(--accent) !important;
@@ -94,8 +93,6 @@
             box-shadow: 0 0 10px rgba(255, 157, 0, 0.4) !important;
             white-space: nowrap !important;
         }
-        /* Прибираємо стандартну стрілочку Leaflet */
-        .leaflet-tooltip-top:before { border-top-color: var(--accent) !important; }
 
         .uav-icon img {
             width: 32px; height: 32px;
@@ -130,18 +127,7 @@
         .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .c-btn:hover { background: rgba(255, 157, 0, 0.1); border-color: var(--accent); color: var(--accent); }
         
-        .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
-        .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
-
         #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
-        .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
-        .privacy-link:hover { opacity: 1; color: var(--accent); }
-
-        @media (max-width: 600px) {
-            .top-ui { flex-direction: column; gap: 8px; }
-            .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
-            .side-panel.active { right: 20px; left: 20px; }
-        }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -158,9 +144,9 @@
     <div class="policy-box">
         <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
         <div class="policy-content">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу.</p>
+            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для відображення вашого положення.</p>
+            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані локації обробляються лише локально.</p>
+            <p><strong>3. ТОЧНІСТЬ:</strong> Залежить від вашого модуля GPS/мережі.</p>
         </div>
         <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
@@ -178,8 +164,7 @@
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
+        <div class="box"><i class="fa-solid fa-satellite-dish"></i> GPS: <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
     </div>
     <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
 </div>
@@ -193,19 +178,14 @@
         <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
         <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
-            <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
             <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
         </div>
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
     </div>
 </div>
 
 <div class="bottom-nav" id="ui-nav" style="display: none;">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn">
-        <i class="fa-solid fa-heart"></i>
-    </a>
     <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
+    <button class="c-btn" id="geoBtn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
@@ -223,6 +203,43 @@
     const map = L.map('map', { zoomControl: false, attributionControl: false, minZoom: 5 }).setView([48.4, 32.5], 6);
     let layer = L.tileLayer(themes[0].url).addTo(map);
 
+    let userMarker = null;
+
+    // ГЕОЛОКАЦІЯ
+    function locateMe() {
+        showNotify("SEARCHING SIGNAL...");
+        map.locate({setView: true, maxZoom: 10, enableHighAccuracy: true});
+    }
+
+    map.on('locationfound', (e) => {
+        const gpsStatus = document.getElementById('gpsStatus');
+        gpsStatus.innerText = "ONLINE";
+        gpsStatus.style.color = "var(--success)";
+        
+        if (userMarker) {
+            userMarker.setLatLng(e.latlng);
+        } else {
+            userMarker = L.circleMarker(e.latlng, {
+                radius: 8,
+                fillColor: "#007bff",
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            userMarker.bindTooltip("MY POSITION", { className: 'uav-label', direction: 'top' });
+        }
+        showNotify("LOCATION FIXED");
+    });
+
+    map.on('locationerror', (e) => {
+        const gpsStatus = document.getElementById('gpsStatus');
+        gpsStatus.innerText = "ERROR";
+        gpsStatus.style.color = "var(--danger)";
+        showNotify("SIGNAL LOST");
+        console.warn(e.message);
+    });
+
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
@@ -236,7 +253,6 @@
         setTimeout(() => n.style.opacity = "0", 1500);
     }
 
-    // ЛОГІКА ЧАСУ ІСНУВАННЯ
     function getLifetimeString(timestamp) {
         const diff = Math.floor((Date.now() - (timestamp || Date.now())) / 1000);
         const m = Math.floor(diff / 60).toString().padStart(2, '0');
@@ -256,7 +272,7 @@
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setLatLng([d.lat, d.lng]);
+            if(obs[id].circle) obs[id].circle.setLatLng([d.lat, d.lng]);
             obs[id].marker.setTooltipContent(getLifetimeString(d.timestamp));
             const img = obs[id].marker.getElement()?.querySelector('img');
             if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
@@ -271,13 +287,8 @@
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            
-            // ДОДАЄМО ТЕКСТ ТАЙМЕРА НАД МАРКЕРОМ
             marker.bindTooltip(getLifetimeString(d.timestamp), {
-                permanent: true,
-                direction: 'top',
-                className: 'uav-label',
-                offset: [0, -15]
+                permanent: true, direction: 'top', className: 'uav-label', offset: [0, -15]
             }).addTo(map);
 
             const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
@@ -287,7 +298,6 @@
         updateCounters();
     }
 
-    // ОНОВЛЕННЯ ТАЙМЕРІВ ЩОСЕКУНДИ
     setInterval(() => {
         Object.keys(obs).forEach(id => {
             if(obs[id] && obs[id].data.timestamp) {
@@ -306,7 +316,6 @@
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
@@ -315,7 +324,6 @@
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
     
-    // Splash & Startup
     window.addEventListener('load', () => {
         setTimeout(() => {
             document.getElementById('splash-screen').style.display = 'none';
@@ -333,7 +341,8 @@
 
     function fullStartup() {
         document.getElementById('ui-nav').style.display = 'flex';
-        map.locate({setView: true, maxZoom: 8});
+        // Автоматичний запит гео при старті
+        locateMe();
         showNotify("SYSTEM READY");
     }
 
