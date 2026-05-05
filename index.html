@@ -29,21 +29,17 @@
         * { -webkit-user-select: none; -moz-user-select: none; user-select: none; box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
         
+        /* UI Elements Styling */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            align-items: center; justify-content: center; transition: 0.8s;
         }
         .boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
         .boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
         .progress-bar { width: 100%; height: 2px; background: rgba(255, 157, 0, 0.1); position: relative; overflow: hidden; }
-        .progress-fill { 
-            width: 0%; height: 100%; background: var(--accent); 
-            box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; 
-        }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; }
         @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
-        .logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         #privacy-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -53,169 +49,172 @@
         .policy-box {
             background: var(--glass); border: 1px solid var(--accent);
             padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;
-            text-align: center; box-shadow: 0 0 40px rgba(255, 157, 0, 0.15);
-            animation: modalFlyIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            text-align: center; box-shadow: var(--panel-shadow);
         }
-        @keyframes modalFlyIn {
-            0% { transform: scale(0.8) translateY(50px); opacity: 0; }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin: 0 0 15px 0; letter-spacing: 2px; }
         .policy-content {
             text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.7);
             max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
             background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 157, 0, 0.1);
         }
-        .policy-content strong { color: var(--accent); }
         .accept-btn {
             background: transparent; border: 1px solid var(--accent); color: var(--accent);
             padding: 12px 40px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
-            font-weight: bold; letter-spacing: 1px;
         }
-        .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
+        .accept-btn:hover { background: var(--accent); color: #000; }
 
-        #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
+        #map { width: 100%; height: 100%; z-index: 1; background: #000; }
         #map::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(255, 157, 0, 0.03) 0px, rgba(255, 157, 0, 0.03) 1px, transparent 1px, transparent 2px);
             pointer-events: none; z-index: 1000;
         }
 
-        /* ТЕКСТ НАД ЦІЛЛЮ */
         .uav-label {
             background: rgba(10, 8, 5, 0.9) !important;
             border: 1px solid var(--accent) !important;
             color: var(--accent) !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 10px !important;
-            font-weight: bold !important;
-            padding: 2px 6px !important;
-            border-radius: 4px !important;
-            box-shadow: 0 0 10px rgba(255, 157, 0, 0.4) !important;
-            white-space: nowrap !important;
-        }
-        /* Прибираємо стандартну стрілочку Leaflet */
-        .leaflet-tooltip-top:before { border-top-color: var(--accent) !important; }
-
-        .uav-icon img {
-            width: 32px; height: 32px;
-            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
-        }
-        .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
-        @keyframes targetPulse {
-            0%, 100% { filter: invert(1) brightness(1.5) drop-shadow(0 0 2px var(--accent)); }
-            50% { filter: invert(1) brightness(2.5) drop-shadow(0 0 12px var(--accent)); }
+            font-family: 'Orbitron' !important; font-size: 10px !important;
+            padding: 2px 6px !important; border-radius: 4px !important;
         }
 
-        .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.5; }
-        .main-crosshair span { position: absolute; width: 8px; height: 8px; border-color: var(--accent); border-style: solid; }
-        .tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; } .tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
-        .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; } .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
-
+        .uav-icon img { width: 32px; height: 32px; filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent)); }
+        
         .top-ui { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; }
-        .status-group { display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
-        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
+        .status-group { display: flex; gap: 10px; pointer-events: auto; }
+        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
 
-        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 280px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
+        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); width: 280px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); }
         .side-panel.active { right: 20px; }
-        .panel-header { padding: 15px; border-bottom: 1px solid rgba(255, 157, 0, 0.1); display: flex; justify-content: space-between; align-items: center; }
-        .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; }
-        .panel-body { padding: 20px; }
-        .data-block { margin-bottom: 15px; }
-        .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; letter-spacing: 1px; }
-        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
+        .panel-header { padding: 15px; border-bottom: 1px solid rgba(255, 157, 0, 0.1); display: flex; justify-content: space-between; color: var(--accent); font-family: 'Orbitron'; }
 
-        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
-        .c-btn:hover { background: rgba(255, 157, 0, 0.1); border-color: var(--accent); color: var(--accent); }
+        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); padding: 10px; border-radius: 20px; display: flex; gap: 15px; border: 1px solid var(--neon-border); }
+        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .c-btn:hover { border-color: var(--accent); color: var(--accent); }
         
-        .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
-        .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
+        .lang-btn { font-family: 'Orbitron'; font-size: 10px; font-weight: bold; }
 
-        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
-        .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
-        .privacy-link:hover { opacity: 1; color: var(--accent); }
+        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; font-family: 'Orbitron'; }
 
         @media (max-width: 600px) {
             .top-ui { flex-direction: column; gap: 8px; }
-            .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
-            .side-panel.active { right: 20px; left: 20px; }
+            .side-panel { width: calc(100% - 40px); bottom: 100px; top: auto; }
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="splash-screen">
-    <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
+    <div class="logo-anim" style="color:var(--accent); font-family: 'Orbitron'; font-size: 24px;">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
+        <div class="boot-text" id="bootStatus">Initializing...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
 
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
-        <div class="policy-content">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу.</p>
-        </div>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+        <h2 id="modalTitle">ПРОТОКОЛ БЕЗПЕКИ</h2>
+        <div class="policy-content" id="modalText">
+            </div>
+        <button class="accept-btn" onclick="acceptPolicy()" id="modalBtn">ПРИЙНЯТИ</button>
     </div>
 </div>
 
 <div id="map"></div>
-
-<div class="main-crosshair">
-    <span class="tl"></span><span class="tr"></span>
-    <span class="bl"></span><span class="br"></span>
-</div>
-
-<div id="mapNotify">SYNC COMPLETED</div>
+<div id="mapNotify">SYNC</div>
 
 <div class="top-ui">
     <div class="status-group">
         <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
+        <div class="box"><i class="fa-solid fa-users"></i> <span id="lang-online">ONLINE</span>: <span id="onlineCount" class="glow">1</span></div>
     </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
+    <div class="box"><i class="fa-solid fa-crosshairs"></i> <span id="lang-active">ACTIVE</span>: <span id="uavCount" class="glow">0</span></div>
 </div>
 
 <div id="sidePanel" class="side-panel">
     <div class="panel-header">
-        <span>TRACKING INFO</span>
-        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
+        <span id="lang-info">TRACKING INFO</span>
+        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; opacity: 0.5;"></i>
     </div>
-    <div class="panel-body">
-        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
-        <div class="data-block" style="display: flex; justify-content: space-between;">
-            <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
-        </div>
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
+    <div class="panel-body" style="padding: 20px;">
+        <div style="margin-bottom:15px"><span id="lang-class" style="font-size:9px; opacity:0.5; text-transform:uppercase">Class</span><div id="objType" class="glow">--</div></div>
+        <div style="margin-bottom:15px"><span id="lang-pos" style="font-size:9px; opacity:0.5; text-transform:uppercase">Position</span><div id="objCoords">--</div></div>
+        <div><span id="lang-course" style="font-size:9px; opacity:0.5; text-transform:uppercase">Course</span><div id="objAngle">--</div></div>
     </div>
 </div>
 
 <div class="bottom-nav" id="ui-nav" style="display: none;">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn">
-        <i class="fa-solid fa-heart"></i>
-    </a>
+    <button class="c-btn lang-btn" onclick="toggleLang()" id="langSwitcher">UA</button>
     <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
 <script>
+    // --- СИСТЕМА ПЕРЕКЛАДУ ---
+    const translations = {
+        uk: {
+            boot: "Завантаження систем...",
+            modalTitle: "ПРОТОКОЛ БЕЗПЕКИ",
+            modalText: "<p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку позиції цілей.</p><p><strong>2. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу.</p>",
+            modalBtn: "ПРИЙНЯТИ ТА ЗАПУСТИТИ",
+            online: "ОНЛАЙН",
+            active: "ЦІЛІ",
+            info: "ІНФОРМАЦІЯ",
+            class: "Тип об'єкта",
+            pos: "Координати",
+            course: "Курс",
+            notify_ready: "СИСТЕМА ГОТОВА",
+            notify_layer: "КАРТА: "
+        },
+        en: {
+            boot: "Initializing systems...",
+            modalTitle: "SECURITY PROTOCOL",
+            modalText: "<p><strong>1. GEOLOCATION:</strong> Access needed for target positioning.</p><p><strong>2. SOURCES:</strong> Data based on OSINT monitoring.</p>",
+            modalBtn: "ACCEPT AND START",
+            online: "ONLINE",
+            active: "ACTIVE",
+            info: "TRACKING INFO",
+            class: "Object Class",
+            pos: "Coordinates",
+            course: "Course",
+            notify_ready: "SYSTEM READY",
+            notify_layer: "LAYER: "
+        }
+    };
+
+    let currentLang = localStorage.getItem('appLang') || 'uk';
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('bootStatus').innerText = t.boot;
+        document.getElementById('modalTitle').innerText = t.modalTitle;
+        document.getElementById('modalText').innerHTML = t.modalText;
+        document.getElementById('modalBtn').innerText = t.modalBtn;
+        document.getElementById('lang-online').innerText = t.online;
+        document.getElementById('lang-active').innerText = t.active;
+        document.getElementById('lang-info').innerText = t.info;
+        document.getElementById('lang-class').innerText = t.class;
+        document.getElementById('lang-pos').innerText = t.pos;
+        document.getElementById('lang-course').innerText = t.course;
+        document.getElementById('langSwitcher').innerText = currentLang.toUpperCase();
+        localStorage.setItem('appLang', currentLang);
+    }
+
+    function toggleLang() {
+        currentLang = currentLang === 'uk' ? 'en' : 'uk';
+        updateLanguage();
+        showNotify("LANG: " + currentLang.toUpperCase());
+    }
+
+    // --- ОСНОВНА ЛОГІКА ---
     const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('drones');
 
     const themes = [
-        { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
+        { name: "DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
         { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
     ];
 
@@ -227,7 +226,7 @@
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
         layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        showNotify("LAYER: " + themes[tIdx].name);
+        showNotify(translations[currentLang].notify_layer + themes[tIdx].name);
     }
 
     function showNotify(text) {
@@ -236,7 +235,6 @@
         setTimeout(() => n.style.opacity = "0", 1500);
     }
 
-    // ЛОГІКА ЧАСУ ІСНУВАННЯ
     function getLifetimeString(timestamp) {
         const diff = Math.floor((Date.now() - (timestamp || Date.now())) / 1000);
         const m = Math.floor(diff / 60).toString().padStart(2, '0');
@@ -251,62 +249,40 @@
         const now = Date.now();
         if ((now - (d.timestamp || now)) / 1000 / 60 > 30) { removeObject(id); return; }
 
-        const angleRad = (d.angle - 90) * Math.PI / 180;
-        const tailEnd = [d.lat - Math.cos(angleRad) * 0.015, d.lng - Math.sin(angleRad) * 0.015];
-
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setLatLng([d.lat, d.lng]);
             obs[id].marker.setTooltipContent(getLifetimeString(d.timestamp));
             const img = obs[id].marker.getElement()?.querySelector('img');
             if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
-            obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
         } else {
-            const circle = L.circle([d.lat, d.lng], { radius: d.accuracy || 5000, color: 'var(--accent)', weight: 1, fillOpacity: 0.1 }).addTo(map);
             const icon = L.divIcon({ 
-                className: 'uav-icon active-uav', 
+                className: 'uav-icon', 
                 html: `<img src="${d.type}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2503/2503508.png';" style="transform:rotate(${d.angle || 0}deg);">`, 
                 iconSize: [32, 32], iconAnchor: [16, 16] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            
-            // ДОДАЄМО ТЕКСТ ТАЙМЕРА НАД МАРКЕРОМ
-            marker.bindTooltip(getLifetimeString(d.timestamp), {
-                permanent: true,
-                direction: 'top',
-                className: 'uav-label',
-                offset: [0, -15]
-            }).addTo(map);
-
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: 'var(--accent)', weight: 1, opacity: 0.4, dashArray: '2, 5' }).addTo(map);
+            marker.bindTooltip(getLifetimeString(d.timestamp), { permanent: true, direction: 'top', className: 'uav-label', offset: [0, -15] }).addTo(map);
             marker.on('click', () => updateUI(id, d));
-            obs[id] = { marker, line, circle, data: d };
+            obs[id] = { marker, data: d };
         }
         updateCounters();
     }
 
-    // ОНОВЛЕННЯ ТАЙМЕРІВ ЩОСЕКУНДИ
     setInterval(() => {
         Object.keys(obs).forEach(id => {
-            if(obs[id] && obs[id].data.timestamp) {
-                obs[id].marker.setTooltipContent(getLifetimeString(obs[id].data.timestamp));
-            }
+            if(obs[id] && obs[id].data.timestamp) obs[id].marker.setTooltipContent(getLifetimeString(obs[id].data.timestamp));
         });
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
     }, 1000);
 
     function removeObject(id) {
-        if(obs[id]) {
-            map.removeLayer(obs[id].marker); map.removeLayer(obs[id].line); map.removeLayer(obs[id].circle);
-            delete obs[id]; updateCounters();
-        }
+        if(obs[id]) { map.removeLayer(obs[id].marker); delete obs[id]; updateCounters(); }
     }
 
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
@@ -314,9 +290,11 @@
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
-    
-    // Splash & Startup
+    function locateMe() { map.locate({setView: true, maxZoom: 8}); }
+
+    // Start
     window.addEventListener('load', () => {
+        updateLanguage();
         setTimeout(() => {
             document.getElementById('splash-screen').style.display = 'none';
             if (!localStorage.getItem('policyAccepted')) {
@@ -333,8 +311,7 @@
 
     function fullStartup() {
         document.getElementById('ui-nav').style.display = 'flex';
-        map.locate({setView: true, maxZoom: 8});
-        showNotify("SYSTEM READY");
+        showNotify(translations[currentLang].notify_ready);
     }
 
     db.on('child_added', s => sync(s.key, s.val()));
