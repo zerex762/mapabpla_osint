@@ -141,17 +141,17 @@
 <div id="splash-screen">
     <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
     <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">SYSTEM INITIALIZATION...</div>
+        <div class="boot-text" id="bootStatus">ІНІЦІАЛІЗАЦІЯ СИСТЕМИ...</div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
     </div>
 </div>
 
 <div id="privacy-modal">
     <div class="policy-box">
-        <h2 id="policyTitle">SECURITY PROTOCOL</h2>
+        <h2 id="policyTitle">ПРОТОКОЛ БЕЗПЕКИ</h2>
         <div class="policy-content" id="policyContent">
             </div>
-        <button class="accept-btn" onclick="acceptPolicy()" id="policyBtn">ACCEPT AND LAUNCH</button>
+        <button class="accept-btn" onclick="acceptPolicy()" id="policyBtn">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
 </div>
 
@@ -190,7 +190,7 @@
 </div>
 
 <div class="bottom-nav" id="ui-nav" style="display: none;">
-    <button class="c-btn lang-btn" onclick="toggleLang()" id="btnLang">EN</button>
+    <button class="c-btn lang-btn" onclick="toggleLang()" id="btnLang">UA</button>
     <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn">
         <i class="fa-solid fa-heart"></i>
     </a>
@@ -245,9 +245,8 @@
         }
     };
 
-    // Установлен английский по умолчанию
-    let currentLang = localStorage.getItem('skyLang') || 'en';
-    const EXPIRATION_MS = 30 * 60 * 1000;
+    let currentLang = localStorage.getItem('skyLang') || 'ua';
+    const EXPIRATION_MS = 30 * 60 * 1000; // 30 хвилин
 
     function updateLanguage() {
         const lang = translations[currentLang];
@@ -278,14 +277,13 @@
         { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
     ];
 
-    // Установлен спутник по умолчанию (индекс 1)
-    let tIdx = 1;
+    let tIdx = 0;
     const map = L.map('map', { 
         zoomControl: false, attributionControl: false, 
         maxBounds: [[43, 21], [53, 41]], minZoom: 5 
     }).setView([48.4, 32.5], 6);
     
-    let layer = L.tileLayer(themes[tIdx].url).addTo(map);
+    let layer = L.tileLayer(themes[0].url).addTo(map);
 
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
@@ -375,14 +373,16 @@
     });
 
     function getTimeString(timestamp) {
-        if (!timestamp) return "0m";
+        if (!timestamp) return "0м";
         const diff = Math.floor((Date.now() - timestamp) / 1000 / 60);
-        return diff < 60 ? diff + "m" : Math.floor(diff / 60) + "h " + (diff % 60) + "m";
+        return diff < 60 ? diff + "м" : Math.floor(diff / 60) + "г " + (diff % 60) + "м";
     }
 
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
+        
+        // --- ПЕРЕВІРКА НА АВТОВИДАЛЕННЯ (30 ХВ) ---
         if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
             removeObject(id);
             return;
@@ -428,6 +428,7 @@
         updateCounters();
     }
 
+    // --- ЦИКЛ ОЧИЩЕННЯ: Перевірка кожну хвилину ---
     setInterval(() => {
         const now = Date.now();
         for (let id in obs) {
@@ -435,6 +436,7 @@
             if (d.timestamp && (now - d.timestamp) > EXPIRATION_MS) {
                 removeObject(id);
             } else {
+                // Оновлення тексту таймера на іконці
                 const el = obs[id].marker.getElement();
                 if (el) {
                     const timerEl = el.querySelector('.uav-timer');
@@ -472,7 +474,7 @@
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
     map.on('click', () => { closeInfo(); });
-    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('en-GB', { hour12: false }); }, 1000);
+    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false }); }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
     db.on('child_changed', s => sync(s.key, s.val()));
@@ -480,3 +482,4 @@
 </script>
 </body>
 </html>
+
