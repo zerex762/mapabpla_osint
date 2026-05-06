@@ -109,6 +109,9 @@
         .data-block { margin-bottom: 15px; }
         .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; letter-spacing: 1px; }
         .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
+        
+        /* Новий стиль для таймера */
+        .live-timer { color: var(--success); text-shadow: 0 0 5px var(--success); }
 
         .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
         .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
@@ -121,7 +124,6 @@
         .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
         .privacy-link:hover { opacity: 1; color: var(--accent); }
 
-        /* Стиль для міток прогнозу */
         .forecast-label {
             background: rgba(0,0,0,0.7);
             border: 1px solid var(--accent);
@@ -189,6 +191,10 @@
     </div>
     <div class="panel-body">
         <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
+        
+        <!-- Додано: Час існування цілі -->
+        <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">0 хв 0 сек</div></div>
+        
         <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
@@ -225,8 +231,6 @@
     }).setView([48.4, 32.5], 6);
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
-
-    // Шар для вектору прогнозу
     const forecastLayer = L.layerGroup().addTo(map);
 
     function nextTheme() {
@@ -313,7 +317,7 @@
 
     let userPos = null;
     let userMarker = null;
-    let selectedId = null; // Для відстеження активної цілі
+    let selectedId = null;
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
@@ -330,7 +334,6 @@
 
     let obs = {};
 
-    // Функція малювання вектора прогнозу
     function drawForecast(d) {
         forecastLayer.clearLayers();
         if (!d) return;
@@ -338,19 +341,17 @@
         const speed = SPEED_MAP[d.type] || 200;
         const angleRad = (d.angle - 90) * Math.PI / 180;
         
-        // Малюємо прогноз на 3 часові точки: 10, 20 та 30 хвилин
         const timeSteps = [10, 20, 30];
         const points = [[d.lat, d.lng]];
 
         timeSteps.forEach(min => {
-            const dist = (speed * (min / 60)); // км
+            const dist = (speed * (min / 60)); 
             const latOff = (dist / 111) * Math.cos(angleRad);
             const lngOff = (dist / (111 * Math.cos(d.lat * Math.PI / 180))) * Math.sin(angleRad);
             
             const p = [d.lat + latOff, d.lng + lngOff];
             points.push(p);
 
-            // Додаємо мітку
             L.marker(p, {
                 icon: L.divIcon({
                     className: 'forecast-label',
@@ -360,13 +361,22 @@
             }).addTo(forecastLayer);
         });
 
-        // Лінія прогнозу
         L.polyline(points, {
             color: 'var(--accent)',
             weight: 2,
             dashArray: '5, 10',
             opacity: 0.6
         }).addTo(forecastLayer);
+    }
+
+    // Функція розрахунку часу життя
+    function getLifetime(timestamp) {
+        if (!timestamp) return "0 хв 0 сек";
+        const diff = Date.now() - timestamp;
+        const totalSec = Math.floor(diff / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        return `${min} хв ${sec} сек`;
     }
 
     function sync(id, d) {
@@ -391,7 +401,6 @@
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
 
-            // Оновлюємо прогноз в реальному часі, якщо об'єкт вибрано
             if (selectedId === id) {
                 updateUI(id, d);
                 drawForecast(d);
@@ -450,6 +459,10 @@
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace('-standart', '').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
+        
+        // Оновлюємо таймер життя
+        document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
+
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
             const speed = (SPEED_MAP[d.type] || 200);
@@ -468,8 +481,15 @@
 
     map.on('click', () => { closeInfo(); });
 
+    // Головний цикл оновлення (раз на сек)
     setInterval(() => {
+        // Системний час
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+        
+        // Оновлення таймера цілі, якщо вона вибрана
+        if (selectedId && obs[selectedId]) {
+            document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
+        }
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
