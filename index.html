@@ -15,7 +15,6 @@
     
     <style>
         :root { 
-            /* ЗМІНЕНО НА ПОМАРАНЧЕВИЙ */
             --accent: #ff9d00; 
             --danger: #ff3333;
             --warning: #ffcc00;
@@ -76,7 +75,6 @@
         .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
 
         #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
-        /* Скан-лінії тепер тепліші */
         #map::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(255, 157, 0, 0.03) 0px, rgba(255, 157, 0, 0.03) 1px, transparent 1px, transparent 2px);
@@ -122,6 +120,19 @@
         #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
         .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
         .privacy-link:hover { opacity: 1; color: var(--accent); }
+
+        /* Стиль для міток прогнозу */
+        .forecast-label {
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-family: 'Orbitron';
+            white-space: nowrap;
+            pointer-events: none;
+        }
 
         @media (max-width: 600px) {
             .top-ui { flex-direction: column; gap: 8px; }
@@ -199,7 +210,6 @@
 <a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
 
 <script>
-    // Logic remains same, only theme visuals modified via CSS
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
         { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
@@ -215,6 +225,9 @@
     }).setView([48.4, 32.5], 6);
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
+
+    // Шар для вектору прогнозу
+    const forecastLayer = L.layerGroup().addTo(map);
 
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
@@ -291,12 +304,16 @@
     });
 
     const SPEED_MAP = {
-        'shahed-vp-standart': 185, 'shahed-238-standart': 550, 'kalibr-standart': 880, 'tu-95ms-standart': 750
+        'shahed-vp-standart': 185, 
+        'shahed-238-standart': 550, 
+        'kalibr-standart': 880, 
+        'tu-95ms-standart': 750
     };
     const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 
     let userPos = null;
     let userMarker = null;
+    let selectedId = null; // Для відстеження активної цілі
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
@@ -312,6 +329,45 @@
     });
 
     let obs = {};
+
+    // Функція малювання вектора прогнозу
+    function drawForecast(d) {
+        forecastLayer.clearLayers();
+        if (!d) return;
+
+        const speed = SPEED_MAP[d.type] || 200;
+        const angleRad = (d.angle - 90) * Math.PI / 180;
+        
+        // Малюємо прогноз на 3 часові точки: 10, 20 та 30 хвилин
+        const timeSteps = [10, 20, 30];
+        const points = [[d.lat, d.lng]];
+
+        timeSteps.forEach(min => {
+            const dist = (speed * (min / 60)); // км
+            const latOff = (dist / 111) * Math.cos(angleRad);
+            const lngOff = (dist / (111 * Math.cos(d.lat * Math.PI / 180))) * Math.sin(angleRad);
+            
+            const p = [d.lat + latOff, d.lng + lngOff];
+            points.push(p);
+
+            // Додаємо мітку
+            L.marker(p, {
+                icon: L.divIcon({
+                    className: 'forecast-label',
+                    html: `+${min}м (${Math.round(dist)}км)`,
+                    iconAnchor: [-5, 12]
+                })
+            }).addTo(forecastLayer);
+        });
+
+        // Лінія прогнозу
+        L.polyline(points, {
+            color: 'var(--accent)',
+            weight: 2,
+            dashArray: '5, 10',
+            opacity: 0.6
+        }).addTo(forecastLayer);
+    }
 
     function sync(id, d) {
         if (!d) return;
@@ -334,6 +390,12 @@
             if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
+
+            // Оновлюємо прогноз в реальному часі, якщо об'єкт вибрано
+            if (selectedId === id) {
+                updateUI(id, d);
+                drawForecast(d);
+            }
         } else {
             const circle = L.circle([d.lat, d.lng], {
                 radius: errorRadius,
@@ -361,7 +423,9 @@
 
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
+                selectedId = id;
                 updateUI(id, d);
+                drawForecast(d);
             });
 
             obs[id] = { marker, line, circle, data: d };
@@ -374,9 +438,9 @@
             map.removeLayer(obs[id].marker);
             map.removeLayer(obs[id].line);
             map.removeLayer(obs[id].circle);
+            if (selectedId === id) closeInfo();
             delete obs[id];
             updateCounters();
-            closeInfo();
         }
     }
 
@@ -388,13 +452,19 @@
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         if (userPos) {
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const timeMinutes = Math.round(distance / (SPEED_MAP[d.type] || 200) * 60);
+            const speed = (SPEED_MAP[d.type] || 200);
+            const timeMinutes = Math.round(distance / speed * 60);
             document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
         }
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
-    function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); }
+    
+    function closeInfo() { 
+        document.getElementById('sidePanel').classList.remove('active'); 
+        forecastLayer.clearLayers();
+        selectedId = null;
+    }
 
     map.on('click', () => { closeInfo(); });
 
