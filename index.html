@@ -81,14 +81,15 @@
             pointer-events: none; z-index: 1000;
         }
 
+        /* --- ЗБІЛЬШЕННЯ ІКОНОК --- */
         .uav-icon img {
-            width: 32px; height: 32px;
-            filter: invert(1) brightness(2) drop-shadow(0 0 5px var(--accent));
+            width: 48px; height: 48px; /* Було 32px */
+            filter: invert(1) brightness(2) drop-shadow(0 0 8px var(--accent));
         }
         .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
-            0%, 100% { filter: invert(1) brightness(1.5) drop-shadow(0 0 2px var(--accent)); }
-            50% { filter: invert(1) brightness(2.5) drop-shadow(0 0 12px var(--accent)); }
+            0%, 100% { filter: invert(1) brightness(1.5) drop-shadow(0 0 3px var(--accent)); }
+            50% { filter: invert(1) brightness(2.5) drop-shadow(0 0 15px var(--accent)); }
         }
 
         .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.5; }
@@ -110,7 +111,6 @@
         .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; letter-spacing: 1px; }
         .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
         
-        /* Новий стиль для таймера */
         .live-timer { color: var(--success); text-shadow: 0 0 5px var(--success); }
 
         .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
@@ -191,10 +191,7 @@
     </div>
     <div class="panel-body">
         <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-        
-        <!-- Додано: Час існування цілі -->
         <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">0 хв 0 сек</div></div>
-        
         <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
         <div class="data-block" style="display: flex; justify-content: space-between;">
             <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
@@ -334,42 +331,6 @@
 
     let obs = {};
 
-    function drawForecast(d) {
-        forecastLayer.clearLayers();
-        if (!d) return;
-
-        const speed = SPEED_MAP[d.type] || 200;
-        const angleRad = (d.angle - 90) * Math.PI / 180;
-        
-        const timeSteps = [10, 20, 30];
-        const points = [[d.lat, d.lng]];
-
-        timeSteps.forEach(min => {
-            const dist = (speed * (min / 60)); 
-            const latOff = (dist / 111) * Math.cos(angleRad);
-            const lngOff = (dist / (111 * Math.cos(d.lat * Math.PI / 180))) * Math.sin(angleRad);
-            
-            const p = [d.lat + latOff, d.lng + lngOff];
-            points.push(p);
-
-            L.marker(p, {
-                icon: L.divIcon({
-                    className: 'forecast-label',
-                    html: `+${min}м (${Math.round(dist)}км)`,
-                    iconAnchor: [-5, 12]
-                })
-            }).addTo(forecastLayer);
-        });
-
-        L.polyline(points, {
-            color: 'var(--accent)',
-            weight: 2,
-            dashArray: '5, 10',
-            opacity: 0.6
-        }).addTo(forecastLayer);
-    }
-
-    // Функція розрахунку часу життя
     function getLifetime(timestamp) {
         if (!timestamp) return "0 хв 0 сек";
         const diff = Date.now() - timestamp;
@@ -403,7 +364,6 @@
 
             if (selectedId === id) {
                 updateUI(id, d);
-                drawForecast(d);
             }
         } else {
             const circle = L.circle([d.lat, d.lng], {
@@ -416,10 +376,13 @@
                 interactive: false
             }).addTo(map);
 
+            /* --- НОВІ РОЗМІРИ ТУТ --- */
+            const iconSize = 48; // Було 32
             const icon = L.divIcon({ 
                 className: 'uav-icon active-uav', 
                 html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
-                iconSize: [32, 32], iconAnchor: [16, 16] 
+                iconSize: [iconSize, iconSize], 
+                iconAnchor: [iconSize/2, iconSize/2] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
@@ -434,7 +397,6 @@
                 L.DomEvent.stopPropagation(e);
                 selectedId = id;
                 updateUI(id, d);
-                drawForecast(d);
             });
 
             obs[id] = { marker, line, circle, data: d };
@@ -459,8 +421,6 @@
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace('-standart', '').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
-        
-        // Оновлюємо таймер життя
         document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
 
         if (userPos) {
@@ -475,18 +435,13 @@
     
     function closeInfo() { 
         document.getElementById('sidePanel').classList.remove('active'); 
-        forecastLayer.clearLayers();
         selectedId = null;
     }
 
     map.on('click', () => { closeInfo(); });
 
-    // Головний цикл оновлення (раз на сек)
     setInterval(() => {
-        // Системний час
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-        
-        // Оновлення таймера цілі, якщо вона вибрана
         if (selectedId && obs[selectedId]) {
             document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
         }
