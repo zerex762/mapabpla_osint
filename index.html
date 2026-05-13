@@ -15,13 +15,13 @@
     
     <style>
         :root { 
-            --accent: #ff9d00; 
+            --accent: #ff3333; /* Змінено на червоний */
             --danger: #ff3333;
             --warning: #ffcc00;
             --success: #00ff88;
             --bg-dark: #0a0805;
-            --glass: rgba(25, 15, 5, 0.85);
-            --neon-border: rgba(255, 157, 0, 0.3);
+            --glass: rgba(15, 5, 5, 0.85);
+            --neon-border: rgba(255, 51, 51, 0.3);
             --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
             --mono-gold: #ffcc00;
         }
@@ -36,7 +36,7 @@
         }
         .boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
         .boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        .progress-bar { width: 100%; height: 2px; background: rgba(255, 157, 0, 0.1); position: relative; overflow: hidden; }
+        .progress-bar { width: 100%; height: 2px; background: rgba(255, 51, 51, 0.1); position: relative; overflow: hidden; }
         .progress-fill { 
             width: 0%; height: 100%; background: var(--accent); 
             box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; 
@@ -53,7 +53,7 @@
         .policy-box {
             background: var(--glass); border: 1px solid var(--accent);
             padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;
-            text-align: center; box-shadow: 0 0 40px rgba(255, 157, 0, 0.15);
+            text-align: center; box-shadow: 0 0 40px rgba(255, 51, 51, 0.15);
             animation: modalFlyIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes modalFlyIn {
@@ -64,7 +64,7 @@
         .policy-content {
             text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.7);
             max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 157, 0, 0.1);
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 51, 51, 0.1);
         }
         .policy-content strong { color: var(--accent); }
         .accept-btn {
@@ -77,18 +77,20 @@
         #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
         #map::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(255, 157, 0, 0.03) 0px, rgba(255, 157, 0, 0.03) 1px, transparent 1px, transparent 2px);
+            background: repeating-linear-gradient(0deg, rgba(255, 51, 51, 0.03) 0px, rgba(255, 51, 51, 0.03) 1px, transparent 1px, transparent 2px);
             pointer-events: none; z-index: 1000;
         }
 
+        /* КЛЮЧОВІ ЗМІНИ ДЛЯ ДРОНІВ */
         .uav-icon img {
             width: 48px; height: 48px;
-            filter: invert(1) brightness(2) drop-shadow(0 0 8px var(--accent));
+            /* Фільтр змінено для отримання чистого червоного кольору */
+            filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px var(--accent));
         }
         .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
         @keyframes targetPulse {
-            0%, 100% { filter: invert(1) brightness(1.5) drop-shadow(0 0 3px var(--accent)); }
-            50% { filter: invert(1) brightness(2.5) drop-shadow(0 0 15px var(--accent)); }
+            0%, 100% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(80%) drop-shadow(0 0 3px var(--accent)); }
+            50% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(120%) drop-shadow(0 0 15px var(--accent)); }
         }
 
         .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.5; }
@@ -103,7 +105,7 @@
 
         .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 280px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
         .side-panel.active { right: 20px; }
-        .panel-header { padding: 15px; border-bottom: 1px solid rgba(255, 157, 0, 0.1); display: flex; justify-content: space-between; align-items: center; }
+        .panel-header { padding: 15px; border-bottom: 1px solid rgba(255, 51, 51, 0.1); display: flex; justify-content: space-between; align-items: center; }
         .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; }
         .panel-body { padding: 20px; }
         .data-block { margin-bottom: 15px; }
@@ -114,16 +116,15 @@
 
         .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
         .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
-        .c-btn:hover { background: rgba(255, 157, 0, 0.1); border-color: var(--accent); color: var(--accent); }
+        .c-btn:hover { background: rgba(255, 51, 51, 0.1); border-color: var(--accent); color: var(--accent); }
         
         .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
         .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
 
-        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #000; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
+        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #fff; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
         .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
         .privacy-link:hover { opacity: 1; color: var(--accent); }
 
-        /* --- ADMIN STYLES --- */
         #adminPanel {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000; display: none;
@@ -132,7 +133,7 @@
         .admin-box {
             max-width: 450px; margin: 0 auto; border: 1px solid var(--accent);
             padding: 25px; border-radius: 15px; background: #000;
-            box-shadow: 0 0 50px rgba(255, 157, 0, 0.2);
+            box-shadow: 0 0 50px rgba(255, 51, 51, 0.2);
         }
         .admin-input, .admin-select {
             width: 100%; background: #111; color: #fff; border: 1px solid #333;
@@ -143,7 +144,7 @@
             cursor: pointer; font-family: 'Orbitron'; font-weight: bold;
             transition: 0.2s;
         }
-        .btn-add { background: var(--accent); color: #000; }
+        .btn-add { background: var(--accent); color: #fff; }
         .btn-clear { background: var(--danger); color: #fff; margin-top: 10px; opacity: 0.8; }
         .btn-add:hover { box-shadow: 0 0 15px var(--accent); }
 
@@ -185,9 +186,9 @@
             <span class="data-label">Type of Target</span>
             <select id="admType" class="admin-select">
                 <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-                <option value="shahed-238-standart">Shahed-238 (Jet)</option>
-                <option value="kalibr-standart">Kalibr / Cruise Missile</option>
-                <option value="tu-95ms-standart">Tu-95MS Strategy</option>
+                <option value="shahed-238-jet">Shahed-238 (Jet)</option>
+                <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
+                <option value="tu-95ms-strat">Tu-95MS Strategy</option>
             </select>
         </div>
 
@@ -271,7 +272,6 @@
     }).setView([48.4, 32.5], 6);
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
-    const forecastLayer = L.layerGroup().addTo(map);
 
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
@@ -306,7 +306,6 @@
         }, 2600);
     });
 
-    // ADMIN LOGIC
     function checkAdmin() {
         if (window.location.hash === '#admin') {
             document.getElementById('adminPanel').style.display = 'block';
@@ -386,9 +385,9 @@
 
     const SPEED_MAP = {
         'shahed-vp-standart': 185, 
-        'shahed-238-standart': 550, 
-        'kalibr-standart': 880, 
-        'tu-95ms-standart': 750
+        'shahed-238-jet': 550, 
+        'kalibr-cruise': 880, 
+        'tu-95ms-strat': 750
     };
     const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 
@@ -423,7 +422,7 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 30) {
+        if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
             removeObject(id);
             return;
         }
@@ -442,15 +441,13 @@
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
             obs[id].data = d;
 
-            if (selectedId === id) {
-                updateUI(id, d);
-            }
+            if (selectedId === id) updateUI(id, d);
         } else {
             const circle = L.circle([d.lat, d.lng], {
                 radius: errorRadius,
-                color: 'var(--accent)',
+                color: '#ff3333', // Червоний колір кола
                 weight: 1,
-                fillColor: 'var(--accent)',
+                fillColor: '#ff3333',
                 fillOpacity: 0.1,
                 dashArray: '5, 10',
                 interactive: false
@@ -466,9 +463,9 @@
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
             const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-                color: 'var(--accent)', 
+                color: '#ff3333', // Червона лінія напрямку
                 weight: 1, 
-                opacity: 0.4, 
+                opacity: 0.6, 
                 dashArray: '2, 5' 
             }).addTo(map);
 
@@ -497,7 +494,7 @@
     function updateUI(id, d) {
         document.getElementById('sidePanel').classList.add('active');
         document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
-        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace('-standart', '').toUpperCase();
+        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
