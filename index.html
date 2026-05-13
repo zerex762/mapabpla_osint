@@ -16,188 +16,165 @@
 <style>
 :root {
     --accent: #ff3333;
-    --danger: #ff3333;
-    --warning: #ffcc00;
     --success: #00ff88;
+    --warning: #ffcc00;
     --bg-dark: #0a0805;
-    --glass: rgba(15, 5, 5, 0.88);
-    --neon-border: rgba(255, 51, 51, 0.3);
-    --panel-shadow: 0 8px 32px 0 rgba(0,0,0,0.9);
-    --mono-gold: #ffcc00;
+    --glass: rgba(12,4,4,0.92);
+    --neon-border: rgba(255,51,51,0.28);
+    --panel-shadow: 0 8px 32px rgba(0,0,0,0.9);
+    --target-color: #ff3333;
 }
-
-* { -webkit-user-select: none; user-select: none; box-sizing: border-box; }
-body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
+* { box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+html,body { margin:0;padding:0;height:100%;width:100%;background:var(--bg-dark);font-family:'Inter',sans-serif;overflow:hidden;color:#fff; }
 
 /* SPLASH */
-#splash-screen {
-    position: fixed; inset: 0; background: #000; z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity 0.8s;
-}
-.boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
-.boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-.progress-bar { width: 100%; height: 2px; background: rgba(255,51,51,0.1); overflow: hidden; }
-.progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; }
-@keyframes load { to { width: 100%; } }
-.logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; color: var(--accent); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+#splash { position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s; }
+.logo-anim { font-size:26px;font-family:'Orbitron';color:var(--accent);margin-bottom:20px;animation:pulse 1.5s infinite; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.boot-loader { width:260px;font-family:'Orbitron'; }
+.boot-text { font-size:10px;color:var(--accent);margin-bottom:10px;letter-spacing:2px;text-transform:uppercase; }
+.progress-bar { width:100%;height:2px;background:rgba(255,51,51,.1);overflow:hidden; }
+.progress-fill { width:0;height:100%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:load 2.5s forwards; }
+@keyframes load{to{width:100%}}
 
-/* PRIVACY MODAL */
-#privacy-modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000;
-    display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
-}
-.policy-box {
-    background: var(--glass); border: 1px solid var(--accent);
-    padding: 30px; border-radius: 4px; max-width: 500px; width: 90%;
-    box-shadow: 0 0 40px rgba(255,51,51,0.15);
-    animation: modalIn 0.4s ease forwards;
-}
-@keyframes modalIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-.policy-box h2 { font-family:'Orbitron'; color:var(--accent); font-size:18px; margin:0 0 15px; letter-spacing:2px; }
-.policy-content {
-    text-align:left; font-size:12px; line-height:1.6; color:rgba(255,255,255,0.7);
-    max-height:220px; overflow-y:auto; margin-bottom:20px; padding:15px;
-    background:rgba(0,0,0,0.5); border:1px solid rgba(255,51,51,0.1);
-}
-.policy-content strong { color: var(--accent); }
-.accept-btn {
-    background:transparent; border:1px solid var(--accent); color:var(--accent);
-    padding:12px 40px; font-family:'Orbitron'; cursor:pointer; transition:0.3s;
-    font-weight:bold; letter-spacing:1px; display:block; width:100%;
-}
-.accept-btn:hover { background:var(--accent); color:#000; }
+/* PRIVACY */
+#privacy-modal { position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px); }
+.policy-box { background:var(--glass);border:1px solid var(--accent);padding:28px;border-radius:4px;max-width:480px;width:92%;animation:mIn .4s ease; }
+@keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.policy-box h2 { font-family:'Orbitron';color:var(--accent);font-size:17px;margin:0 0 14px;letter-spacing:2px; }
+.policy-content { font-size:12px;line-height:1.6;color:rgba(255,255,255,.65);max-height:200px;overflow-y:auto;margin-bottom:18px;padding:13px;background:rgba(0,0,0,.5);border:1px solid rgba(255,51,51,.1); }
+.policy-content strong { color:var(--accent); }
+.accept-btn { background:transparent;border:1px solid var(--accent);color:var(--accent);padding:11px;font-family:'Orbitron';cursor:pointer;transition:.3s;font-weight:700;letter-spacing:1px;display:block;width:100%; }
+.accept-btn:hover { background:var(--accent);color:#000; }
 
 /* MAP */
-#map { width:100%; height:100%; z-index:1; background:#000; }
+#map { width:100%;height:100%;z-index:1;background:#000; }
 
 /* CROSSHAIR */
-.main-crosshair { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; z-index:1500; pointer-events:none; opacity:0.5; }
-.main-crosshair span { position:absolute; width:8px; height:8px; border-color:var(--accent); border-style:solid; }
-.tl{top:0;left:0;border-width:1.5px 0 0 1.5px} .tr{top:0;right:0;border-width:1.5px 1.5px 0 0}
-.bl{bottom:0;left:0;border-width:0 0 1.5px 1.5px} .br{bottom:0;right:0;border-width:0 1.5px 1.5px 0}
+.main-crosshair { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;z-index:1500;pointer-events:none;opacity:.45; }
+.main-crosshair span { position:absolute;width:8px;height:8px;border-color:var(--accent);border-style:solid; }
+.tl{top:0;left:0;border-width:1.5px 0 0 1.5px}.tr{top:0;right:0;border-width:1.5px 1.5px 0 0}
+.bl{bottom:0;left:0;border-width:0 0 1.5px 1.5px}.br{bottom:0;right:0;border-width:0 1.5px 1.5px 0}
 
 /* TOP UI */
-.top-ui { position:absolute; top:20px; left:20px; right:20px; z-index:2000; display:flex; justify-content:space-between; pointer-events:none; }
-.status-group { display:flex; gap:10px; pointer-events:auto; flex-wrap:wrap; }
-.box { background:var(--glass); backdrop-filter:blur(10px); padding:8px 15px; border-radius:6px; border:1px solid var(--neon-border); font-size:11px; font-weight:600; text-transform:uppercase; display:flex; align-items:center; gap:8px; box-shadow:var(--panel-shadow); }
-.glow { color:var(--accent); text-shadow:0 0 8px var(--accent); font-family:'Orbitron'; }
+.top-ui { position:absolute;top:16px;left:16px;right:16px;z-index:2000;display:flex;justify-content:space-between;pointer-events:none; }
+.status-group { display:flex;gap:8px;pointer-events:auto;flex-wrap:wrap; }
+.box { background:var(--glass);backdrop-filter:blur(10px);padding:7px 13px;border-radius:6px;border:1px solid var(--neon-border);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:7px;box-shadow:var(--panel-shadow); }
+.glow { color:var(--accent);text-shadow:0 0 8px var(--accent);font-family:'Orbitron'; }
+
+/* ALARM STRIP */
+#alarmStrip { position:absolute;top:70px;left:0;right:0;z-index:1900;pointer-events:none;display:flex;flex-direction:column;gap:3px;padding:0 16px;max-height:80px;overflow:hidden; }
+.alarm-tag { background:rgba(255,30,30,.18);border:1px solid rgba(255,30,30,.4);border-radius:3px;padding:3px 10px;font-size:10px;font-family:'Orbitron';color:#ff6666;letter-spacing:1px;animation:fadeTag 15s forwards; }
+@keyframes fadeTag{0%{opacity:1}80%{opacity:1}100%{opacity:0}}
 
 /* SIDE PANEL */
-.side-panel { position:absolute; top:20px; right:-350px; z-index:2100; background:var(--glass); backdrop-filter:blur(15px); width:260px; border-radius:4px; transition:0.4s; border:1px solid var(--neon-border); box-shadow:var(--panel-shadow); }
-.side-panel.active { right:20px; }
-.panel-header { padding:14px 16px; border-bottom:1px solid rgba(255,51,51,0.1); display:flex; justify-content:space-between; align-items:center; }
-.panel-header span { font-family:'Orbitron'; font-weight:700; color:var(--accent); font-size:13px; }
-.panel-body { padding:16px; }
-.data-block { margin-bottom:13px; }
-.data-label { color:rgba(255,255,255,0.4); font-size:9px; font-weight:700; text-transform:uppercase; margin-bottom:3px; display:block; letter-spacing:1px; }
-.data-value { font-family:'Orbitron'; color:#fff; font-size:13px; }
+.side-panel { position:absolute;top:16px;right:-320px;z-index:2100;background:var(--glass);backdrop-filter:blur(15px);width:250px;border-radius:4px;transition:.4s;border:1px solid var(--neon-border);box-shadow:var(--panel-shadow); }
+.side-panel.active { right:16px; }
+.panel-header { padding:12px 15px;border-bottom:1px solid rgba(255,51,51,.1);display:flex;justify-content:space-between;align-items:center; }
+.panel-header span { font-family:'Orbitron';font-weight:700;color:var(--accent);font-size:12px; }
+.panel-body { padding:14px; }
+.data-block { margin-bottom:11px; }
+.data-label { color:rgba(255,255,255,.38);font-size:9px;font-weight:700;text-transform:uppercase;margin-bottom:3px;display:block;letter-spacing:1px; }
+.data-value { font-family:'Orbitron';color:#fff;font-size:12px; }
 .live-timer { color:var(--success); }
-
-/* BOTTOM NAV */
-.bottom-nav { position:absolute; bottom:25px; left:50%; transform:translateX(-50%); z-index:2000; background:var(--glass); backdrop-filter:blur(15px); padding:8px; border-radius:16px; display:flex; align-items:center; gap:10px; border:1px solid var(--neon-border); box-shadow:var(--panel-shadow); }
-.c-btn { width:44px; height:44px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:0.2s; text-decoration:none; }
-.c-btn:hover { background:rgba(255,51,51,0.1); border-color:var(--accent); color:var(--accent); }
-.support-btn { border-color:var(--mono-gold); color:var(--mono-gold); }
-.support-btn:hover { background:rgba(255,204,0,0.1); color:#fff; }
+.vector-line { font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;line-height:1.5; }
 
 /* NOTIFY */
-#mapNotify { position:absolute; top:105px; left:50%; transform:translateX(-50%); z-index:3000; background:var(--accent); color:#fff; padding:5px 18px; border-radius:3px; font-size:10px; font-weight:900; opacity:0; transition:0.3s; pointer-events:none; font-family:'Orbitron'; white-space:nowrap; }
+#mapNotify { position:absolute;top:100px;left:50%;transform:translateX(-50%);z-index:3000;background:var(--accent);color:#fff;padding:5px 16px;border-radius:3px;font-size:10px;font-weight:900;opacity:0;transition:.3s;pointer-events:none;font-family:'Orbitron';white-space:nowrap; }
+
+/* BOTTOM NAV */
+.bottom-nav { position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--glass);backdrop-filter:blur(15px);padding:7px;border-radius:14px;display:flex;align-items:center;gap:8px;border:1px solid var(--neon-border);box-shadow:var(--panel-shadow); }
+.c-btn { width:42px;height:42px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.2s;text-decoration:none; }
+.c-btn:hover { background:rgba(255,51,51,.1);border-color:var(--accent);color:var(--accent); }
+.support-btn { border-color:#ffcc00;color:#ffcc00; }
+.support-btn:hover { background:rgba(255,204,0,.08);color:#fff; }
+
+/* ── SHEET BASE ── */
+.bottom-sheet-bg { position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:8000;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(12px); }
+.bottom-sheet-bg.show { display:flex; }
+.bottom-sheet { background:#0e0909;border:1px solid rgba(255,51,51,.18);border-bottom:none;border-radius:14px 14px 0 0;width:min(540px,100%);padding:22px 18px 30px;animation:shUp .35s cubic-bezier(.19,1,.22,1) forwards; }
+@keyframes shUp{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.sheet-handle { width:34px;height:3px;background:rgba(255,255,255,.13);border-radius:99px;margin:0 auto 18px; }
+.sheet-title { font-family:'Orbitron';font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:16px;text-align:center; }
+.sheet-close { display:block;width:100%;margin-top:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);font-family:'Orbitron';font-size:10px;letter-spacing:2px;padding:9px;cursor:pointer;border-radius:4px;transition:.2s; }
+.sheet-close:hover { color:#fff;background:rgba(255,255,255,.07); }
+
+/* THEME MODAL */
+.theme-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px; }
+.theme-card { border:1px solid rgba(255,255,255,.07);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative; }
+.theme-card:hover { transform:scale(1.04); }
+.theme-card.active { border-color:var(--accent);box-shadow:0 0 10px rgba(255,51,51,.3); }
+.theme-card.active::after { content:'✓';position:absolute;top:5px;right:7px;color:var(--accent);font-size:12px;font-weight:900; }
+.prev-dark  { height:58px;background:linear-gradient(135deg,#0d1117,#161b22,#111); }
+.prev-sat   { height:58px;background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f,#1a2e1a); }
+.prev-night { height:58px;background:linear-gradient(135deg,#060914,#0a0f24,#0d1530); }
+.prev-topo  { height:58px;background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870); }
+.prev-water { height:58px;background:linear-gradient(135deg,#1a2840,#243550,#1e3060); }
+.prev-light { height:58px;background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8); }
+.theme-name { padding:5px 4px;font-size:8px;font-family:'Orbitron';color:rgba(255,255,255,.55);letter-spacing:1px;text-align:center;background:#080404; }
+.brightness-row { display:flex;align-items:center;gap:11px; }
+.brightness-row label { font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.38);letter-spacing:1px;white-space:nowrap; }
+#brightnessSlider { flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--accent) 50%,rgba(255,255,255,.1) 50%); }
+#brightnessSlider::-webkit-slider-thumb { -webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 5px rgba(255,51,51,.5); }
+.bright-val { font-family:'Orbitron';font-size:10px;color:var(--accent);width:32px;text-align:right; }
+
+/* SETTINGS MODAL */
+.settings-section { margin-bottom:18px; }
+.settings-label { font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.38);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:block; }
+.toggle-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.toggle-row span { font-size:12px;color:rgba(255,255,255,.7); }
+.toggle { position:relative;width:38px;height:20px; }
+.toggle input { opacity:0;width:0;height:0; }
+.toggle-slider { position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:20px;cursor:pointer;transition:.3s; }
+.toggle-slider:before { content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#666;border-radius:50%;transition:.3s; }
+.toggle input:checked + .toggle-slider { background:var(--accent); }
+.toggle input:checked + .toggle-slider:before { transform:translateX(18px);background:#fff; }
+/* Color picker row */
+.color-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.color-row span { font-size:12px;color:rgba(255,255,255,.7); }
+.color-swatches { display:flex;gap:7px; }
+.swatch { width:22px;height:22px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:.2s; }
+.swatch.selected { border-color:#fff;transform:scale(1.15); }
 
 /* ADMIN */
-#adminPanel { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(10px); }
-.admin-box { max-width:420px; width:92%; border:1px solid var(--accent); padding:25px; border-radius:4px; background:#000; }
-.admin-input, .admin-select { width:100%; background:#111; color:#fff; border:1px solid #2a2a2a; padding:11px 12px; margin-top:4px; font-family:'Orbitron'; font-size:12px; outline:none; }
-.admin-btn { width:100%; padding:12px; margin-top:12px; border:none; cursor:pointer; font-family:'Orbitron'; font-weight:bold; transition:0.2s; }
-.btn-add { background:var(--accent); color:#fff; }
-.btn-clear { background:rgba(255,51,51,0.15); color:var(--accent); border:1px solid rgba(255,51,51,0.3); }
+#adminPanel { position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px); }
+.admin-box { max-width:400px;width:92%;border:1px solid var(--accent);padding:22px;border-radius:4px;background:#000; }
+.admin-input,.admin-select { width:100%;background:#111;color:#fff;border:1px solid #252525;padding:10px 11px;margin-top:4px;font-family:'Orbitron';font-size:12px;outline:none;margin-bottom:10px; }
+.admin-btn { width:100%;padding:11px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.2s;margin-top:6px; }
+.btn-add { background:var(--accent);color:#fff; }
+.btn-clear { background:rgba(255,51,51,.1);color:var(--accent);border:1px solid rgba(255,51,51,.25); }
 
-/* ===================== THEME MODAL ===================== */
-#themeModal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 8000;
-    display: none; align-items: flex-end; justify-content: center;
-    backdrop-filter: blur(12px);
+/* UAV marker */
+.uav-wrap { position:relative;width:44px;height:44px; }
+.uav-arrow {
+    position:absolute;
+    top:50%;left:50%;
+    transform-origin:center bottom;
+    width:0;height:0;
+    border-left:7px solid transparent;
+    border-right:7px solid transparent;
+    border-bottom:18px solid var(--target-color);
+    /* arrow points UP by default; rotation applied via JS */
+    margin-left:-7px;
+    margin-top:-22px;
+    filter:drop-shadow(0 0 4px var(--target-color));
 }
-#themeModal.show { display: flex; }
-.theme-sheet {
-    background: #0f0a0a;
-    border: 1px solid rgba(255,51,51,0.2);
-    border-bottom: none;
-    border-radius: 14px 14px 0 0;
-    width: min(520px, 100%);
-    padding: 24px 20px 32px;
-    animation: sheetUp 0.35s cubic-bezier(0.19,1,0.22,1) forwards;
-}
-@keyframes sheetUp { from{transform:translateY(100%);opacity:0} to{transform:none;opacity:1} }
+.uav-img { position:absolute;top:0;left:0;width:44px;height:44px;filter:invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%); }
 
-.sheet-handle { width:36px; height:3px; background:rgba(255,255,255,0.15); border-radius:99px; margin:0 auto 20px; }
-.sheet-title { font-family:'Orbitron'; font-size:13px; color:var(--accent); letter-spacing:2px; margin-bottom:18px; text-align:center; }
+/* occupied territory */
+.occupied-layer path { stroke:#cc2200!important;stroke-width:1px!important;fill:rgba(180,20,0,.13)!important;stroke-dasharray:6,4!important; }
+/* oblast borders */
+.oblast-layer path { stroke:rgba(255,100,50,.35)!important;stroke-width:1px!important;fill:none!important; }
+/* alarm overlay */
+.alarm-region path { fill:rgba(255,30,0,.18)!important;stroke:rgba(255,60,0,.7)!important;stroke-width:1.5px!important; }
 
-/* Theme cards grid */
-.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
-.theme-card {
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 6px; overflow: hidden; cursor: pointer;
-    transition: border-color 0.2s, transform 0.15s;
-    position: relative;
-}
-.theme-card:hover { transform: scale(1.03); }
-.theme-card.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(255,51,51,0.3); }
-.theme-card.active::after {
-    content: '✓';
-    position: absolute; top: 5px; right: 7px;
-    color: var(--accent); font-size: 12px; font-weight: 900;
-}
-.theme-preview {
-    width: 100%; height: 64px;
-    display: block;
-    object-fit: cover;
-}
-/* Fake previews using CSS gradients */
-.prev-dark   { background: linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1c2128 70%, #111 100%); height:64px; }
-.prev-sat    { background: linear-gradient(135deg, #1a3a1a 0%, #2d5a1b 30%, #4a7c3f 60%, #1a2e1a 100%); height:64px; position:relative; overflow:hidden; }
-.prev-sat::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at 60% 40%, rgba(100,140,80,0.6) 0%, transparent 60%), radial-gradient(ellipse at 30% 70%, rgba(60,100,50,0.4) 0%, transparent 50%); }
-.prev-light  { background: linear-gradient(135deg, #e8e0d0 0%, #d4c9b5 40%, #c8bea8 100%); height:64px; }
-.prev-topo   { background: linear-gradient(135deg, #c8d8a0 0%, #b0c080 30%, #98a870 60%, #808860 100%); height:64px; }
-.prev-night  { background: linear-gradient(135deg, #060914 0%, #0a0f24 40%, #0d1530 70%, #050810 100%); height:64px; }
-.prev-water  { background: linear-gradient(135deg, #1a2840 0%, #243550 40%, #1e3060 70%, #152035 100%); height:64px; }
-
-.theme-name { padding: 5px 6px; font-size: 9px; font-family:'Orbitron'; color:rgba(255,255,255,0.6); letter-spacing:1px; text-align:center; background:#0a0606; }
-
-/* Brightness slider */
-.brightness-row { display:flex; align-items:center; gap:12px; margin-top:4px; }
-.brightness-row label { font-family:'Orbitron'; font-size:9px; color:rgba(255,255,255,0.4); letter-spacing:1px; white-space:nowrap; }
-#brightnessSlider {
-    flex: 1; -webkit-appearance:none; height:3px;
-    background: linear-gradient(to right, var(--accent) 0%, var(--accent) 50%, rgba(255,255,255,0.1) 50%);
-    border-radius:99px; outline:none; cursor:pointer;
-}
-#brightnessSlider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 6px rgba(255,51,51,0.5); }
-.bright-val { font-family:'Orbitron'; font-size:10px; color:var(--accent); width:32px; text-align:right; }
-
-.sheet-close-btn {
-    display:block; width:100%; margin-top:18px;
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
-    color:rgba(255,255,255,0.35); font-family:'Orbitron'; font-size:10px;
-    letter-spacing:2px; padding:10px; cursor:pointer; border-radius:4px; transition:0.2s;
-}
-.sheet-close-btn:hover { color:#fff; background:rgba(255,255,255,0.08); }
-
-/* UAV — без анімацій */
-.uav-icon img {
-    width: 44px; height: 44px;
-    filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 4px rgba(255,51,51,0.6));
-}
-
-/* privacy link */
-.privacy-link { position:absolute; bottom:8px; right:14px; z-index:2001; font-size:8px; opacity:0.35; color:white; text-decoration:none; font-family:'Orbitron'; letter-spacing:1px; }
-.privacy-link:hover { opacity:0.8; color:var(--accent); }
+.privacy-link { position:absolute;bottom:6px;right:12px;z-index:2001;font-size:8px;opacity:.3;color:white;text-decoration:none;font-family:'Orbitron';letter-spacing:1px; }
+.privacy-link:hover { opacity:.8;color:var(--accent); }
 
 @media(max-width:600px){
-    .top-ui{flex-direction:column;gap:8px}
-    .side-panel{width:calc(100% - 40px);top:auto;bottom:100px}
-    .side-panel.active{right:20px;left:20px}
+    .top-ui{flex-direction:column;gap:7px}
+    .side-panel{width:calc(100% - 32px);top:auto;bottom:90px}
+    .side-panel.active{right:16px;left:16px}
     .theme-grid{grid-template-columns:repeat(2,1fr)}
 }
 </style>
@@ -205,7 +182,7 @@ body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(-
 <body oncontextmenu="return false;">
 
 <!-- SPLASH -->
-<div id="splash-screen">
+<div id="splash">
     <div class="logo-anim">SKY DEFENSE</div>
     <div class="boot-loader">
         <div class="boot-text" id="bootStatus">Initializing Systems...</div>
@@ -230,117 +207,152 @@ body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(-
 <!-- ADMIN -->
 <div id="adminPanel">
     <div class="admin-box">
-        <h2 style="color:var(--accent);font-family:'Orbitron';font-size:15px;margin-bottom:18px;text-align:center;">COMMAND CENTER</h2>
-        <div class="data-block">
-            <span class="data-label">Type of Target</span>
-            <select id="admType" class="admin-select">
-                <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-                <option value="shahed-238-jet">Shahed-238 (Jet)</option>
-                <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
-                <option value="tu-95ms-strat">Tu-95MS Strategy</option>
-            </select>
-        </div>
-        <div class="data-block">
-            <span class="data-label">Angle (0-360°)</span>
-            <input type="number" id="admAngle" class="admin-input" value="0">
-        </div>
-        <div class="data-block">
-            <span class="data-label">Accuracy Radius (m)</span>
-            <input type="number" id="admAcc" class="admin-input" value="5000">
-        </div>
+        <h2 style="color:var(--accent);font-family:'Orbitron';font-size:14px;margin-bottom:16px;text-align:center;">COMMAND CENTER</h2>
+        <span class="data-label" style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase">Type of Target</span>
+        <select id="admType" class="admin-select">
+            <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
+            <option value="shahed-238-jet">Shahed-238 (Jet)</option>
+            <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
+            <option value="tu-95ms-strat">Tu-95MS Strategy</option>
+        </select>
+        <span class="data-label" style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase">Angle (0–360°)</span>
+        <input type="number" id="admAngle" class="admin-input" value="0">
+        <span class="data-label" style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase">Accuracy Radius (m)</span>
+        <input type="number" id="admAcc" class="admin-input" value="5000">
         <button class="admin-btn btn-add" onclick="spawnDrone()">DEPLOY TARGET</button>
         <button class="admin-btn btn-clear" onclick="clearDrones()">PURGE ALL DATA</button>
-        <button class="admin-btn" style="background:#1a1a1a;color:#666;margin-top:8px;" onclick="location.hash=''">CLOSE</button>
-        <p style="font-size:9px;color:#444;text-align:center;margin-top:12px;">Target spawns at crosshair position</p>
+        <button class="admin-btn" style="background:#181818;color:#555;margin-top:6px" onclick="location.hash=''">CLOSE</button>
     </div>
 </div>
 
-<!-- THEME MODAL (bottom sheet) -->
-<div id="themeModal" onclick="closeThemeModal(event)">
-    <div class="theme-sheet" id="themeSheet">
+<!-- THEME SHEET -->
+<div class="bottom-sheet-bg" id="themeModal" onclick="closeBgSheet(event,'themeModal')">
+    <div class="bottom-sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-title">MAP LAYER</div>
-
         <div class="theme-grid">
-            <div class="theme-card active" onclick="selectTheme(0)" id="tc0">
-                <div class="prev-dark"></div>
-                <div class="theme-name">ULTRA DARK</div>
-            </div>
-            <div class="theme-card" onclick="selectTheme(1)" id="tc1">
-                <div class="prev-sat"></div>
-                <div class="theme-name">SATELLITE</div>
-            </div>
-            <div class="theme-card" onclick="selectTheme(2)" id="tc2">
-                <div class="prev-night"></div>
-                <div class="theme-name">NIGHT BLUE</div>
-            </div>
-            <div class="theme-card" onclick="selectTheme(3)" id="tc3">
-                <div class="prev-topo"></div>
-                <div class="theme-name">TOPO</div>
-            </div>
-            <div class="theme-card" onclick="selectTheme(4)" id="tc4">
-                <div class="prev-water"></div>
-                <div class="theme-name">DARK WATER</div>
-            </div>
-            <div class="theme-card" onclick="selectTheme(5)" id="tc5">
-                <div class="prev-light"></div>
-                <div class="theme-name">LIGHT</div>
-            </div>
+            <div class="theme-card active" onclick="selectTheme(0)" id="tc0"><div class="prev-dark"></div><div class="theme-name">ULTRA DARK</div></div>
+            <div class="theme-card" onclick="selectTheme(1)" id="tc1"><div class="prev-sat"></div><div class="theme-name">SATELLITE</div></div>
+            <div class="theme-card" onclick="selectTheme(2)" id="tc2"><div class="prev-night"></div><div class="theme-name">NIGHT BLUE</div></div>
+            <div class="theme-card" onclick="selectTheme(3)" id="tc3"><div class="prev-topo"></div><div class="theme-name">TOPO</div></div>
+            <div class="theme-card" onclick="selectTheme(4)" id="tc4"><div class="prev-water"></div><div class="theme-name">DARK WATER</div></div>
+            <div class="theme-card" onclick="selectTheme(5)" id="tc5"><div class="prev-light"></div><div class="theme-name">LIGHT</div></div>
         </div>
-
         <div class="brightness-row">
             <label>BRIGHTNESS</label>
-            <input type="range" id="brightnessSlider" min="20" max="120" value="65" oninput="setBrightness(this.value)">
-            <span class="bright-val" id="brightVal">65%</span>
+            <input type="range" id="brightnessSlider" min="15" max="130" value="60" oninput="setBrightness(this.value)">
+            <span class="bright-val" id="brightVal">60%</span>
+        </div>
+        <button class="sheet-close" onclick="closeSheet('themeModal')">CLOSE</button>
+    </div>
+</div>
+
+<!-- SETTINGS SHEET -->
+<div class="bottom-sheet-bg" id="settingsModal" onclick="closeBgSheet(event,'settingsModal')">
+    <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">SETTINGS</div>
+
+        <!-- Layers -->
+        <div class="settings-section">
+            <span class="settings-label">Шари карти</span>
+            <div class="toggle-row">
+                <span>Межі областей</span>
+                <label class="toggle"><input type="checkbox" id="togOblast" checked onchange="toggleOblast()"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span>Окуповані території</span>
+                <label class="toggle"><input type="checkbox" id="togOccup" checked onchange="toggleOccup()"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span>Тривоги (Alarm API)</span>
+                <label class="toggle"><input type="checkbox" id="togAlarm" checked onchange="toggleAlarm()"><span class="toggle-slider"></span></label>
+            </div>
         </div>
 
-        <button class="sheet-close-btn" onclick="closeThemeModal()">CLOSE</button>
+        <!-- Target color -->
+        <div class="settings-section">
+            <span class="settings-label">Колір цілей</span>
+            <div class="color-row">
+                <span>Виберіть колір</span>
+                <div class="color-swatches" id="colorSwatches">
+                    <div class="swatch selected" style="background:#ff3333" onclick="setTargetColor('#ff3333',this)"></div>
+                    <div class="swatch" style="background:#ff9900" onclick="setTargetColor('#ff9900',this)"></div>
+                    <div class="swatch" style="background:#ffcc00" onclick="setTargetColor('#ffcc00',this)"></div>
+                    <div class="swatch" style="background:#00e5ff" onclick="setTargetColor('#00e5ff',this)"></div>
+                    <div class="swatch" style="background:#00ff88" onclick="setTargetColor('#00ff88',this)"></div>
+                    <div class="swatch" style="background:#cc44ff" onclick="setTargetColor('#cc44ff',this)"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI color -->
+        <div class="settings-section">
+            <span class="settings-label">Колір інтерфейсу</span>
+            <div class="color-row">
+                <span>Акцентний колір</span>
+                <div class="color-swatches" id="uiSwatches">
+                    <div class="swatch selected" style="background:#ff3333" onclick="setUIColor('#ff3333',this)"></div>
+                    <div class="swatch" style="background:#ff9900" onclick="setUIColor('#ff9900',this)"></div>
+                    <div class="swatch" style="background:#ffcc00" onclick="setUIColor('#ffcc00',this)"></div>
+                    <div class="swatch" style="background:#00e5ff" onclick="setUIColor('#00e5ff',this)"></div>
+                    <div class="swatch" style="background:#00ff88" onclick="setUIColor('#00ff88',this)"></div>
+                    <div class="swatch" style="background:#cc44ff" onclick="setUIColor('#cc44ff',this)"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="sheet-close" onclick="closeSheet('settingsModal')">CLOSE</button>
     </div>
 </div>
 
+<!-- MAP -->
 <div id="map"></div>
 
-<div class="main-crosshair">
-    <span class="tl"></span><span class="tr"></span>
-    <span class="bl"></span><span class="br"></span>
-</div>
+<!-- CROSSHAIR -->
+<div class="main-crosshair"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
 
 <div id="mapNotify">SYNC COMPLETED</div>
+<div id="alarmStrip"></div>
 
+<!-- TOP UI -->
 <div class="top-ui">
     <div class="status-group">
-        <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color:var(--danger);">OFFLINE</span></div>
+        <div class="box"><i class="fa-solid fa-clock"></i><span id="sysTime" class="glow">00:00:00</span></div>
+        <div class="box"><i class="fa-solid fa-users"></i> ONLINE:<span id="onlineCount" class="glow">1</span></div>
+        <div class="box"><i class="fa-solid fa-satellite-dish"></i><span id="gpsStatus" style="color:var(--accent)">OFFLINE</span></div>
+        <div class="box" id="alarmBox" style="display:none"><i class="fa-solid fa-bell" style="color:#ff5555"></i><span id="alarmCount" style="color:#ff5555;font-family:'Orbitron'">0</span> ТРИВОГ</div>
     </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
+    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE:<span id="uavCount" class="glow">0</span></div>
 </div>
 
+<!-- SIDE PANEL -->
 <div id="sidePanel" class="side-panel">
     <div class="panel-header">
         <span>TRACKING INFO</span>
-        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer;font-size:14px;opacity:0.5;"></i>
+        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer;font-size:13px;opacity:.45"></i>
     </div>
     <div class="panel-body">
         <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
         <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">--</div></div>
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color:var(--accent);">--</div></div>
-        <div class="data-block" style="display:flex;justify-content:space-between;">
-            <div style="width:50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width:50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
+        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color:var(--accent)">--</div></div>
+        <div class="data-block" style="display:flex;justify-content:space-between">
+            <div style="width:48%"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
+            <div style="width:48%"><span class="data-label">Bearing</span><div class="data-value" id="objAngle">--</div></div>
         </div>
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size:10px;opacity:0.5;">--</div></div>
+        <div class="data-block">
+            <span class="data-label">Вектор руху</span>
+            <div class="data-value vector-line" id="objVector">--</div>
+        </div>
+        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size:10px;opacity:.45">--</div></div>
     </div>
 </div>
 
-<div class="bottom-nav" id="ui-nav" style="display:none;">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати">
-        <i class="fa-solid fa-heart"></i>
-    </a>
-    <!-- КНОПКА ТЕМ — відкриває модалку -->
-    <button class="c-btn" onclick="openThemeModal()" title="Теми карти">
-        <i class="fa-solid fa-layer-group"></i>
-    </button>
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="ui-nav" style="display:none">
+    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати"><i class="fa-solid fa-heart"></i></a>
+    <button class="c-btn" onclick="openSheet('themeModal')" title="Теми карти"><i class="fa-solid fa-layer-group"></i></button>
+    <button class="c-btn" onclick="openSheet('settingsModal')" title="Налаштування"><i class="fa-solid fa-gear"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
@@ -348,238 +360,444 @@ body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(-
 <a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY</a>
 
 <script>
-// ── THEMES ──
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const ALARM_API_KEY = '9a1da94ee326981c88ffcaba1c1468ae';
+const FIREBASE_URL  = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
+const SPEED_MAP = { 'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750 };
+const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+
 const THEMES = [
-    { name: "ULTRA DARK",  url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-    { name: "SATELLITE",   url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-    { name: "NIGHT BLUE",  url: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' },
-    { name: "TOPO",        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
-    { name: "DARK WATER",  url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg' },
-    { name: "LIGHT",       url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' },
+    { url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
+    { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+    { url:'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' },
+    { url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
+    { url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg' },
+    { url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' },
 ];
 
-let tIdx = 0;
-let mapBrightness = 65;
+let tIdx=0, mapBrightness=60;
+let targetColor='#ff3333';
+let showOblast=true, showOccup=true, showAlarm=true;
+let userPos=null, userMarker=null, selectedId=null;
+let obs={};
+let oblastLayer=null, occupLayer=null, alarmLayers={};
 
-const map = L.map('map', {
-    zoomControl: false,
-    attributionControl: false,
-    maxBounds: [[43, 21], [53, 41]],
-    minZoom: 5
-}).setView([48.4, 32.5], 6);
-
+// ═══════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════
+const map = L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5}).setView([48.4,32.5],6);
 let tileLayer = L.tileLayer(THEMES[0].url).addTo(map);
-applyBrightness(mapBrightness);
+applyBrightness(60);
 
-function applyBrightness(val) {
-    document.querySelectorAll('.leaflet-tile-pane').forEach(el => {
-        el.style.filter = `brightness(${val}%)`;
-    });
-    // також після зміни тайлів
-    map.once('layeradd', () => {
-        document.querySelectorAll('.leaflet-tile-pane').forEach(el => {
-            el.style.filter = `brightness(${val}%)`;
-        });
-    });
+function applyBrightness(v){
+    document.querySelectorAll('.leaflet-tile-pane').forEach(el=>el.style.filter=`brightness(${v}%)`);
 }
-
-function selectTheme(idx) {
-    tIdx = idx;
+function selectTheme(i){
+    tIdx=i;
     map.removeLayer(tileLayer);
-    tileLayer = L.tileLayer(THEMES[idx].url).addTo(map);
-    setTimeout(() => applyBrightness(mapBrightness), 200);
-    // active card
-    document.querySelectorAll('.theme-card').forEach((c,i) => c.classList.toggle('active', i === idx));
-    showNotify("MAP: " + THEMES[idx].name);
+    tileLayer=L.tileLayer(THEMES[i].url).addTo(map);
+    setTimeout(()=>applyBrightness(mapBrightness),300);
+    document.querySelectorAll('.theme-card').forEach((c,j)=>c.classList.toggle('active',j===i));
+    showNotify("MAP LAYER "+i);
+}
+function setBrightness(v){
+    mapBrightness=+v;
+    document.getElementById('brightVal').textContent=v+'%';
+    const pct=((v-15)/115*100).toFixed(1);
+    document.getElementById('brightnessSlider').style.background=`linear-gradient(to right,var(--accent) ${pct}%,rgba(255,255,255,.1) ${pct}%)`;
+    applyBrightness(v);
 }
 
-function setBrightness(val) {
-    mapBrightness = parseInt(val);
-    document.getElementById('brightVal').textContent = val + '%';
-    // update slider gradient
-    const pct = ((val - 20) / 100 * 100).toFixed(1);
-    document.getElementById('brightnessSlider').style.background =
-        `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
-    applyBrightness(val);
-}
-
-function openThemeModal() {
-    document.getElementById('themeModal').classList.add('show');
-}
-function closeThemeModal(e) {
-    if (!e || e.target === document.getElementById('themeModal')) {
-        document.getElementById('themeModal').classList.remove('show');
+// ═══════════════════════════════════════
+// OBLAST BORDERS (GeoJSON from public CDN)
+// ═══════════════════════════════════════
+async function loadOblastBorders(){
+    try{
+        const r=await fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson');
+        // use Ukraine-specific GeoJSON instead
+        const r2=await fetch('https://raw.githubusercontent.com/corvin-rose/ukraine-regions-geojson/main/ukraine.geojson');
+        const data=await r2.json();
+        oblastLayer=L.geoJSON(data,{
+            style:{color:'rgba(255,100,50,0.4)',weight:1,fill:false,dashArray:'4,6'},
+            interactive:false
+        });
+        if(showOblast) oblastLayer.addTo(map);
+    }catch(e){
+        console.warn('Oblast GeoJSON load failed, trying fallback');
+        try{
+            const r3=await fetch('https://raw.githubusercontent.com/geoloep/leaflet-geojson-ukraine/master/public/ukraine-regions.json');
+            const data=await r3.json();
+            oblastLayer=L.geoJSON(data,{style:{color:'rgba(255,100,50,0.4)',weight:1,fill:false,dashArray:'4,6'},interactive:false});
+            if(showOblast) oblastLayer.addTo(map);
+        }catch(e2){ console.warn('Oblast load failed', e2); }
     }
 }
 
-// ── NOTIFY ──
-function showNotify(text) {
-    const el = document.getElementById('mapNotify');
-    el.innerText = text; el.style.opacity = '1';
-    setTimeout(() => el.style.opacity = '0', 1500);
+// ═══════════════════════════════════════
+// OCCUPIED TERRITORIES
+// ═══════════════════════════════════════
+async function loadOccupied(){
+    try{
+        // ISW / DeepState-style polygon — using approximate simplified GeoJSON
+        const r=await fetch('https://raw.githubusercontent.com/simonepri/geo-ukraine/main/data/ukraine.geojson');
+        // fallback — draw approximate occupied bbox polygons
+    }catch(e){}
+    // Hardcoded approximate occupied zones as polygons (simplified)
+    const occupiedZones = {
+        type:"FeatureCollection",
+        features:[
+            // Crimea
+            {type:"Feature",geometry:{type:"Polygon",coordinates:[[
+                [32.49,46.19],[36.65,45.38],[36.24,45.06],[34.75,44.85],[33.52,44.54],[32.50,45.01],[31.68,45.59],[32.49,46.19]
+            ]]},properties:{name:"Крим"}},
+            // Eastern front (approximate)
+            {type:"Feature",geometry:{type:"Polygon",coordinates:[[
+                [37.27,50.06],[38.40,49.88],[39.33,48.26],[38.91,47.40],[37.55,47.10],[36.80,47.28],[36.00,47.65],[35.85,48.15],[36.30,48.82],[36.70,49.17],[37.27,50.06]
+            ]]},properties:{name:"Окупований схід"}},
+            // South corridor
+            {type:"Feature",geometry:{type:"Polygon",coordinates:[[
+                [33.10,47.00],[34.70,47.05],[35.90,47.05],[36.80,47.28],[36.00,47.65],[34.60,47.45],[33.65,46.90],[33.10,47.00]
+            ]]},properties:{name:"Запорізький коридор"}},
+            // Kherson partial
+            {type:"Feature",geometry:{type:"Polygon",coordinates:[[
+                [32.50,46.19],[33.65,46.90],[34.60,47.45],[34.40,46.58],[33.55,46.05],[32.50,46.19]
+            ]]},properties:{name:"Частина Херсонщини"}}
+        ]
+    };
+    occupLayer=L.geoJSON(occupiedZones,{
+        style:{color:'#cc2200',weight:1,fillColor:'rgba(180,20,0,.18)',fillOpacity:1,dashArray:'6,5'},
+        interactive:false,
+        onEachFeature:(f,l)=>l.bindTooltip(f.properties.name,{sticky:true,className:'occ-tooltip'})
+    });
+    if(showOccup) occupLayer.addTo(map);
 }
 
-// ── SPLASH ──
-window.addEventListener('load', () => {
-    const splash = document.getElementById('splash-screen');
-    const boot = document.getElementById('bootStatus');
-    setTimeout(() => boot.innerText = "Loading OSINT Modules...", 900);
-    setTimeout(() => boot.innerText = "Establishing Satellite Link...", 1900);
-    setTimeout(() => {
-        splash.style.opacity = '0';
-        setTimeout(() => {
-            splash.style.display = 'none';
-            if (!localStorage.getItem('policyAccepted')) showPrivacy();
+function toggleOblast(){
+    showOblast=document.getElementById('togOblast').checked;
+    if(!oblastLayer) return;
+    showOblast ? oblastLayer.addTo(map) : map.removeLayer(oblastLayer);
+}
+function toggleOccup(){
+    showOccup=document.getElementById('togOccup').checked;
+    if(!occupLayer) return;
+    showOccup ? occupLayer.addTo(map) : map.removeLayer(occupLayer);
+}
+function toggleAlarm(){
+    showAlarm=document.getElementById('togAlarm').checked;
+    Object.values(alarmLayers).forEach(l=>showAlarm?l.addTo(map):map.removeLayer(l));
+}
+
+// ═══════════════════════════════════════
+// UKRAINE ALARM API
+// ═══════════════════════════════════════
+// Region ID → approximate center coords
+const REGION_COORDS={
+    "Одеська область":[46.48,30.73],"Київ":[50.45,30.52],"Харківська область":[49.99,36.23],
+    "Дніпропетровська область":[48.46,35.04],"Запорізька область":[47.84,35.14],
+    "Львівська область":[49.84,24.03],"Миколаївська область":[46.97,31.99],
+    "Херсонська область":[46.64,32.62],"Вінницька область":[49.23,28.47],
+    "Полтавська область":[49.59,34.55],"Чернігівська область":[51.50,31.29],
+    "Черкаська область":[49.44,32.06],"Сумська область":[50.91,34.80],
+    "Житомирська область":[50.25,28.66],"Хмельницька область":[49.42,26.99],
+    "Рівненська область":[50.62,26.25],"Івано-Франківська область":[48.92,24.71],
+    "Тернопільська область":[49.55,25.59],"Волинська область":[50.75,25.33],
+    "Закарпатська область":[48.62,22.29],"Кіровоградська область":[48.51,32.26],
+    "Чернівецька область":[48.29,25.94],"Луганська область":[48.57,39.31],
+    "Донецька область":[48.00,37.80]
+};
+
+async function fetchAlarms(){
+    if(!showAlarm) return;
+    try{
+        const res=await fetch('https://api.ukrainealarm.com/api/v3/alerts',{
+            headers:{'Authorization':ALARM_API_KEY}
+        });
+        const data=await res.json();
+        // clean old
+        Object.values(alarmLayers).forEach(l=>map.removeLayer(l));
+        alarmLayers={};
+        let count=0;
+        if(Array.isArray(data)){
+            data.forEach(region=>{
+                const active=(region.activeAlerts||[]).filter(a=>a.type==='AIR');
+                if(active.length===0) return;
+                const nm=region.regionName||'';
+                const coords=REGION_COORDS[nm];
+                if(!coords) return;
+                count++;
+                // glow circle
+                const c=L.circle(coords,{
+                    radius:55000,color:'rgba(255,40,0,.7)',weight:1.2,
+                    fillColor:'rgba(255,20,0,.12)',fillOpacity:1,
+                    dashArray:'8,8',interactive:false
+                });
+                if(showAlarm) c.addTo(map);
+                alarmLayers[nm]=c;
+                // strip tag
+                addAlarmTag(nm);
+            });
+        }
+        document.getElementById('alarmCount').textContent=count;
+        document.getElementById('alarmBox').style.display=count>0?'flex':'none';
+    }catch(e){ console.warn('Alarm API error',e); }
+}
+
+function addAlarmTag(name){
+    const strip=document.getElementById('alarmStrip');
+    const tag=document.createElement('div');
+    tag.className='alarm-tag';
+    tag.textContent='⚠ ТРИВОГА · '+name.replace(' область','').toUpperCase();
+    strip.appendChild(tag);
+    setTimeout(()=>tag.remove(),15000);
+}
+
+// ═══════════════════════════════════════
+// TARGET COLOR
+// ═══════════════════════════════════════
+function setTargetColor(color,el){
+    targetColor=color;
+    document.querySelectorAll('#colorSwatches .swatch').forEach(s=>s.classList.remove('selected'));
+    el.classList.add('selected');
+    // update existing arrows
+    document.querySelectorAll('.uav-arrow').forEach(a=>{
+        a.style.borderBottomColor=color;
+        a.style.filter=`drop-shadow(0 0 4px ${color})`;
+    });
+    // update circles
+    Object.values(obs).forEach(o=>{
+        o.circle.setStyle({color,fillColor:color});
+        o.line.setStyle({color});
+    });
+}
+function setUIColor(color,el){
+    document.documentElement.style.setProperty('--accent',color);
+    document.querySelectorAll('#uiSwatches .swatch').forEach(s=>s.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+// ═══════════════════════════════════════
+// SHEETS
+// ═══════════════════════════════════════
+function openSheet(id){ document.getElementById(id).classList.add('show'); }
+function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
+function closeBgSheet(e,id){ if(e.target===document.getElementById(id)) closeSheet(id); }
+
+// ═══════════════════════════════════════
+// NOTIFY
+// ═══════════════════════════════════════
+function showNotify(txt){
+    const el=document.getElementById('mapNotify');
+    el.innerText=txt; el.style.opacity='1';
+    setTimeout(()=>el.style.opacity='0',1500);
+}
+
+// ═══════════════════════════════════════
+// SPLASH / BOOT
+// ═══════════════════════════════════════
+window.addEventListener('load',()=>{
+    const sp=document.getElementById('splash');
+    const bt=document.getElementById('bootStatus');
+    setTimeout(()=>bt.innerText="Loading OSINT Modules...",900);
+    setTimeout(()=>bt.innerText="Calibrating Satellite Link...",1800);
+    setTimeout(()=>{
+        sp.style.opacity='0';
+        setTimeout(()=>{
+            sp.style.display='none';
+            if(!localStorage.getItem('policyAccepted')) showPrivacy();
             else fullStartup();
             checkAdmin();
-        }, 800);
-    }, 2600);
+        },800);
+    },2700);
 });
 
-function checkAdmin() {
-    document.getElementById('adminPanel').style.display = window.location.hash === '#admin' ? 'flex' : 'none';
-}
-window.addEventListener('hashchange', checkAdmin);
+function checkAdmin(){ document.getElementById('adminPanel').style.display=window.location.hash==='#admin'?'flex':'none'; }
+window.addEventListener('hashchange',checkAdmin);
 
-function showPrivacy() {
-    document.getElementById('privacy-modal').style.display = 'flex';
-    document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
-    document.getElementById('map').style.pointerEvents = 'none';
+function showPrivacy(){
+    document.getElementById('privacy-modal').style.display='flex';
+    document.getElementById('map').style.filter='blur(15px) grayscale(1)';
 }
-function acceptPolicy() {
-    localStorage.setItem('policyAccepted', 'true');
-    document.getElementById('privacy-modal').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('privacy-modal').style.display = 'none';
-        document.getElementById('map').style.filter = '';
-        document.getElementById('map').style.pointerEvents = 'auto';
-        fullStartup();
-    }, 400);
+function acceptPolicy(){
+    localStorage.setItem('policyAccepted','true');
+    const m=document.getElementById('privacy-modal');
+    m.style.opacity='0'; m.style.transition='opacity .4s';
+    setTimeout(()=>{ m.style.display='none'; document.getElementById('map').style.filter=''; fullStartup(); },400);
 }
-function fullStartup() {
-    document.getElementById('ui-nav').style.display = 'flex';
+function fullStartup(){
+    document.getElementById('ui-nav').style.display='flex';
     locateMe();
+    loadOblastBorders();
+    loadOccupied();
+    fetchAlarms();
+    setInterval(fetchAlarms,60000);
     showNotify("SYSTEM READY");
 }
 
-// ── FIREBASE ──
-const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref('drones');
-
-const presenceRef = firebase.database().ref('presence');
-firebase.database().ref('.info/connected').on('value', snap => {
-    if (snap.val()) { const c = presenceRef.push(true); c.onDisconnect().remove(); }
+// ═══════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════
+firebase.initializeApp({databaseURL:FIREBASE_URL});
+const db=firebase.database().ref('drones');
+const presRef=firebase.database().ref('presence');
+firebase.database().ref('.info/connected').on('value',s=>{
+    if(s.val()){ const c=presRef.push(true); c.onDisconnect().remove(); }
 });
-presenceRef.on('value', snap => document.getElementById('onlineCount').innerText = snap.numChildren() || 0);
+presRef.on('value',s=>document.getElementById('onlineCount').innerText=s.numChildren()||0);
 
-// ── GPS ──
-let userPos = null, userMarker = null, selectedId = null;
-function locateMe() {
-    if (!localStorage.getItem('policyAccepted')) return;
-    map.locate({ setView: true, maxZoom: 10 });
+// ═══════════════════════════════════════
+// GPS
+// ═══════════════════════════════════════
+function locateMe(){
+    if(!localStorage.getItem('policyAccepted')) return;
+    map.locate({setView:true,maxZoom:10});
 }
-map.on('locationfound', e => {
-    userPos = e.latlng;
-    document.getElementById('gpsStatus').innerText = "ACTIVE";
-    document.getElementById('gpsStatus').style.color = "var(--success)";
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.circleMarker(userPos, { radius:6, color:'#fff', weight:2, fillColor:'#ff9d00', fillOpacity:0.9 }).addTo(map);
+map.on('locationfound',e=>{
+    userPos=e.latlng;
+    document.getElementById('gpsStatus').innerText="ACTIVE";
+    document.getElementById('gpsStatus').style.color="var(--success)";
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker=L.circleMarker(userPos,{radius:6,color:'#fff',weight:2,fillColor:'#ff9d00',fillOpacity:.9}).addTo(map);
 });
 
-const SPEED_MAP = { 'shahed-vp-standart':185, 'shahed-238-jet':550, 'kalibr-cruise':880, 'tu-95ms-strat':750 };
-const FALLBACK = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
-let obs = {};
-
-function getLifetime(ts) {
-    if (!ts) return "--";
-    const s = Math.floor((Date.now() - ts) / 1000);
-    return `${Math.floor(s/60)} хв ${s%60} сек`;
+// ═══════════════════════════════════════
+// VECTOR LABEL
+// ═══════════════════════════════════════
+function bearingToName(deg){
+    const dirs=['ПІВНІЧ','ПН-СХ','СХІД','ПД-СХ','ПІВДЕНЬ','ПД-ЗХ','ЗАХІД','ПН-ЗХ'];
+    return dirs[Math.round(deg/45)%8];
+}
+function computeVector(lat,lng,angle,speedKmH){
+    // 10-minute projection
+    const dist=(speedKmH/60)*10; // km in 10 min
+    const R=6371;
+    const angRad=angle*Math.PI/180;
+    const dLat=dist/R*Math.cos(angRad)*(180/Math.PI);
+    const dLng=dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(angRad)*(180/Math.PI);
+    return {lat:lat+dLat,lng:lng+dLng,dist};
 }
 
-function sync(id, d) {
-    if (!d) return;
-    if ((Date.now() - (d.timestamp || Date.now())) / 60000 > 45) { removeObject(id); return; }
+// ═══════════════════════════════════════
+// SYNC DRONE
+// ═══════════════════════════════════════
+function makeArrowHTML(angle){
+    return `<div class="uav-wrap">
+        <div class="uav-arrow" style="transform:rotate(${angle}deg) translateY(-14px);border-bottom-color:${targetColor};filter:drop-shadow(0 0 4px ${targetColor})"></div>
+        <img class="uav-img" src="${'shahed-standart'}.png" onerror="this.style.opacity=0" style="transform:rotate(${angle}deg)">
+    </div>`;
+}
 
-    const rad = (d.angle - 90) * Math.PI / 180;
-    const tail = [d.lat - Math.cos(rad)*0.015, d.lng - Math.sin(rad)*0.015];
-    const errR = d.accuracy || 5000;
+function sync(id,d){
+    if(!d) return;
+    if((Date.now()-(d.timestamp||Date.now()))/60000>45){ removeObject(id); return; }
 
-    if (obs[id]) {
-        obs[id].marker.setLatLng([d.lat, d.lng]);
-        obs[id].circle.setLatLng([d.lat, d.lng]).setRadius(errR);
-        obs[id].line.setLatLngs([[d.lat, d.lng], tail]);
-        const img = obs[id].marker.getElement()?.querySelector('img');
-        if (img) img.style.transform = `rotate(${d.angle||0}deg)`;
-        obs[id].data = d;
-        if (selectedId === id) updateUI(id, d);
+    const ang=d.angle||0;
+    const rad=(ang-90)*Math.PI/180;
+    const tail=[d.lat-Math.cos(rad)*0.018, d.lng-Math.sin(rad)*0.018];
+    const errR=d.accuracy||5000;
+
+    if(obs[id]){
+        obs[id].marker.setLatLng([d.lat,d.lng]);
+        obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
+        obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
+        const wrap=obs[id].marker.getElement()?.querySelector('.uav-wrap');
+        if(wrap){
+            const arr=wrap.querySelector('.uav-arrow');
+            const img=wrap.querySelector('.uav-img');
+            if(arr){ arr.style.transform=`rotate(${ang}deg) translateY(-14px)`;arr.style.borderBottomColor=targetColor; }
+            if(img) img.style.transform=`rotate(${ang}deg)`;
+        }
+        obs[id].data=d;
+        if(selectedId===id) updateUI(id,d);
     } else {
-        const circle = L.circle([d.lat, d.lng], {
-            radius: errR, color:'#ff3333', weight:1,
-            fillColor:'#ff3333', fillOpacity:0.08,
-            dashArray:'5,10', interactive:false
+        const circle=L.circle([d.lat,d.lng],{
+            radius:errR,color:targetColor,weight:1,
+            fillColor:targetColor,fillOpacity:.07,
+            dashArray:'5,10',interactive:false
         }).addTo(map);
 
-        const icon = L.divIcon({
-            className: 'uav-icon',
-            html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK}'" style="transform:rotate(${d.angle||0}deg)">`,
-            iconSize: [44, 44], iconAnchor: [22, 22]
+        const icon=L.divIcon({
+            className:'',
+            html:`<div class="uav-wrap">
+                <div class="uav-arrow" style="position:absolute;top:50%;left:50%;transform:rotate(${ang}deg) translateY(-20px);margin-left:-7px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:18px solid ${targetColor};filter:drop-shadow(0 0 4px ${targetColor})"></div>
+                <img class="uav-img" src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}'" style="position:absolute;top:0;left:0;width:44px;height:44px;transform:rotate(${ang}deg);filter:invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%)">
+            </div>`,
+            iconSize:[44,44],iconAnchor:[22,22]
         });
-        const marker = L.marker([d.lat, d.lng], { icon }).addTo(map);
-        const line = L.polyline([[d.lat, d.lng], tail], {
-            color:'rgba(255,51,51,0.5)', weight:1, dashArray:'3,7'
-        }).addTo(map);
+        const marker=L.marker([d.lat,d.lng],{icon}).addTo(map);
+        const line=L.polyline([[d.lat,d.lng],tail],{color:targetColor,weight:1,opacity:.5,dashArray:'3,8'}).addTo(map);
 
-        marker.on('click', e => { L.DomEvent.stopPropagation(e); selectedId = id; updateUI(id, d); });
-        obs[id] = { marker, line, circle, data: d };
+        marker.on('click',e=>{ L.DomEvent.stopPropagation(e); selectedId=id; updateUI(id,d); });
+        obs[id]={marker,line,circle,data:d};
     }
     updateCounters();
 }
 
-function removeObject(id) {
-    if (!obs[id]) return;
+function removeObject(id){
+    if(!obs[id]) return;
     map.removeLayer(obs[id].marker);
     map.removeLayer(obs[id].line);
     map.removeLayer(obs[id].circle);
-    if (selectedId === id) closeInfo();
+    if(selectedId===id) closeInfo();
     delete obs[id];
     updateCounters();
 }
 
-function updateUI(id, d) {
+function getLifetime(ts){
+    if(!ts) return '--';
+    const s=Math.floor((Date.now()-ts)/1000);
+    return `${Math.floor(s/60)} хв ${s%60} сек`;
+}
+
+function updateUI(id,d){
     document.getElementById('sidePanel').classList.add('active');
-    document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
-    document.getElementById('objType').innerText = (d.type||'UNKNOWN').replace(/-/g,' ').toUpperCase();
-    document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-    document.getElementById('objAngle').innerText = `${Math.round(d.angle||0)}°`;
-    document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
-    if (userPos) {
-        const dist = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-        const eta = Math.round(dist / (SPEED_MAP[d.type]||200) * 60);
-        document.getElementById('objRange').innerHTML = `${dist.toFixed(1)} KM<br><span style="color:var(--accent);font-size:10px">ETA: ~${eta} MIN</span>`;
+    document.getElementById('objId').innerText='REF_'+id.substring(0,6).toUpperCase();
+    document.getElementById('objType').innerText=(d.type||'UNKNOWN').replace(/-/g,' ').toUpperCase();
+    document.getElementById('objCoords').innerText=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+    document.getElementById('objAngle').innerText=`${Math.round(d.angle||0)}° ${bearingToName(d.angle||0)}`;
+    document.getElementById('objLifetime').innerText=getLifetime(d.timestamp);
+
+    // Vector
+    const spd=SPEED_MAP[d.type]||200;
+    const vec=computeVector(d.lat,d.lng,d.angle||0,spd);
+    document.getElementById('objVector').innerHTML=
+        `→ ${bearingToName(d.angle||0)}<br>~${vec.dist.toFixed(1)} км за 10 хв<br>` +
+        `<span style="font-size:9px;opacity:.5">${vec.lat.toFixed(3)}, ${vec.lng.toFixed(3)}</span>`;
+
+    if(userPos){
+        const dist=(map.distance(userPos,[d.lat,d.lng])/1000);
+        const eta=Math.round(dist/spd*60);
+        document.getElementById('objRange').innerHTML=`${dist.toFixed(1)} KM<br><span style="color:var(--accent);font-size:10px">ETA: ~${eta} MIN</span>`;
     }
 }
 
-function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
-function closeInfo() { document.getElementById('sidePanel').classList.remove('active'); selectedId = null; }
-map.on('click', closeInfo);
+function updateCounters(){ document.getElementById('uavCount').innerText=Object.keys(obs).length; }
+function closeInfo(){ document.getElementById('sidePanel').classList.remove('active'); selectedId=null; }
+map.on('click',closeInfo);
 
-setInterval(() => {
-    document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', {hour12:false});
-    if (selectedId && obs[selectedId]) document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
-}, 1000);
+setInterval(()=>{
+    document.getElementById('sysTime').innerText=new Date().toLocaleTimeString('uk-UA',{hour12:false});
+    if(selectedId&&obs[selectedId]) document.getElementById('objLifetime').innerText=getLifetime(obs[selectedId].data.timestamp);
+},1000);
 
-db.on('child_added',   s => sync(s.key, s.val()));
-db.on('child_changed', s => sync(s.key, s.val()));
-db.on('child_removed', s => removeObject(s.key));
+db.on('child_added',  s=>sync(s.key,s.val()));
+db.on('child_changed',s=>sync(s.key,s.val()));
+db.on('child_removed',s=>removeObject(s.key));
 
-function spawnDrone() {
-    const c = map.getCenter();
-    db.push({ lat:c.lat, lng:c.lng, type:document.getElementById('admType').value, angle:parseInt(document.getElementById('admAngle').value)||0, accuracy:parseInt(document.getElementById('admAcc').value)||5000, timestamp:Date.now() })
-    .then(() => showNotify("TARGET DEPLOYED"));
+// ═══════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════
+function spawnDrone(){
+    const c=map.getCenter();
+    db.push({lat:c.lat,lng:c.lng,type:document.getElementById('admType').value,
+        angle:parseInt(document.getElementById('admAngle').value)||0,
+        accuracy:parseInt(document.getElementById('admAcc').value)||5000,
+        timestamp:Date.now()
+    }).then(()=>showNotify("TARGET DEPLOYED"));
 }
-function clearDrones() {
-    if (confirm("Purge all targets?")) db.remove().then(() => showNotify("PURGED"));
+function clearDrones(){
+    if(confirm("Purge all targets?")) db.remove().then(()=>showNotify("PURGED"));
 }
 </script>
 </body>
