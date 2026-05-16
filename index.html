@@ -2,205 +2,308 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<title>SKY DEFENSE - Strategic Monitor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SKY DEFENSE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
 <style>
-:root {
-    --accent:#ff3333; --danger:#ff3333; --warning:#ffcc00; --success:#00ff88;
-    --bg-dark:#0a0805; --glass:rgba(15,5,5,0.88); --neon-border:rgba(255,51,51,0.3);
-    --panel-shadow:0 8px 32px rgba(0,0,0,0.9); --mono-gold:#ffcc00;
-    --target-color:#ff3333; --icon-size:44px;
+/* ═══════════════ RESET & VARS ═══════════════ */
+:root{
+  --a:#ff3333; --a2:rgba(255,51,51,0.18); --a3:rgba(255,51,51,0.08);
+  --ok:#00e676; --warn:#ffcc00; --gold:#f5a623;
+  --bg:#09080a; --glass:rgba(14,8,8,0.92);
+  --border:rgba(255,51,51,0.22); --border2:rgba(255,255,255,0.07);
+  --shadow:0 8px 32px rgba(0,0,0,0.85);
+  --tc:#ff3333; --isz:36px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
 }
-*{-webkit-user-select:none;user-select:none;box-sizing:border-box;}
-html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg-dark);font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
 
-/* SPLASH */
-#splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s;}
-.logo-anim{font-size:26px;font-family:'Orbitron';color:var(--accent);margin-bottom:20px;animation:pulse 1.5s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.boot-loader{width:260px;font-family:'Orbitron';}
-.boot-text{font-size:10px;color:var(--accent);margin-bottom:10px;letter-spacing:2px;text-transform:uppercase;}
-.progress-bar{width:100%;height:2px;background:rgba(255,51,51,.1);overflow:hidden;}
-.progress-fill{width:0;height:100%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:load 2.5s forwards;}
-@keyframes load{to{width:100%}}
+/* ═══════════════ MAP ═══════════════ */
+#map{position:absolute;inset:0;z-index:1;background:#000;}
+/* Performance: GPU layers for tile pane */
+.leaflet-tile-pane{will-change:transform;}
+.leaflet-map-pane{will-change:transform;}
 
-/* PRIVACY */
-#privacy-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
-.policy-box{background:var(--glass);border:1px solid var(--accent);padding:28px;border-radius:12px;max-width:480px;width:92%;animation:mIn .4s ease;}
-@keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.policy-box h2{font-family:'Orbitron';color:var(--accent);font-size:17px;margin:0 0 14px;letter-spacing:2px;}
-.policy-content{font-size:12px;line-height:1.6;color:rgba(255,255,255,.65);max-height:200px;overflow-y:auto;margin-bottom:18px;padding:13px;background:rgba(0,0,0,.5);border:1px solid rgba(255,51,51,.1);}
-.policy-content strong{color:var(--accent);}
-.accept-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);padding:11px;font-family:'Orbitron';cursor:pointer;transition:.3s;font-weight:700;letter-spacing:1px;display:block;width:100%;}
-.accept-btn:hover{background:var(--accent);color:#000;}
+/* ═══════════════ SPLASH ═══════════════ */
+#splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s;}
+.s-logo{font-family:'Orbitron';font-size:clamp(20px,6vw,32px);color:var(--a);letter-spacing:.15em;margin-bottom:6px;animation:gp 2s infinite;}
+@keyframes gp{0%,100%{text-shadow:0 0 20px var(--a)}50%{text-shadow:0 0 40px var(--a),0 0 80px rgba(255,51,51,.3)}}
+.s-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.25em;margin-bottom:32px;}
+.s-bar-wrap{width:200px;height:1px;background:rgba(255,255,255,.08);}
+.s-bar{height:100%;background:var(--a);width:0;animation:sb 2.5s ease forwards;box-shadow:0 0 8px var(--a);}
+@keyframes sb{to{width:100%}}
+.s-txt{font-family:'Orbitron';font-size:9px;color:var(--a);letter-spacing:.15em;margin-top:10px;text-transform:uppercase;}
 
-/* MAP */
-#map{width:100%;height:100%;z-index:1;background:#000;}
+/* ═══════════════ PRIVACY ═══════════════ */
+#privModal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px);padding:16px;}
+.priv-box{background:var(--glass);border:1px solid var(--a);padding:24px;border-radius:16px;max-width:440px;width:100%;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.priv-box h2{font-family:'Orbitron';color:var(--a);font-size:15px;margin:0 0 12px;letter-spacing:.1em;}
+.priv-body{font-size:11px;line-height:1.7;color:rgba(255,255,255,.6);max-height:160px;overflow-y:auto;margin-bottom:16px;padding:12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,51,51,.1);border-radius:8px;}
+.priv-body strong{color:var(--a);}
+.priv-ok{width:100%;padding:12px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Orbitron';font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:8px;transition:.25s;}
+.priv-ok:hover{background:var(--a);color:#000;}
 
-/* CROSSHAIR */
-.main-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;z-index:1500;pointer-events:none;opacity:.45;}
-.main-crosshair span{position:absolute;width:8px;height:8px;border-color:var(--accent);border-style:solid;}
-.tl{top:0;left:0;border-width:1.5px 0 0 1.5px}.tr{top:0;right:0;border-width:1.5px 1.5px 0 0}
-.bl{bottom:0;left:0;border-width:0 0 1.5px 1.5px}.br{bottom:0;right:0;border-width:0 1.5px 1.5px 0}
+/* ═══════════════ TOP STATUS BAR ═══════════════ */
+#topBar{
+  position:absolute;top:calc(var(--safe-t) + 12px);left:12px;right:12px;
+  z-index:2000;display:flex;justify-content:space-between;align-items:flex-start;
+  pointer-events:none;
+}
+.tb-left{display:flex;flex-direction:column;gap:5px;pointer-events:auto;}
+.tb-pill{
+  background:var(--glass);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 10px;font-size:10px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;
+  box-shadow:var(--shadow);white-space:nowrap;
+}
+.tb-pill .v{color:#fff;font-family:'Orbitron';font-size:10px;}
+.tb-pill .v.red{color:var(--a);text-shadow:0 0 6px var(--a);}
+.tb-pill .v.ok{color:var(--ok);}
+.tb-right{pointer-events:auto;}
+#activePill{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;box-shadow:var(--shadow);}
+#activePill .num{font-family:'Orbitron';color:var(--a);font-size:13px;line-height:1;text-shadow:0 0 8px var(--a);}
 
-/* TOP UI */
-.top-ui{position:absolute;top:16px;left:16px;right:16px;z-index:2000;display:flex;justify-content:space-between;pointer-events:none;}
-.status-group{display:flex;gap:8px;pointer-events:auto;flex-wrap:wrap;}
-.box{background:var(--glass);backdrop-filter:blur(10px);padding:7px 13px;border-radius:8px;border:1px solid var(--neon-border);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:7px;box-shadow:var(--panel-shadow);}
-.glow{color:var(--accent);text-shadow:0 0 8px var(--accent);font-family:'Orbitron';}
-#weatherBox{cursor:pointer;}
+/* ═══════════════ CROSSHAIR ═══════════════ */
+#xhair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:32px;height:32px;opacity:.4;}
+#xhair:before,#xhair:after{content:'';position:absolute;background:var(--a);}
+#xhair:before{width:1px;height:100%;left:50%;top:0;}
+#xhair:after{height:1px;width:100%;top:50%;left:0;}
+.xh-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;border:1px solid var(--a);border-radius:50%;}
 
-/* SIDE PANEL */
-.side-panel{position:absolute;top:16px;right:-320px;z-index:2100;background:var(--glass);backdrop-filter:blur(15px);width:255px;border-radius:10px;transition:.4s;border:1px solid var(--neon-border);box-shadow:var(--panel-shadow);}
-.side-panel.active{right:16px;}
-.panel-header{padding:12px 15px;border-bottom:1px solid rgba(255,51,51,.1);display:flex;justify-content:space-between;align-items:center;}
-.panel-header span{font-family:'Orbitron';font-weight:700;color:var(--accent);font-size:12px;}
-.panel-body{padding:14px;}
-.data-block{margin-bottom:11px;}
-.data-label{color:rgba(255,255,255,.38);font-size:9px;font-weight:700;text-transform:uppercase;margin-bottom:3px;display:block;letter-spacing:1px;}
-.data-value{font-family:'Orbitron';color:#fff;font-size:12px;}
-.live-timer{color:var(--success);}
+/* ═══════════════ FLOATING ACTION BAR ═══════════════ */
+/* Компактна вертикальна панель справа */
+#fab{
+  position:absolute;
+  right:12px;
+  bottom:calc(var(--safe-b) + 24px);
+  z-index:2000;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.fab-btn{
+  width:40px;height:40px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+  color:rgba(255,255,255,.55);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  box-shadow:var(--shadow);
+  text-decoration:none;
+  position:relative;
+}
+.fab-btn:active{transform:scale(.93);}
+.fab-btn:hover,.fab-btn.on{border-color:var(--a);color:var(--a);background:var(--a3);}
+.fab-btn.gold-btn{border-color:var(--gold);color:var(--gold);}
+.fab-btn.gold-btn:hover{background:rgba(245,166,35,.1);color:#fff;}
+.fab-sep{width:24px;height:1px;background:var(--border);}
+/* badge dot */
+.fab-btn .bdot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--a);box-shadow:0 0 4px var(--a);}
 
-/* NOTIFY */
-#mapNotify{position:absolute;top:100px;left:50%;transform:translateX(-50%);z-index:3000;background:var(--accent);color:#fff;padding:5px 16px;border-radius:4px;font-size:10px;font-weight:900;opacity:0;transition:.3s;pointer-events:none;font-family:'Orbitron';white-space:nowrap;}
+/* ═══════════════ WEATHER CHIP ═══════════════ */
+#wxChip{cursor:pointer;}
+#wxPanel{
+  position:absolute;top:calc(var(--safe-t) + 80px);right:12px;
+  z-index:2100;background:var(--glass);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;min-width:190px;display:none;
+  box-shadow:var(--shadow);animation:fadeUp .25s ease;
+}
+.wx-icon{font-size:32px;text-align:center;margin-bottom:8px;}
+.wx-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;}
+.wx-row b{color:#fff;font-family:'Orbitron';font-size:10px;}
 
-/* BOTTOM NAV */
-.bottom-nav{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--glass);backdrop-filter:blur(15px);padding:7px;border-radius:18px;display:flex;align-items:center;gap:8px;border:1px solid var(--neon-border);box-shadow:var(--panel-shadow);}
-.c-btn{width:44px;height:44px;border-radius:11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:.2s;text-decoration:none;position:relative;}
-.c-btn:hover{background:rgba(255,51,51,.1);border-color:var(--accent);color:var(--accent);}
-.support-btn{border-color:var(--mono-gold);color:var(--mono-gold);}
-.support-btn:hover{background:rgba(255,204,0,.1);color:#fff;}
-.c-btn.active-btn{border-color:var(--accent);color:var(--accent);background:rgba(255,51,51,.08);}
+/* ═══════════════ TRACK PANEL (click on drone) ═══════════════ */
+#trackPanel{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 80px);
+  left:12px;right:12px;
+  max-width:380px;
+  z-index:2100;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;
+  display:none;box-shadow:var(--shadow);
+  animation:fadeUp .3s ease;
+}
+#trackPanel.show{display:block;}
+.tp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;}
+.tp-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:0;line-height:1;}
+.tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tp-cell .lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px;}
+.tp-cell .val{font-family:'Orbitron';font-size:11px;color:#fff;}
+.tp-cell .val.red{color:var(--a);}
+.tp-cell .val.ok{color:var(--ok);}
+.tp-vector{margin-top:8px;padding-top:8px;border-top:1px solid var(--border2);font-size:10px;color:rgba(255,255,255,.45);font-family:'Orbitron';}
 
-/* ═══════════════════════════════ THEME MODAL ═══════════════════════════════ */
-#themeModal{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);}
-#themeModal.show{display:flex;}
-.theme-sheet{background:#0f0808;border:1px solid rgba(255,51,51,.22);border-bottom:none;border-radius:18px 18px 0 0;width:min(560px,100%);padding:24px 18px 36px;animation:shUp .38s cubic-bezier(.19,1,.22,1) forwards;}
+/* ═══════════════ RADAR PANEL ═══════════════ */
+#radarPanel{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 80px);
+  left:12px;
+  z-index:2100;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;width:240px;
+  display:none;box-shadow:var(--shadow);animation:fadeUp .3s ease;
+}
+#radarPanel.show{display:block;}
+.radar-title{font-family:'Orbitron';font-size:10px;color:var(--a);letter-spacing:.15em;margin-bottom:10px;}
+#radarCanvas{display:block;margin:0 auto 10px;border-radius:50%;background:#040208;}
+.radar-list{max-height:120px;overflow-y:auto;}
+.radar-item{font-size:10px;color:rgba(255,255,255,.6);padding:4px 0;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;font-family:'Orbitron';}
+.radar-item .ri-eta{color:var(--a);}
+#radarEmpty{font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:8px 0;font-family:'Orbitron';}
+
+/* ═══════════════ BOTTOM SHEET BASE ═══════════════ */
+.bsheet-bg{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);}
+.bsheet-bg.show{display:flex;}
+.bsheet{
+  background:#0c0808;border:1px solid var(--border);border-bottom:none;
+  border-radius:20px 20px 0 0;width:min(560px,100%);
+  padding:20px 16px calc(var(--safe-b) + 28px);
+  max-height:88vh;overflow-y:auto;
+  animation:shUp .32s cubic-bezier(.19,1,.22,1) forwards;
+}
 @keyframes shUp{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
-.sheet-drag{width:38px;height:3px;background:rgba(255,255,255,.14);border-radius:99px;margin:0 auto 20px;}
-.sheet-section-title{font-family:'Orbitron';font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:14px;text-align:center;}
+.bsh-drag{width:36px;height:3px;background:rgba(255,255,255,.12);border-radius:99px;margin:0 auto 18px;}
+.bsh-title{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.2em;text-align:center;margin-bottom:16px;}
+.bsh-close{display:block;width:100%;margin-top:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);font-family:'Orbitron';font-size:9px;letter-spacing:.2em;padding:10px;cursor:pointer;border-radius:8px;transition:.2s;}
+.bsh-close:hover{color:#fff;}
 
-/* Theme cards */
-.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
-.theme-card{border:1px solid rgba(255,255,255,.08);border-radius:9px;overflow:hidden;cursor:pointer;transition:border-color .25s,transform .18s,box-shadow .25s;position:relative;}
-.theme-card:hover{transform:scale(1.04);border-color:rgba(255,51,51,.45);}
-.theme-card.active{border-color:var(--accent);box-shadow:0 0 14px rgba(255,51,51,.35);}
-.theme-card.active::after{content:'✓';position:absolute;top:5px;right:8px;color:var(--accent);font-size:13px;font-weight:900;text-shadow:0 0 8px var(--accent);}
-/* Preview gradients */
-.prev-dark{height:62px;background:linear-gradient(135deg,#0d1117,#161b22,#0a0a0a);}
-.prev-sat{height:62px;background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f);}
-.prev-night{height:62px;background:linear-gradient(135deg,#060914,#0a0f24,#0d1530);}
-.prev-topo{height:62px;background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870);}
-.prev-3d{height:62px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);position:relative;overflow:hidden;}
-.prev-3d::after{content:'3D';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron';font-size:16px;color:#00e5ff;text-shadow:0 0 10px #00e5ff;}
-.prev-light{height:62px;background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8);}
-.theme-name-tag{padding:5px 6px;font-size:8px;font-family:'Orbitron';color:rgba(255,255,255,.55);letter-spacing:1px;text-align:center;background:#080404;}
+/* THEME GRID */
+.th-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.th-card{border:1px solid var(--border2);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.th-card:active{transform:scale(.97);}
+.th-card.on{border-color:var(--a);box-shadow:0 0 12px rgba(255,51,51,.3);}
+.th-card.on::after{content:'✓';position:absolute;top:4px;right:6px;color:var(--a);font-size:11px;font-weight:900;}
+.th-prev{height:54px;}
+.p0{background:linear-gradient(135deg,#0d1117,#161b22,#0a0a0a);}
+.p1{background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f);}
+.p2{background:linear-gradient(135deg,#060914,#0a0f24,#0d1530);}
+.p3{background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870);}
+.p4{height:54px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:13px;color:#00e5ff;text-shadow:0 0 8px #00e5ff;}
+.p5{background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8);}
+.th-name{padding:4px 5px;font-size:7px;font-family:'Orbitron';color:rgba(255,255,255,.5);letter-spacing:.08em;text-align:center;background:#060303;}
+/* Bright row */
+.br-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.br-row span{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);white-space:nowrap;letter-spacing:.1em;}
+.rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
+.rng-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
 
-/* Brightness */
-.bright-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-.bright-row label{font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.38);letter-spacing:1px;white-space:nowrap;}
-#brightSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
-#brightSlider::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);}
-.bright-val{font-family:'Orbitron';font-size:10px;color:var(--accent);width:34px;text-align:right;}
-.sheet-close-btn{display:block;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.32);font-family:'Orbitron';font-size:10px;letter-spacing:2px;padding:10px;cursor:pointer;border-radius:6px;transition:.2s;}
-.sheet-close-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
-
-/* ═══════════════════════════════ SETTINGS MODAL ═══════════════════════════ */
-#settingsModal{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);}
-#settingsModal.show{display:flex;}
-.settings-sheet{background:#0f0808;border:1px solid rgba(255,51,51,.22);border-bottom:none;border-radius:18px 18px 0 0;width:min(560px,100%);padding:24px 18px 36px;max-height:90vh;overflow-y:auto;animation:shUp .38s cubic-bezier(.19,1,.22,1) forwards;}
-.set-section{margin-bottom:20px;}
-.set-section-lbl{font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:block;border-bottom:1px solid rgba(255,51,51,.1);padding-bottom:6px;}
-.set-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.set-row label{font-size:12px;color:rgba(255,255,255,.7);}
-/* Toggle */
-.tog{position:relative;width:40px;height:22px;}
+/* SETTINGS */
+.set-sec{margin-bottom:16px;}
+.set-sec-lbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;display:block;border-bottom:1px solid var(--border2);padding-bottom:5px;}
+.set-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.set-row > span{font-size:12px;color:rgba(255,255,255,.65);}
+/* toggle */
+.tog{position:relative;width:38px;height:20px;flex-shrink:0;}
 .tog input{opacity:0;width:0;height:0;}
-.tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:22px;cursor:pointer;transition:.3s;}
-.tog-sl:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#666;border-radius:50%;transition:.3s;}
-.tog input:checked+.tog-sl{background:var(--accent);}
+.tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:20px;cursor:pointer;transition:.25s;}
+.tog-sl:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#555;border-radius:50%;transition:.25s;}
+.tog input:checked+.tog-sl{background:var(--a);}
 .tog input:checked+.tog-sl:before{transform:translateX(18px);background:#fff;}
-/* Slider row */
-.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.slider-row label{font-size:12px;color:rgba(255,255,255,.7);width:120px;flex-shrink:0;}
-.set-slider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--accent) 50%,rgba(255,255,255,.1) 50%);}
-.set-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--accent);}
-.slider-val{font-family:'Orbitron';font-size:10px;color:var(--accent);width:34px;text-align:right;}
-/* Swatches */
-.swatches{display:flex;gap:7px;}
-.sw{width:24px;height:24px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.2s;}
-.sw.sel{border-color:#fff;transform:scale(1.18);}
-/* Sound buttons */
-.sound-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.sound-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:11px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:.2s;text-align:left;}
-.sound-btn:hover{border-color:var(--accent);color:#fff;}
-.sound-btn.active-snd{border-color:var(--accent);color:var(--accent);}
+/* swatches */
+.swg{display:flex;gap:6px;}
+.sw{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.15s;}
+.sw.on{border-color:#fff;transform:scale(1.2);}
+/* slider row in settings */
+.sl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sl-row > span{font-size:11px;color:rgba(255,255,255,.65);flex-shrink:0;width:110px;}
+.sl-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
+/* sound grid */
+.snd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.snd-btn{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:rgba(255,255,255,.55);font-size:10px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.15s;text-align:left;}
+.snd-btn:hover,.snd-btn.on{border-color:var(--a);color:var(--a);}
 
-/* ═══════════════════════════════ TARGETS TABLE ═════════════════════════════ */
-#tableModal{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);}
-#tableModal.show{display:flex;}
-.table-sheet{background:#0f0808;border:1px solid rgba(255,51,51,.22);border-bottom:none;border-radius:18px 18px 0 0;width:min(700px,100%);padding:22px 16px 32px;max-height:75vh;overflow-y:auto;animation:shUp .38s cubic-bezier(.19,1,.22,1) forwards;}
-#targetsTable{width:100%;border-collapse:collapse;font-size:11px;}
-#targetsTable th{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.38);letter-spacing:1.5px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid rgba(255,51,51,.15);text-align:left;}
-#targetsTable td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.75);font-family:'Orbitron';font-size:10px;}
-#targetsTable tr:hover td{background:rgba(255,51,51,.06);cursor:pointer;}
-.tbl-type-badge{background:rgba(255,51,51,.15);border:1px solid rgba(255,51,51,.3);color:var(--accent);padding:2px 6px;border-radius:3px;font-size:9px;}
+/* TABLE SHEET */
+#tblTable{width:100%;border-collapse:collapse;font-size:10px;}
+#tblTable th{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--border2);}
+#tblTable td{padding:6px 6px;border-bottom:1px solid rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:'Orbitron';font-size:9px;}
+#tblTable tr:hover td{background:var(--a3);cursor:pointer;}
+.t-badge{background:var(--a2);border:1px solid var(--border);color:var(--a);padding:1px 5px;border-radius:3px;font-size:8px;}
 
-/* ═══════════════════════════════ HISTORY TIMELINE ═════════════════════════ */
-#historyBar{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--neon-border);border-radius:10px;padding:8px 14px;display:none;align-items:center;gap:10px;width:min(500px,92vw);}
-#historyBar.show{display:flex;}
-#historyBar label{font-family:'Orbitron';font-size:9px;color:var(--accent);white-space:nowrap;letter-spacing:1px;}
-#timeSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--accent) 50%,rgba(255,255,255,.1) 50%);}
-#timeSlider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);}
-#timeLabel{font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;min-width:70px;text-align:right;}
-#histPlayBtn{width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,51,51,.3);background:rgba(255,51,51,.08);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+/* HISTORY BAR */
+#histBar{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 76px);
+  left:12px;right:58px;
+  z-index:2000;
+  background:var(--glass);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:10px;
+  padding:7px 12px;
+  display:none;align-items:center;gap:8px;
+}
+#histBar.show{display:flex;}
+#histBar label{font-family:'Orbitron';font-size:8px;color:var(--a);white-space:nowrap;letter-spacing:.1em;}
+#tSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+#tSlider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
+#tLbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.4);white-space:nowrap;min-width:56px;text-align:right;}
+#hPlayBtn{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--a3);color:var(--a);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 
-/* ═══════════════════════════════ WEATHER ═══════════════════════════════════ */
-#weatherPanel{position:absolute;top:66px;right:16px;z-index:2050;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--neon-border);border-radius:10px;padding:12px 16px;display:none;min-width:200px;animation:mIn .3s ease;}
-.wp-title{font-family:'Orbitron';font-size:10px;color:var(--accent);margin-bottom:8px;letter-spacing:1px;}
-.wp-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.65);margin-bottom:5px;}
-.wp-row span:last-child{color:#fff;font-family:'Orbitron';font-size:10px;}
-.wp-icon{font-size:28px;text-align:center;margin-bottom:6px;}
-
-/* ═══════════════════════════════ UAV MARKERS ═══════════════════════════════ */
-/* Стрілка + іконка: весь .uav-cont обертається разом */
-.uav-cont{position:relative;display:flex;align-items:center;justify-content:center;}
-.uav-arrow-el{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:14px solid var(--target-color);filter:drop-shadow(0 0 4px var(--target-color));}
-.uav-img-el{display:block;filter:invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%);}
-/* Курс-лейбл */
-.course-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-family:'Orbitron';font-size:8px;color:var(--target-color);white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.8);letter-spacing:1px;}
-
-/* Cluster override */
-.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:rgba(255,30,30,.18)!important;border:1px solid rgba(255,51,51,.5)!important;}
-.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:rgba(255,30,30,.35)!important;color:#fff!important;font-family:'Orbitron'!important;font-size:11px!important;}
+/* NOTIFY TOAST */
+#toast{
+  position:absolute;top:calc(var(--safe-t) + 60px);left:50%;transform:translateX(-50%);
+  z-index:3000;background:var(--a);color:#fff;
+  padding:4px 14px;border-radius:20px;font-size:9px;font-weight:700;
+  opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Orbitron';
+  letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 16px rgba(255,51,51,.4);
+}
 
 /* ADMIN */
-#adminPanel{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
-.admin-box{max-width:420px;width:92%;border:1px solid var(--accent);padding:22px;border-radius:10px;background:#000;}
-.admin-input,.admin-select{width:100%;background:#111;color:#fff;border:1px solid #252525;padding:10px 11px;margin-top:4px;font-family:'Orbitron';font-size:12px;outline:none;margin-bottom:10px;}
-.admin-btn{width:100%;padding:11px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.2s;margin-top:6px;}
-.btn-add{background:var(--accent);color:#fff;}
-.btn-clear{background:rgba(255,51,51,.1);color:var(--accent);border:1px solid rgba(255,51,51,.25);}
+#adminPanel{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px;}
+.adm-box{max-width:380px;width:100%;border:1px solid var(--a);padding:20px;border-radius:14px;background:#000;}
+.adm-fld{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px;}
+.adm-inp,.adm-sel{width:100%;background:#111;color:#fff;border:1px solid #222;padding:9px 10px;font-family:'Orbitron';font-size:11px;outline:none;margin-bottom:10px;border-radius:6px;}
+.adm-btn{width:100%;padding:10px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.2s;border-radius:7px;margin-top:4px;}
+.adm-ok{background:var(--a);color:#fff;}
+.adm-del{background:rgba(255,51,51,.1);color:var(--a);border:1px solid var(--border);}
+.adm-cls{background:#181818;color:#555;margin-top:6px;}
 
-.privacy-link{position:absolute;bottom:6px;right:12px;z-index:2001;font-size:8px;opacity:.3;color:white;text-decoration:none;font-family:'Orbitron';letter-spacing:1px;}
-.privacy-link:hover{opacity:.8;color:var(--accent);}
+/* Privacy link */
+.priv-lnk{position:absolute;bottom:calc(var(--safe-b) + 4px);left:50%;transform:translateX(-50%);z-index:2001;font-size:7px;opacity:.25;color:#fff;text-decoration:none;font-family:'Orbitron';letter-spacing:.08em;white-space:nowrap;}
 
-@media(max-width:600px){
-    .top-ui{flex-direction:column;gap:7px}
-    .side-panel{width:calc(100% - 32px);top:auto;bottom:90px}
-    .side-panel.active{right:16px;left:16px}
-    .theme-grid{grid-template-columns:repeat(2,1fr)}
+/* ═══════════════ UAV MARKER ═══════════════ */
+/* Wrapper обертається на кут дрона; стрілка завжди вперед (вгору) */
+.uav-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+/* Course label */
+.c-lbl{position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  font-family:'Orbitron';font-size:7px;white-space:nowrap;
+  letter-spacing:.05em;pointer-events:none;
+  text-shadow:1px 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.8);
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(min-width:600px){
+  #fab{bottom:calc(var(--safe-b) + 32px);right:20px;}
+  #trackPanel{bottom:calc(var(--safe-b) + 90px);left:20px;max-width:340px;}
+  #radarPanel{bottom:calc(var(--safe-b) + 90px);left:20px;}
+  #histBar{bottom:calc(var(--safe-b) + 86px);left:20px;right:70px;}
+}
+@media(min-width:1024px){
+  #fab{top:50%;transform:translateY(-50%);bottom:auto;right:16px;}
+  .fab-btn{width:38px;height:38px;font-size:13px;}
 }
 </style>
 </head>
@@ -208,664 +311,744 @@ html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg-dark);fo
 
 <!-- SPLASH -->
 <div id="splash">
-    <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
-    <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-    </div>
+  <div class="s-logo">SKY DEFENSE</div>
+  <div class="s-sub">STRATEGIC MONITOR · UA</div>
+  <div class="s-bar-wrap"><div class="s-bar"></div></div>
+  <div class="s-txt" id="sTxt">Initializing...</div>
 </div>
 
 <!-- PRIVACY -->
-<div id="privacy-modal">
-    <div class="policy-box">
-        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
-        <div class="policy-content">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
-            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
-        </div>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+<div id="privModal">
+  <div class="priv-box">
+    <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
+    <div class="priv-body">
+      <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Потрібна для розрахунку ETA та радарної функції. Зберігається локально.</p>
+      <p><strong>2. ПРИВАТНІСТЬ:</strong> Жодних даних на сервер. Все локально.</p>
+      <p><strong>3. ДЖЕРЕЛА:</strong> OSINT-моніторинг, можлива похибка.</p>
+      <p><strong>4. УВАГА:</strong> Не офіційне джерело тривоги. Слухайте ПС ЗСУ.</p>
     </div>
+    <button class="priv-ok" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+  </div>
 </div>
 
 <!-- ADMIN -->
 <div id="adminPanel">
-    <div class="admin-box">
-        <h2 style="color:var(--accent);font-family:'Orbitron';font-size:14px;margin-bottom:16px;text-align:center;">COMMAND CENTER</h2>
-        <span style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase;font-family:'Orbitron'">Type of Target</span>
-        <select id="admType" class="admin-select">
-            <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-            <option value="shahed-238-jet">Shahed-238 (Jet)</option>
-            <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
-            <option value="tu-95ms-strat">Tu-95MS Strategy</option>
-        </select>
-        <span style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase;font-family:'Orbitron'">Angle (0–360°)</span>
-        <input type="number" id="admAngle" class="admin-input" value="0">
-        <span style="color:rgba(255,255,255,.35);font-size:9px;letter-spacing:1px;text-transform:uppercase;font-family:'Orbitron'">Accuracy Radius (m)</span>
-        <input type="number" id="admAcc" class="admin-input" value="5000">
-        <button class="admin-btn btn-add" onclick="spawnDrone()">DEPLOY TARGET</button>
-        <button class="admin-btn btn-clear" onclick="clearDrones()">PURGE ALL DATA</button>
-        <button class="admin-btn" style="background:#181818;color:#555;margin-top:6px" onclick="location.hash=''">CLOSE</button>
-    </div>
+  <div class="adm-box">
+    <div style="font-family:'Orbitron';color:var(--a);font-size:13px;margin-bottom:14px;text-align:center">COMMAND CENTER</div>
+    <span class="adm-fld">Target Type</span>
+    <select id="aType" class="adm-sel">
+      <option value="shahed-vp-standart">Shahed-136</option>
+      <option value="shahed-238-jet">Shahed-238 Jet</option>
+      <option value="kalibr-cruise">Kalibr Cruise</option>
+      <option value="tu-95ms-strat">Tu-95MS Strategic</option>
+    </select>
+    <span class="adm-fld">Angle 0–360°</span>
+    <input type="number" id="aAngle" class="adm-inp" value="180">
+    <span class="adm-fld">Accuracy Radius (m)</span>
+    <input type="number" id="aAcc" class="adm-inp" value="5000">
+    <button class="adm-btn adm-ok" onclick="spawnDrone()">DEPLOY TARGET</button>
+    <button class="adm-btn adm-del" onclick="clearDrones()">PURGE ALL</button>
+    <button class="adm-btn adm-cls" onclick="location.hash=''">CLOSE</button>
+  </div>
 </div>
 
-<!-- THEME MODAL -->
-<div id="themeModal" onclick="closeBg(event,'themeModal')">
-    <div class="theme-sheet">
-        <div class="sheet-drag"></div>
-        <div class="sheet-section-title">MAP LAYER</div>
-        <div class="theme-grid">
-            <div class="theme-card active" id="tc0" onclick="selectTheme(0)"><div class="prev-dark"></div><div class="theme-name-tag">ULTRA DARK</div></div>
-            <div class="theme-card" id="tc1" onclick="selectTheme(1)"><div class="prev-sat"></div><div class="theme-name-tag">SATELLITE</div></div>
-            <div class="theme-card" id="tc2" onclick="selectTheme(2)"><div class="prev-night"></div><div class="theme-name-tag">NIGHT BLUE</div></div>
-            <div class="theme-card" id="tc3" onclick="selectTheme(3)"><div class="prev-topo"></div><div class="theme-name-tag">TOPO</div></div>
-            <div class="theme-card" id="tc4" onclick="selectTheme(4)"><div class="prev-3d"></div><div class="theme-name-tag">3D RELIEF</div></div>
-            <div class="theme-card" id="tc5" onclick="selectTheme(5)"><div class="prev-light"></div><div class="theme-name-tag">LIGHT</div></div>
-        </div>
-        <div class="bright-row">
-            <label>BRIGHTNESS</label>
-            <input type="range" id="brightSlider" min="15" max="130" value="60" oninput="setBright(this.value)">
-            <span class="bright-val" id="brightVal">60%</span>
-        </div>
-        <button class="sheet-close-btn" onclick="closeSheet('themeModal')">CLOSE</button>
+<!-- THEME SHEET -->
+<div class="bsheet-bg" id="themeSheet" onclick="bgClose(event,'themeSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">MAP LAYER</div>
+    <div class="th-grid">
+      <div class="th-card on" id="tc0" onclick="selTheme(0)"><div class="th-prev p0"></div><div class="th-name">ULTRA DARK</div></div>
+      <div class="th-card" id="tc1" onclick="selTheme(1)"><div class="th-prev p1"></div><div class="th-name">SATELLITE</div></div>
+      <div class="th-card" id="tc2" onclick="selTheme(2)"><div class="th-prev p2"></div><div class="th-name">NIGHT BLUE</div></div>
+      <div class="th-card" id="tc3" onclick="selTheme(3)"><div class="th-prev p3"></div><div class="th-name">TOPO</div></div>
+      <div class="th-card" id="tc4" onclick="selTheme(4)"><div class="th-prev p4">3D</div><div class="th-name">3D RELIEF</div></div>
+      <div class="th-card" id="tc5" onclick="selTheme(5)"><div class="th-prev p5"></div><div class="th-name">LIGHT</div></div>
     </div>
+    <div class="br-row">
+      <span>BRIGHTNESS</span>
+      <input type="range" id="brightR" class="rng" min="15" max="130" value="60" oninput="setBright(this.value)" style="background:linear-gradient(to right,var(--a) 39%,rgba(255,255,255,.1) 39%)">
+      <span class="rng-val" id="brightV">60%</span>
+    </div>
+    <button class="bsh-close" onclick="closeSheet('themeSheet')">CLOSE</button>
+  </div>
 </div>
 
-<!-- SETTINGS MODAL -->
-<div id="settingsModal" onclick="closeBg(event,'settingsModal')">
-    <div class="settings-sheet">
-        <div class="sheet-drag"></div>
-        <div class="sheet-section-title">SETTINGS</div>
+<!-- SETTINGS SHEET -->
+<div class="bsheet-bg" id="setSheet" onclick="bgClose(event,'setSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">SETTINGS</div>
 
-        <!-- Вигляд -->
-        <div class="set-section">
-            <span class="set-section-lbl">Вигляд цілей</span>
-            <div class="slider-row">
-                <label>Розмір іконки</label>
-                <input type="range" class="set-slider" id="iconSizeSlider" min="20" max="80" value="44" oninput="setIconSize(this.value)">
-                <span class="slider-val" id="iconSizeVal">44px</span>
-            </div>
-            <div class="set-row">
-                <label>Колір цілей</label>
-                <div class="swatches" id="targetSwatches">
-                    <div class="sw sel" style="background:#ff3333" onclick="setTargetColor('#ff3333',this)"></div>
-                    <div class="sw" style="background:#ff9900" onclick="setTargetColor('#ff9900',this)"></div>
-                    <div class="sw" style="background:#ffcc00" onclick="setTargetColor('#ffcc00',this)"></div>
-                    <div class="sw" style="background:#00e5ff" onclick="setTargetColor('#00e5ff',this)"></div>
-                    <div class="sw" style="background:#00ff88" onclick="setTargetColor('#00ff88',this)"></div>
-                    <div class="sw" style="background:#cc44ff" onclick="setTargetColor('#cc44ff',this)"></div>
-                </div>
-            </div>
+    <div class="set-sec">
+      <span class="set-sec-lbl">Вигляд цілей</span>
+      <div class="sl-row">
+        <span>Розмір іконки</span>
+        <input type="range" class="rng" id="iszR" min="18" max="64" value="36" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 50%,rgba(255,255,255,.1) 50%)">
+        <span class="sl-val" id="iszV">36px</span>
+      </div>
+      <div class="set-row"><span>Колір цілей</span>
+        <div class="swg" id="tcSw">
+          <div class="sw on" style="background:#ff3333" onclick="setTC('#ff3333',this)"></div>
+          <div class="sw" style="background:#ff9900" onclick="setTC('#ff9900',this)"></div>
+          <div class="sw" style="background:#ffcc00" onclick="setTC('#ffcc00',this)"></div>
+          <div class="sw" style="background:#00e5ff" onclick="setTC('#00e5ff',this)"></div>
+          <div class="sw" style="background:#00ff88" onclick="setTC('#00ff88',this)"></div>
+          <div class="sw" style="background:#cc44ff" onclick="setTC('#cc44ff',this)"></div>
         </div>
-
-        <!-- Інтерфейс -->
-        <div class="set-section">
-            <span class="set-section-lbl">Інтерфейс</span>
-            <div class="set-row">
-                <label>Акцентний колір UI</label>
-                <div class="swatches" id="uiSwatches">
-                    <div class="sw sel" style="background:#ff3333" onclick="setUIColor('#ff3333',this)"></div>
-                    <div class="sw" style="background:#ff9900" onclick="setUIColor('#ff9900',this)"></div>
-                    <div class="sw" style="background:#ffcc00" onclick="setUIColor('#ffcc00',this)"></div>
-                    <div class="sw" style="background:#00e5ff" onclick="setUIColor('#00e5ff',this)"></div>
-                    <div class="sw" style="background:#00ff88" onclick="setUIColor('#00ff88',this)"></div>
-                    <div class="sw" style="background:#cc44ff" onclick="setUIColor('#cc44ff',this)"></div>
-                </div>
-            </div>
-            <div class="set-row">
-                <label>Показувати курс на маркері</label>
-                <label class="tog"><input type="checkbox" id="togCourse" checked><span class="tog-sl"></span></label>
-            </div>
-            <div class="set-row">
-                <label>Групування цілей</label>
-                <label class="tog"><input type="checkbox" id="togCluster" checked onchange="toggleCluster()"><span class="tog-sl"></span></label>
-            </div>
-        </div>
-
-        <!-- Звуки -->
-        <div class="set-section">
-            <span class="set-section-lbl">Звуки</span>
-            <div class="set-row">
-                <label>Звукові сповіщення</label>
-                <label class="tog"><input type="checkbox" id="togSound" checked><span class="tog-sl"></span></label>
-            </div>
-            <div class="set-row">
-                <label>Гучність</label>
-                <input type="range" class="set-slider" id="volSlider" min="0" max="100" value="60" oninput="setVolume(this.value)" style="flex:1;margin:0 8px;">
-                <span class="slider-val" id="volVal">60%</span>
-            </div>
-            <div class="sound-grid" style="margin-top:6px">
-                <button class="sound-btn active-snd" id="snd_new" onclick="testSound('new')">🔔 Нова ціль</button>
-                <button class="sound-btn active-snd" id="snd_remove" onclick="testSound('remove')">✅ Ціль знищена</button>
-                <button class="sound-btn active-snd" id="snd_alarm" onclick="testSound('alarm')">🚨 Тривога</button>
-                <button class="sound-btn" id="snd_tick" onclick="testSound('tick')">⏱ Таймер</button>
-            </div>
-        </div>
-
-        <button class="sheet-close-btn" onclick="closeSheet('settingsModal')">CLOSE</button>
+      </div>
     </div>
+
+    <div class="set-sec">
+      <span class="set-sec-lbl">Інтерфейс</span>
+      <div class="set-row"><span>Акцент UI</span>
+        <div class="swg" id="uiSw">
+          <div class="sw on" style="background:#ff3333" onclick="setUI('#ff3333',this)"></div>
+          <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
+          <div class="sw" style="background:#ffcc00" onclick="setUI('#ffcc00',this)"></div>
+          <div class="sw" style="background:#00e5ff" onclick="setUI('#00e5ff',this)"></div>
+          <div class="sw" style="background:#00ff88" onclick="setUI('#00ff88',this)"></div>
+          <div class="sw" style="background:#cc44ff" onclick="setUI('#cc44ff',this)"></div>
+        </div>
+      </div>
+      <div class="set-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCourse" checked><span class="tog-sl"></span></label></div>
+      <div class="set-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrail" checked><span class="tog-sl"></span></label></div>
+      <div class="set-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCircle" checked><span class="tog-sl"></span></label></div>
+    </div>
+
+    <div class="set-sec">
+      <span class="set-sec-lbl">Звуки</span>
+      <div class="set-row"><span>Звукові сповіщення</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="tog-sl"></span></label></div>
+      <div class="sl-row">
+        <span>Гучність</span>
+        <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.1) 60%)">
+        <span class="sl-val" id="volV">60%</span>
+      </div>
+      <div class="snd-grid">
+        <button class="snd-btn on" onclick="testSnd('new')">🔔 Нова ціль</button>
+        <button class="snd-btn on" onclick="testSnd('del')">✅ Знищена</button>
+        <button class="snd-btn on" onclick="testSnd('alm')">🚨 Тривога</button>
+        <button class="snd-btn" onclick="testSnd('tick')">⏱ Тік</button>
+      </div>
+    </div>
+
+    <button class="bsh-close" onclick="closeSheet('setSheet')">CLOSE</button>
+  </div>
 </div>
 
-<!-- TARGETS TABLE -->
-<div id="tableModal" onclick="closeBg(event,'tableModal')">
-    <div class="table-sheet">
-        <div class="sheet-drag"></div>
-        <div class="sheet-section-title">АКТИВНІ ЦІЛІ</div>
-        <table id="targetsTable">
-            <thead>
-                <tr>
-                    <th>ID</th><th>Тип</th><th>Позиція</th><th>Кут</th><th>Час</th><th>ETA</th>
-                </tr>
-            </thead>
-            <tbody id="targetsBody"></tbody>
-        </table>
-        <button class="sheet-close-btn" style="margin-top:16px" onclick="closeSheet('tableModal')">CLOSE</button>
-    </div>
+<!-- TABLE SHEET -->
+<div class="bsheet-bg" id="tblSheet" onclick="bgClose(event,'tblSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">АКТИВНІ ЦІЛІ</div>
+    <table id="tblTable">
+      <thead><tr><th>ID</th><th>Тип</th><th>Позиція</th><th>Курс</th><th>ETA</th></tr></thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+    <button class="bsh-close" style="margin-top:14px" onclick="closeSheet('tblSheet')">CLOSE</button>
+  </div>
 </div>
 
 <!-- MAP -->
 <div id="map"></div>
-<div class="main-crosshair"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
-<div id="mapNotify">SYNC</div>
+<div id="xhair"><div class="xh-ring"></div></div>
+<div id="toast"></div>
 
-<!-- TOP UI -->
-<div class="top-ui">
-    <div class="status-group">
-        <div class="box"><i class="fa-solid fa-clock"></i><span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE:<span id="onlineCount" class="glow">1</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i><span id="gpsStatus" style="color:var(--accent)">OFFLINE</span></div>
-        <div class="box" id="weatherBox" style="cursor:pointer" onclick="toggleWeatherPanel()">
-            <i class="fa-solid fa-cloud-sun"></i><span id="weatherChip" style="color:rgba(255,255,255,.5)">--</span>
-        </div>
+<!-- TOP BAR -->
+<div id="topBar">
+  <div class="tb-left">
+    <div class="tb-pill"><i class="fa-solid fa-clock" style="font-size:9px;opacity:.5"></i><span class="v" id="sysTime">00:00:00</span></div>
+    <div class="tb-pill">
+      <i class="fa-solid fa-users" style="font-size:9px;opacity:.5"></i>
+      <span style="opacity:.5;font-size:9px">ON</span><span class="v red" id="onlineC">1</span>
+      <span style="opacity:.3">·</span>
+      <i class="fa-solid fa-satellite-dish" style="font-size:9px;opacity:.5"></i>
+      <span class="v" id="gpsV" style="color:rgba(255,255,255,.4)">GPS</span>
     </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE:<span id="uavCount" class="glow">0</span></div>
+    <div class="tb-pill" id="wxChip" onclick="toggleWX()">
+      <i class="fa-solid fa-cloud-sun" style="font-size:9px;opacity:.5"></i>
+      <span class="v" id="wxT" style="color:rgba(255,255,255,.4)">--</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div id="activePill">
+      <i class="fa-solid fa-crosshairs" style="font-size:10px;opacity:.5"></i>
+      <span class="num" id="uavC">0</span>
+    </div>
+  </div>
 </div>
 
 <!-- WEATHER PANEL -->
-<div id="weatherPanel">
-    <div class="wp-title">ПОГОДА / WEATHER</div>
-    <div class="wp-icon" id="wpIcon">--</div>
-    <div class="wp-row"><span>Температура</span><span id="wpTemp">--</span></div>
-    <div class="wp-row"><span>Відчувається</span><span id="wpFeels">--</span></div>
-    <div class="wp-row"><span>Вологість</span><span id="wpHumidity">--</span></div>
-    <div class="wp-row"><span>Вітер</span><span id="wpWind">--</span></div>
-    <div class="wp-row"><span>Видимість</span><span id="wpVis">--</span></div>
-    <div class="wp-row"><span>Умови</span><span id="wpDesc">--</span></div>
+<div id="wxPanel">
+  <div class="wx-icon" id="wxIco">--</div>
+  <div class="wx-row"><span>Температура</span><b id="wx1">--</b></div>
+  <div class="wx-row"><span>Відчувається</span><b id="wx2">--</b></div>
+  <div class="wx-row"><span>Вологість</span><b id="wx3">--</b></div>
+  <div class="wx-row"><span>Вітер</span><b id="wx4">--</b></div>
+  <div class="wx-row"><span>Видимість</span><b id="wx5">--</b></div>
+  <div class="wx-row"><span>Умови</span><b id="wx6">--</b></div>
 </div>
 
-<!-- SIDE PANEL -->
-<div id="sidePanel" class="side-panel">
-    <div class="panel-header"><span>TRACKING INFO</span><i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer;font-size:13px;opacity:.45"></i></div>
-    <div class="panel-body">
-        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">--</div></div>
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color:var(--accent)">--</div></div>
-        <div class="data-block" style="display:flex;justify-content:space-between">
-            <div style="width:48%"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width:48%"><span class="data-label">Курс</span><div class="data-value" id="objAngle">--</div></div>
-        </div>
-        <div class="data-block"><span class="data-label">Вектор (10 хв)</span><div class="data-value" id="objVector" style="font-size:10px;color:rgba(255,255,255,.55)">--</div></div>
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size:10px;opacity:.45">--</div></div>
-    </div>
+<!-- TRACK PANEL -->
+<div id="trackPanel">
+  <div class="tp-head">
+    <div class="tp-type" id="tpType">--</div>
+    <button class="tp-close" onclick="closeTrack()">×</button>
+  </div>
+  <div class="tp-grid">
+    <div class="tp-cell"><div class="lbl">Позиція</div><div class="val red" id="tpPos">--</div></div>
+    <div class="tp-cell"><div class="lbl">Курс</div><div class="val" id="tpAng">--</div></div>
+    <div class="tp-cell"><div class="lbl">Час виявл.</div><div class="val ok" id="tpAge">--</div></div>
+    <div class="tp-cell"><div class="lbl">ETA до вас</div><div class="val red" id="tpETA">--</div></div>
+  </div>
+  <div class="tp-vector" id="tpVec">--</div>
+</div>
+
+<!-- RADAR PANEL -->
+<div id="radarPanel">
+  <div class="radar-title">⬟ RADAR · 40 KM</div>
+  <canvas id="radarCanvas" width="160" height="160"></canvas>
+  <div class="radar-list" id="radarList">
+    <div id="radarEmpty">Немає цілей в радіусі 40 км</div>
+  </div>
+</div>
+
+<!-- FAB (Floating Action Bar — вертикально справа) -->
+<div id="fab">
+  <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="fab-btn gold-btn" title="Підтримати"><i class="fa-solid fa-heart"></i></a>
+  <div class="fab-sep"></div>
+  <button class="fab-btn" onclick="openSheet('themeSheet')" title="Теми карти"><i class="fa-solid fa-layer-group"></i></button>
+  <button class="fab-btn" onclick="openSheet('setSheet')" title="Налаштування"><i class="fa-solid fa-gear"></i></button>
+  <button class="fab-btn" id="radarBtn" onclick="toggleRadar()" title="Радар 40 км"><i class="fa-solid fa-circle-dot"></i></button>
+  <button class="fab-btn" id="histBtn" onclick="toggleHist()" title="Історія"><i class="fa-solid fa-clock-rotate-left"></i></button>
+  <button class="fab-btn" onclick="openSheet('tblSheet');buildTable()" title="Таблиця"><i class="fa-solid fa-table-list"></i></button>
+  <div class="fab-sep"></div>
+  <button class="fab-btn" onclick="locateMe()" title="Моя позиція"><i class="fa-solid fa-location-crosshairs"></i></button>
+  <button class="fab-btn" onclick="location.reload()" title="Оновити"><i class="fa-solid fa-rotate"></i></button>
 </div>
 
 <!-- HISTORY BAR -->
-<div id="historyBar">
-    <label>HISTORY</label>
-    <button id="histPlayBtn" onclick="toggleHistPlay()"><i class="fa-solid fa-play" id="histPlayIcon"></i></button>
-    <input type="range" id="timeSlider" min="0" max="100" value="100" oninput="onTimeSlider(this.value)">
-    <span id="timeLabel">LIVE</span>
+<div id="histBar">
+  <label>HIST</label>
+  <button id="hPlayBtn" onclick="toggleHPlay()"><i class="fa-solid fa-play" id="hPlayIco"></i></button>
+  <input type="range" id="tSlider" min="0" max="100" value="100" oninput="onTSlide(this.value)"
+    style="background:linear-gradient(to right,var(--a) 100%,rgba(255,255,255,.1) 100%)">
+  <span id="tLbl">LIVE</span>
 </div>
 
-<!-- BOTTOM NAV -->
-<div class="bottom-nav" id="ui-nav" style="display:none">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn"><i class="fa-solid fa-heart"></i></a>
-    <button class="c-btn" onclick="openSheet('themeModal')" title="Теми карти"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" onclick="openSheet('settingsModal')" title="Налаштування"><i class="fa-solid fa-gear"></i></button>
-    <button class="c-btn" id="histBtn" onclick="toggleHistory()" title="Історія цілей"><i class="fa-solid fa-clock-rotate-left"></i></button>
-    <button class="c-btn" onclick="openSheet('tableModal');refreshTable()" title="Таблиця цілей"><i class="fa-solid fa-table-list"></i></button>
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
-    <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
-</div>
-
-<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY</a>
+<a href="javascript:void(0)" class="priv-lnk" onclick="showPrivacy()">PRIVACY & SECURITY</a>
 
 <script>
-// ════════════════════════════════════════════
-// CONFIG & STATE
-// ════════════════════════════════════════════
-const FB_URL = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
-const FALLBACK = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
-const SPEED_MAP = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
-const DIRECTIONS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
-
-const THEMES = [
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
-    'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png', // 3D relief (fallback to topo)
-    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+const FB = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
+const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
+const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
+const URLS = [
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', // 3D uses same + CSS tilt
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
 ];
 
-let tIdx=0, brightness=60, targetColor='#ff3333', iconSize=44;
-let useClustering=true, showCourse=true, soundEnabled=true, volume=0.6;
-let userPos=null, userMarker=null, selectedId=null;
-let obs={}, historyLog=[], histMode=false, histPlaying=false, histInterval=null;
+let brightness=60, TC='#ff3333', ISZ=36;
+let soundOn=true, vol=0.6;
+let userPos=null, uMarker=null, selId=null;
+let obs={}, hLog=[], hMode=false, hPlay=false, hInt=null;
 let audioCtx=null;
+// Performance: batch pending DOM updates
+let pendingSync=new Map();
+let rafPending=false;
 
-// ════════════════════════════════════════════
-// MAP
-// ════════════════════════════════════════════
-const map = L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5}).setView([48.4,32.5],6);
-let tileLayer = L.tileLayer(THEMES[0]).addTo(map);
-setTimeout(()=>applyBright(60),500);
+// ════════════════════════════════════
+// MAP INIT
+// ════════════════════════════════════
+const map=L.map('map',{
+  zoomControl:false,attributionControl:false,
+  maxBounds:[[43,21],[53,41]],minZoom:5,
+  preferCanvas:true  // Canvas renderer — much faster for 500+ markers
+}).setView([48.4,32.5],6);
+let tLayer=L.tileLayer(URLS[0],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
+setTimeout(()=>applyBrt(60),600);
 
-// Cluster group
-let clusterGroup = L.markerClusterGroup({
-    maxClusterRadius:60,
-    iconCreateFunction:c=>{
-        const n=c.getChildCount();
-        return L.divIcon({html:`<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,30,30,.3);border:1.5px solid rgba(255,51,51,.7);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:11px;color:#fff;">${n}</div>`,iconSize:[36,36],iconAnchor:[18,18]});
-    }
-});
-map.addLayer(clusterGroup);
+// Use Canvas renderer for circles and lines (performance)
+const cvs=L.canvas({padding:0.5});
 
-function applyBright(v){document.querySelectorAll('.leaflet-tile-pane').forEach(el=>el.style.filter=`brightness(${v}%)`);}
-
-function selectTheme(i){
-    tIdx=i;
-    map.removeLayer(tileLayer);
-    // 3D relief — використовуємо MapTiler hills або OpenTopoMap
-    const url = i===4
-        ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-        : THEMES[i];
-    tileLayer=L.tileLayer(url).addTo(map);
-    setTimeout(()=>applyBright(brightness),400);
-    document.querySelectorAll('.theme-card').forEach((c,j)=>c.classList.toggle('active',j===i));
-    showNotify(i===4?"3D RELIEF MODE":"LAYER CHANGED");
-    // Якщо 3D — нахил карти (pitch ефект через CSS perspective)
-    if(i===4){
-        document.getElementById('map').style.perspective='800px';
-        document.getElementById('map').style.transform='rotateX(8deg) scale(1.05)';
-    } else {
-        document.getElementById('map').style.perspective='';
-        document.getElementById('map').style.transform='';
-    }
+// ════════════════════════════════════
+// THEME
+// ════════════════════════════════════
+function applyBrt(v){
+  document.querySelectorAll('.leaflet-tile-pane').forEach(el=>el.style.filter=`brightness(${v}%)`);
 }
-
+function selTheme(i){
+  map.removeLayer(tLayer);
+  tLayer=L.tileLayer(URLS[i],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
+  setTimeout(()=>applyBrt(brightness),350);
+  document.querySelectorAll('.th-card').forEach((c,j)=>c.classList.toggle('on',j===i));
+  const m=document.getElementById('map');
+  if(i===4){m.style.perspective='600px';m.style.transform='rotateX(6deg) scale(1.04)';}
+  else{m.style.perspective='';m.style.transform='';}
+  toast(i===4?'3D MODE':['ULTRA DARK','SATELLITE','NIGHT BLUE','TOPO','3D RELIEF','LIGHT'][i]);
+}
 function setBright(v){
-    brightness=+v;
-    document.getElementById('brightVal').textContent=v+'%';
-    const p=((v-15)/115*100).toFixed(1);
-    document.getElementById('brightSlider').style.background=`linear-gradient(to right,var(--accent) ${p}%,rgba(255,255,255,.1) ${p}%)`;
-    applyBright(v);
+  brightness=+v;
+  document.getElementById('brightV').textContent=v+'%';
+  const p=((v-15)/115*100).toFixed(0);
+  document.getElementById('brightR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+  applyBrt(v);
 }
 
-// ════════════════════════════════════════════
-// SOUND ENGINE (Web Audio API)
-// ════════════════════════════════════════════
-function getAudioCtx(){
-    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    return audioCtx;
-}
-function playTone(freq,dur,type='sine',vol=0.3){
-    if(!soundEnabled) return;
-    try{
-        const ctx=getAudioCtx();
-        const osc=ctx.createOscillator();
-        const gain=ctx.createGain();
-        osc.connect(gain);gain.connect(ctx.destination);
-        osc.type=type; osc.frequency.value=freq;
-        gain.gain.setValueAtTime(vol*volume,ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
-        osc.start(); osc.stop(ctx.currentTime+dur);
-    }catch(e){}
-}
-function playNewTarget(){playTone(880,.08,'square',.25);setTimeout(()=>playTone(660,.15,'square',.2),100);}
-function playRemoveTarget(){playTone(440,.05,'sine',.15);setTimeout(()=>playTone(330,.12,'sine',.1),80);}
-function playAlarm(){[0,150,300].forEach(d=>setTimeout(()=>playTone(1200,.1,'sawtooth',.2),d));}
-function testSound(t){
-    if(t==='new') playNewTarget();
-    else if(t==='remove') playRemoveTarget();
-    else if(t==='alarm') playAlarm();
-    else if(t==='tick') playTone(600,.05,'sine',.15);
-}
-function setVolume(v){volume=v/100;document.getElementById('volVal').textContent=v+'%';}
-
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // SETTINGS
-// ════════════════════════════════════════════
-function setIconSize(v){
-    iconSize=+v;
-    document.getElementById('iconSizeVal').textContent=v+'px';
-    // Rebuild all markers with new size
-    Object.entries(obs).forEach(([id,o])=>rebuildMarker(id,o.data));
+// ════════════════════════════════════
+function setISZ(v){
+  ISZ=+v;
+  document.getElementById('iszV').textContent=v+'px';
+  const p=((v-18)/46*100).toFixed(0);
+  document.getElementById('iszR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+  Object.values(obs).forEach(o=>o.marker.setIcon(mkIcon(o.data)));
 }
-function setTargetColor(c,el){
-    targetColor=c;
-    document.querySelectorAll('#targetSwatches .sw').forEach(s=>s.classList.remove('sel'));
-    el.classList.add('sel');
-    Object.entries(obs).forEach(([id,o])=>rebuildMarker(id,o.data));
+function setTC(c,el){
+  TC=c;
+  document.querySelectorAll('#tcSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');
+  Object.values(obs).forEach(o=>{o.marker.setIcon(mkIcon(o.data));if(o.circle)o.circle.setStyle({color:c,fillColor:c});if(o.line)o.line.setStyle({color:c});if(o.trail)o.trail.setStyle({color:c});});
 }
-function setUIColor(c,el){
-    document.documentElement.style.setProperty('--accent',c);
-    document.querySelectorAll('#uiSwatches .sw').forEach(s=>s.classList.remove('sel'));
-    el.classList.add('sel');
+function setUI(c,el){
+  document.documentElement.style.setProperty('--a',c);
+  document.documentElement.style.setProperty('--a2',c+'2e');
+  document.documentElement.style.setProperty('--a3',c+'14');
+  document.querySelectorAll('#uiSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');
 }
-function toggleCluster(){
-    useClustering=document.getElementById('togCluster').checked;
-    // Rebuild all
-    Object.entries(obs).forEach(([id,o])=>rebuildMarker(id,o.data));
-}
+function setVol(v){vol=v/100;document.getElementById('volV').textContent=v+'%';const p=(+v).toFixed(0);document.getElementById('volR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;}
 
-// ════════════════════════════════════════════
-// SHEETS
-// ════════════════════════════════════════════
+// ════════════════════════════════════
+// SOUND
+// ════════════════════════════════════
+function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function tone(f,d,t='sine',v=.3){
+  if(!soundOn)return;
+  try{const ctx=getAC();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v*vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d);}catch{}
+}
+function sndNew(){tone(880,.07,'square',.22);setTimeout(()=>tone(660,.14,'square',.18),90);}
+function sndDel(){tone(440,.05,'sine',.12);setTimeout(()=>tone(330,.1,'sine',.08),70);}
+function sndAlm(){[0,140,280].forEach(d=>setTimeout(()=>tone(1200,.09,'sawtooth',.18),d));}
+function testSnd(t){if(t==='new')sndNew();else if(t==='del')sndDel();else if(t==='alm')sndAlm();else tone(600,.05,'sine',.12);}
+
+// ════════════════════════════════════
+// SHEETS / MODALS
+// ════════════════════════════════════
 function openSheet(id){document.getElementById(id).classList.add('show');}
 function closeSheet(id){document.getElementById(id).classList.remove('show');}
-function closeBg(e,id){if(e.target===document.getElementById(id))closeSheet(id);}
-
-function showNotify(t){
-    const el=document.getElementById('mapNotify');
-    el.innerText=t;el.style.opacity='1';
-    clearTimeout(showNotify._t);
-    showNotify._t=setTimeout(()=>el.style.opacity='0',1600);
+function bgClose(e,id){if(e.target===document.getElementById(id))closeSheet(id);}
+function toast(t,d=1600){
+  const el=document.getElementById('toast');
+  el.textContent=t;el.style.opacity='1';
+  clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity='0',d);
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // SPLASH / BOOT
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 window.addEventListener('load',()=>{
-    const sp=document.getElementById('splash');
-    const bt=document.getElementById('bootStatus');
-    setTimeout(()=>bt.innerText="Loading OSINT Modules...",900);
-    setTimeout(()=>bt.innerText="Calibrating Satellite Link...",1800);
+  const sp=document.getElementById('splash');
+  const tx=document.getElementById('sTxt');
+  const msgs=['Loading OSINT feeds...','Calibrating satellite...','System nominal'];
+  let i=0;
+  const iv=setInterval(()=>{if(i<msgs.length){tx.textContent=msgs[i++];}else clearInterval(iv);},800);
+  setTimeout(()=>{
+    sp.style.opacity='0';
     setTimeout(()=>{
-        sp.style.opacity='0';
-        setTimeout(()=>{
-            sp.style.display='none';
-            if(!localStorage.getItem('policyAccepted')) showPrivacy();
-            else fullStartup();
-            checkAdmin();
-        },800);
-    },2700);
+      sp.style.display='none';
+      if(!localStorage.getItem('sdOK'))showPrivacy();
+      else launch();
+      checkAdm();
+    },700);
+  },2700);
 });
-function checkAdmin(){document.getElementById('adminPanel').style.display=location.hash==='#admin'?'flex':'none';}
-window.addEventListener('hashchange',checkAdmin);
+function checkAdm(){document.getElementById('adminPanel').style.display=location.hash==='#admin'?'flex':'none';}
+window.addEventListener('hashchange',checkAdm);
 function showPrivacy(){
-    document.getElementById('privacy-modal').style.display='flex';
-    document.getElementById('map').style.filter='blur(15px) grayscale(1)';
+  document.getElementById('privModal').style.display='flex';
+  document.getElementById('map').style.filter='blur(18px) grayscale(1)';
 }
 function acceptPolicy(){
-    localStorage.setItem('policyAccepted','true');
-    const m=document.getElementById('privacy-modal');
-    m.style.opacity='0';m.style.transition='opacity .4s';
-    setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';fullStartup();},400);
+  localStorage.setItem('sdOK','1');
+  const m=document.getElementById('privModal');
+  m.style.opacity='0';m.style.transition='opacity .35s';
+  setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},350);
 }
-function fullStartup(){
-    document.getElementById('ui-nav').style.display='flex';
-    locateMe();
-    showNotify("SYSTEM READY");
+function launch(){
+  document.getElementById('fab').style.display='flex';
+  locateMe();
+  toast('SYSTEM READY');
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // FIREBASE
-// ════════════════════════════════════════════
-firebase.initializeApp({databaseURL:FB_URL});
+// ════════════════════════════════════
+firebase.initializeApp({databaseURL:FB});
 const db=firebase.database().ref('drones');
 const presRef=firebase.database().ref('presence');
 firebase.database().ref('.info/connected').on('value',s=>{
-    if(s.val()){const c=presRef.push(true);c.onDisconnect().remove();}
+  if(s.val()){const c=presRef.push(true);c.onDisconnect().remove();}
 });
-presRef.on('value',s=>document.getElementById('onlineCount').innerText=s.numChildren()||0);
+presRef.on('value',s=>document.getElementById('onlineC').textContent=s.numChildren()||0);
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // GPS + WEATHER
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 function locateMe(){
-    if(!localStorage.getItem('policyAccepted')) return;
-    map.locate({setView:true,maxZoom:10});
+  if(!localStorage.getItem('sdOK'))return;
+  map.locate({setView:true,maxZoom:10});
 }
 map.on('locationfound',e=>{
-    userPos=e.latlng;
-    document.getElementById('gpsStatus').innerText="ACTIVE";
-    document.getElementById('gpsStatus').style.color="var(--success)";
-    if(userMarker) map.removeLayer(userMarker);
-    userMarker=L.circleMarker(userPos,{radius:6,color:'#fff',weight:2,fillColor:'#ff9d00',fillOpacity:.9}).addTo(map);
-    fetchWeather(userPos.lat,userPos.lng);
+  userPos=e.latlng;
+  document.getElementById('gpsV').textContent='ACTIVE';
+  document.getElementById('gpsV').style.color='var(--ok)';
+  if(uMarker)map.removeLayer(uMarker);
+  uMarker=L.circleMarker(userPos,{radius:6,color:'#fff',weight:2,fillColor:'#f5a623',fillOpacity:.9}).addTo(map);
+  fetchWX(userPos.lat,userPos.lng);
+  if(document.getElementById('radarPanel').classList.contains('show'))drawRadar();
 });
-
-async function fetchWeather(lat,lng){
-    try{
-        const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility,windspeed_10m&timezone=auto`);
-        const d=await r.json();
-        const cw=d.current_weather;
-        const h=d.hourly;
-        const idx=0; // first hour
-        const wmo={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈',96:'⛈'};
-        const icon=wmo[cw.weathercode]||'🌡';
-        document.getElementById('weatherChip').textContent=`${Math.round(cw.temperature)}°`;
-        document.getElementById('wpIcon').textContent=icon;
-        document.getElementById('wpTemp').textContent=`${Math.round(cw.temperature)}°C`;
-        document.getElementById('wpFeels').textContent=h?.apparent_temperature?`${Math.round(h.apparent_temperature[idx])}°C`:'--';
-        document.getElementById('wpHumidity').textContent=h?.relativehumidity_2m?`${h.relativehumidity_2m[idx]}%`:'--';
-        document.getElementById('wpWind').textContent=`${Math.round(cw.windspeed)} км/г`;
-        document.getElementById('wpVis').textContent=h?.visibility?`${(h.visibility[idx]/1000).toFixed(1)} км`:'--';
-        const wmoDesc={0:'Ясно',1:'Переважно ясно',2:'Мінлива хмарність',3:'Хмарно',45:'Туман',51:'Легкий дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
-        document.getElementById('wpDesc').textContent=wmoDesc[cw.weathercode]||'--';
-    }catch(e){document.getElementById('weatherChip').textContent='ERR';}
+async function fetchWX(lat,lng){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility&timezone=auto`);
+    const d=await r.json();const cw=d.current_weather;const h=d.hourly;
+    const wmo={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
+    const wmoD={0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
+    document.getElementById('wxT').textContent=`${Math.round(cw.temperature)}°`;
+    document.getElementById('wxIco').textContent=wmo[cw.weathercode]||'🌡';
+    document.getElementById('wx1').textContent=`${Math.round(cw.temperature)}°C`;
+    document.getElementById('wx2').textContent=h?.apparent_temperature?`${Math.round(h.apparent_temperature[0])}°C`:'--';
+    document.getElementById('wx3').textContent=h?.relativehumidity_2m?`${h.relativehumidity_2m[0]}%`:'--';
+    document.getElementById('wx4').textContent=`${Math.round(cw.windspeed)} км/г`;
+    document.getElementById('wx5').textContent=h?.visibility?`${(h.visibility[0]/1000).toFixed(1)} км`:'--';
+    document.getElementById('wx6').textContent=wmoD[cw.weathercode]||'--';
+  }catch{}
 }
-function toggleWeatherPanel(){
-    const p=document.getElementById('weatherPanel');
-    p.style.display=p.style.display==='block'?'none':'block';
-}
+function toggleWX(){const p=document.getElementById('wxPanel');p.style.display=p.style.display==='block'?'none':'block';}
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // HELPERS
-// ════════════════════════════════════════════
-function dir(deg){return DIRECTIONS[Math.round(deg/45)%8];}
-function getLifetime(ts){
-    if(!ts) return '--';
-    const s=Math.floor((Date.now()-ts)/1000);
-    return `${Math.floor(s/60)} хв ${s%60} сек`;
-}
-function computeVector(lat,lng,angle,spd){
-    const dist=spd/6;
-    const R=6371,ar=angle*Math.PI/180;
-    return {lat:lat+dist/R*Math.cos(ar)*(180/Math.PI),lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*(180/Math.PI),dist};
+// ════════════════════════════════════
+function dir(d){return DIRS[Math.round(d/45)%8]||'--';}
+function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);return `${Math.floor(s/60)}хв ${s%60}с`;}
+function vec(lat,lng,ang,spd){
+  const dist=spd/6,R=6371,ar=ang*Math.PI/180;
+  return{lat:lat+dist/R*Math.cos(ar)*180/Math.PI,lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*180/Math.PI,dist};
 }
 
-// ════════════════════════════════════════════
-// ICON BUILDER
-// ════════════════════════════════════════════
-function buildIcon(d){
-    const ang=d.angle||0;
-    const sz=iconSize;
-    const showC=showCourse||document.getElementById('togCourse')?.checked;
-    const courseText=showC?`<div class="course-label">${Math.round(ang)}° ${dir(ang)}</div>`:'';
-    const html=`<div class="uav-cont" style="width:${sz}px;height:${sz}px;transform:rotate(${ang}deg);">
-        <div class="uav-arrow-el" style="border-bottom-color:${targetColor};border-left-width:${sz/7}px;border-right-width:${sz/7}px;border-bottom-width:${sz/3}px;top:-${sz/3}px;filter:drop-shadow(0 0 4px ${targetColor});"></div>
-        <img class="uav-img-el" src="${d.type}.png" onerror="this.src='${FALLBACK}'" style="width:${sz}px;height:${sz}px;">
-        ${courseText}
-    </div>`;
-    return L.divIcon({className:'',html,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+// ════════════════════════════════════
+// ICON BUILDER — lightweight, no heavy DOM
+// ════════════════════════════════════
+function mkIcon(d){
+  const ang=d.angle||0, sz=ISZ, c=TC;
+  const showCourse=document.getElementById('togCourse')?.checked!==false;
+  const aW=Math.round(sz/5.5), aH=Math.round(sz/2.6);
+  const course=showCourse?`<div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:7px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 6px #000;letter-spacing:.05em">${Math.round(ang)}°${dir(ang)}</div>`:'';
+  const html=`<div class="uav-wrap" style="width:${sz}px;height:${sz}px;transform:rotate(${ang}deg);position:relative;display:flex;align-items:center;justify-content:center;">
+    <div style="position:absolute;top:-${aH}px;left:50%;margin-left:-${aW}px;width:0;height:0;border-left:${aW}px solid transparent;border-right:${aW}px solid transparent;border-bottom:${aH*1.6}px solid ${c};filter:drop-shadow(0 0 3px ${c});"></div>
+    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;filter:invert(27%) sepia(91%) saturate(6000%) hue-rotate(354deg) brightness(90%) contrast(115%);">
+    ${course}
+  </div>`;
+  return L.divIcon({className:'',html,iconSize:[sz,sz+14],iconAnchor:[sz/2,sz/2]});
 }
 
-// ════════════════════════════════════════════
-// SYNC DRONE
-// ════════════════════════════════════════════
-function rebuildMarker(id,d){
-    if(!obs[id]) return;
-    const newIcon=buildIcon(d);
-    obs[id].marker.setIcon(newIcon);
+// ════════════════════════════════════
+// TRAIL (history polyline behind drone)
+// Max 20 points per drone, reuse existing
+// ════════════════════════════════════
+const trailPoints={}; // id → [latlng, ...]
+const TRAIL_MAX=20;
+
+function updateTrail(id,lat,lng){
+  if(!document.getElementById('togTrail')?.checked)return;
+  if(!trailPoints[id])trailPoints[id]=[];
+  trailPoints[id].push([lat,lng]);
+  if(trailPoints[id].length>TRAIL_MAX)trailPoints[id].shift();
+  if(obs[id]?.trail){
+    obs[id].trail.setLatLngs(trailPoints[id]);
+  }
+}
+
+// ════════════════════════════════════
+// SYNC — batched via requestAnimationFrame
+// ════════════════════════════════════
+function scheduleDOMUpdate(){
+  if(rafPending)return;
+  rafPending=true;
+  requestAnimationFrame(flushSync);
+}
+
+function flushSync(){
+  rafPending=false;
+  pendingSync.forEach((d,id)=>{
+    doSync(id,d);
+  });
+  pendingSync.clear();
+  updateCounts();
 }
 
 function sync(id,d){
-    if(!d||!d.lat||!d.lng) return;
-    if((Date.now()-(d.timestamp||Date.now()))/60000>45){removeObject(id);return;}
-
-    const ang=d.angle||0;
-    const rad=(ang+180-90)*Math.PI/180;
-    const tail=[d.lat+Math.cos(rad)*.02,d.lng+Math.sin(rad)*.02];
-    const errR=d.accuracy||5000;
-
-    // History log
-    historyLog.push({id,d,ts:Date.now()});
-    if(historyLog.length>500) historyLog.shift();
-
-    if(obs[id]){
-        obs[id].marker.setLatLng([d.lat,d.lng]);
-        obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
-        obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
-        obs[id].marker.setIcon(buildIcon(d));
-        obs[id].data=d;
-        if(selectedId===id) updateUI(id,d);
-    } else {
-        playNewTarget();
-        const circle=L.circle([d.lat,d.lng],{radius:errR,color:targetColor,weight:1,fillColor:targetColor,fillOpacity:.07,dashArray:'5,10',interactive:false}).addTo(map);
-        const marker=L.marker([d.lat,d.lng],{icon:buildIcon(d)});
-        const line=L.polyline([[d.lat,d.lng],tail],{color:targetColor,weight:1,opacity:.45,dashArray:'3,8'}).addTo(map);
-        marker.on('click',e=>{L.DomEvent.stopPropagation(e);selectedId=id;updateUI(id,d);});
-        if(useClustering){clusterGroup.addLayer(marker);}else{marker.addTo(map);}
-        obs[id]={marker,line,circle,data:d};
-    }
-    updateCounters();
+  if(!d||!d.lat||!d.lng)return;
+  if((Date.now()-(d.timestamp||Date.now()))/60000>45){remove(id);return;}
+  pendingSync.set(id,d);
+  scheduleDOMUpdate();
 }
 
-function removeObject(id){
-    if(!obs[id]) return;
-    playRemoveTarget();
-    if(useClustering){clusterGroup.removeLayer(obs[id].marker);}else{map.removeLayer(obs[id].marker);}
-    map.removeLayer(obs[id].line);
-    map.removeLayer(obs[id].circle);
-    if(selectedId===id) closeInfo();
-    delete obs[id];
-    updateCounters();
+function doSync(id,d){
+  const ang=d.angle||0;
+  // Tail direction (opposite of flight)
+  const rad=(ang+180-90)*Math.PI/180;
+  const tail=[d.lat+Math.cos(rad)*.025,d.lng+Math.sin(rad)*.025];
+  const errR=d.accuracy||5000;
+
+  // History
+  hLog.push({id,d,ts:Date.now()});
+  if(hLog.length>800)hLog.splice(0,100);
+
+  updateTrail(id,d.lat,d.lng);
+
+  if(obs[id]){
+    obs[id].marker.setLatLng([d.lat,d.lng]);
+    obs[id].marker.setIcon(mkIcon(d));
+    if(obs[id].circle&&document.getElementById('togCircle')?.checked!==false)
+      obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
+    if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
+    obs[id].data=d;
+    if(selId===id)showTrack(id,d);
+  } else {
+    sndNew();
+    // Canvas-based circle (faster)
+    const circle=document.getElementById('togCircle')?.checked!==false
+      ?L.circle([d.lat,d.lng],{renderer:cvs,radius:errR,color:TC,weight:1,fillColor:TC,fillOpacity:.06,dashArray:'4,8',interactive:false}).addTo(map)
+      :null;
+    const icon=mkIcon(d);
+    const marker=L.marker([d.lat,d.lng],{icon}).addTo(map);
+    // Direction line
+    const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:TC,weight:1,opacity:.4,dashArray:'2,8'}).addTo(map);
+    // Trail polyline
+    const trail=L.polyline(trailPoints[id]||[],{renderer:cvs,color:TC,weight:1.5,opacity:.5,dashArray:'none'}).addTo(map);
+
+    marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
+    obs[id]={marker,circle,line,trail,data:d};
+  }
 }
 
-function updateUI(id,d){
-    document.getElementById('sidePanel').classList.add('active');
-    document.getElementById('objId').innerText='REF_'+id.substring(0,6).toUpperCase();
-    document.getElementById('objType').innerText=(d.type||'UNKNOWN').replace(/-/g,' ').toUpperCase();
-    document.getElementById('objCoords').innerText=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-    const ang=d.angle||0;
-    document.getElementById('objAngle').innerText=`${Math.round(ang)}° ${dir(ang)}`;
-    document.getElementById('objLifetime').innerText=getLifetime(d.timestamp);
-    const spd=SPEED_MAP[d.type]||200;
-    const vec=computeVector(d.lat,d.lng,ang,spd);
-    document.getElementById('objVector').innerHTML=`→ ${dir(ang)} ~${vec.dist.toFixed(1)} км<br><span style="opacity:.5;font-size:9px">${vec.lat.toFixed(3)}, ${vec.lng.toFixed(3)}</span>`;
-    if(userPos){
-        const dist=map.distance(userPos,[d.lat,d.lng])/1000;
-        const eta=Math.round(dist/spd*60);
-        document.getElementById('objRange').innerHTML=`${dist.toFixed(1)} KM<br><span style="color:var(--accent);font-size:10px">ETA: ~${eta} MIN</span>`;
-    }
+function remove(id){
+  if(!obs[id])return;
+  sndDel();
+  map.removeLayer(obs[id].marker);
+  if(obs[id].circle)map.removeLayer(obs[id].circle);
+  if(obs[id].line)map.removeLayer(obs[id].line);
+  if(obs[id].trail)map.removeLayer(obs[id].trail);
+  delete trailPoints[id];
+  if(selId===id)closeTrack();
+  delete obs[id];
+  updateCounts();
 }
 
-function updateCounters(){document.getElementById('uavCount').innerText=Object.keys(obs).length;}
-function closeInfo(){document.getElementById('sidePanel').classList.remove('active');selectedId=null;}
-map.on('click',closeInfo);
+function updateCounts(){document.getElementById('uavC').textContent=Object.keys(obs).length;}
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
+// TRACK PANEL
+// ════════════════════════════════════
+function showTrack(id,d){
+  const p=document.getElementById('trackPanel');p.classList.add('show');
+  const spd=SPD[d.type]||200;
+  const ang=d.angle||0;
+  document.getElementById('tpType').textContent=(d.type||'UNKNOWN').replace(/-/g,' ').toUpperCase();
+  document.getElementById('tpPos').textContent=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+  document.getElementById('tpAng').textContent=`${Math.round(ang)}° ${dir(ang)}`;
+  document.getElementById('tpAge').textContent=age(d.timestamp);
+  const v=vec(d.lat,d.lng,ang,spd);
+  document.getElementById('tpVec').textContent=`→ ${dir(ang)}  ~${v.dist.toFixed(1)} км за 10 хв  [${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}]`;
+  if(userPos){
+    const km=map.distance(userPos,[d.lat,d.lng])/1000;
+    document.getElementById('tpETA').textContent=`${km.toFixed(1)} км · ~${Math.round(km/spd*60)} хв`;
+  } else {
+    document.getElementById('tpETA').textContent='GPS off';
+  }
+}
+function closeTrack(){document.getElementById('trackPanel').classList.remove('show');selId=null;}
+map.on('click',closeTrack);
+
+// ════════════════════════════════════
+// RADAR
+// ════════════════════════════════════
+let radarOpen=false, radarAnim=null, radarAngle=0;
+function toggleRadar(){
+  radarOpen=!radarOpen;
+  const p=document.getElementById('radarPanel');
+  p.classList.toggle('show',radarOpen);
+  document.getElementById('radarBtn').classList.toggle('on',radarOpen);
+  if(radarOpen){drawRadar();if(!radarAnim)startRadarAnim();}
+  else{stopRadarAnim();}
+}
+function startRadarAnim(){
+  const cv=document.getElementById('radarCanvas');
+  const ctx=cv.getContext('2d');
+  function frame(){
+    radarAngle=(radarAngle+2)%360;
+    drawRadarFrame(ctx,cv.width,cv.height);
+    radarAnim=requestAnimationFrame(frame);
+  }
+  radarAnim=requestAnimationFrame(frame);
+}
+function stopRadarAnim(){if(radarAnim){cancelAnimationFrame(radarAnim);radarAnim=null;}}
+function drawRadar(){
+  const cv=document.getElementById('radarCanvas');
+  const ctx=cv.getContext('2d');
+  drawRadarFrame(ctx,cv.width,cv.height);
+  buildRadarList();
+}
+function drawRadarFrame(ctx,w,h){
+  const cx=w/2,cy=h/2,R=cx-4;
+  ctx.clearRect(0,0,w,h);
+  // BG
+  ctx.fillStyle='#040208';ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);ctx.fill();
+  // Rings
+  [.25,.5,.75,1].forEach(f=>{
+    ctx.strokeStyle=f===1?'rgba(255,51,51,.4)':'rgba(255,51,51,.12)';
+    ctx.lineWidth=f===1?1.5:1;
+    ctx.beginPath();ctx.arc(cx,cy,R*f,0,Math.PI*2);ctx.stroke();
+  });
+  // Cross
+  ctx.strokeStyle='rgba(255,51,51,.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  // Sweep
+  const sweepRad=(radarAngle-90)*Math.PI/180;
+  const grad=ctx.createConicalGradient?null:null;
+  ctx.save();
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,sweepRad-Math.PI/3,sweepRad);ctx.closePath();
+  const gr=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  gr.addColorStop(0,'rgba(255,51,51,.0)');gr.addColorStop(1,'rgba(255,51,51,.25)');
+  ctx.fillStyle=gr;ctx.fill();ctx.restore();
+  // Sweep line
+  ctx.strokeStyle='rgba(255,51,51,.8)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(sweepRad),cy+R*Math.sin(sweepRad));ctx.stroke();
+  // Dots for targets in 40km radius
+  if(userPos){
+    Object.values(obs).forEach(o=>{
+      const d=o.data;
+      const km=map.distance(userPos,[d.lat,d.lng])/1000;
+      if(km>40)return;
+      const bearing=Math.atan2(d.lng-userPos.lng,d.lat-userPos.lat);
+      const dr=km/40*R;
+      const px=cx+dr*Math.sin(bearing),py=cy-dr*Math.cos(bearing);
+      ctx.fillStyle='#ff3333';ctx.shadowColor='#ff3333';ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+    });
+  }
+  // Self dot
+  ctx.fillStyle='#f5a623';ctx.shadowColor='#f5a623';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  radarAngle=(radarAngle+1.5)%360;
+}
+function buildRadarList(){
+  const list=document.getElementById('radarList');
+  const empty=document.getElementById('radarEmpty');
+  if(!userPos){empty.style.display='block';empty.textContent='GPS недоступний';list.innerHTML='';list.appendChild(empty);return;}
+  const near=Object.entries(obs).filter(([,o])=>map.distance(userPos,[o.data.lat,o.data.lng])/1000<=40)
+    .sort(([,a],[,b])=>map.distance(userPos,[a.data.lat,a.data.lng])-map.distance(userPos,[b.data.lat,b.data.lng]));
+  list.innerHTML='';
+  if(!near.length){empty.style.display='block';list.appendChild(empty);return;}
+  near.forEach(([id,o])=>{
+    const d=o.data, km=map.distance(userPos,[d.lat,d.lng])/1000;
+    const spd=SPD[d.type]||200, eta=Math.round(km/spd*60);
+    const row=document.createElement('div');row.className='radar-item';
+    row.innerHTML=`<span>${id.substring(0,5)} · ${(d.type||'?').split('-')[0].toUpperCase()}</span><span class="ri-eta">${km.toFixed(1)}km ~${eta}хв</span>`;
+    row.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    list.appendChild(row);
+  });
+}
+// Refresh radar list periodically when open
+setInterval(()=>{if(radarOpen)buildRadarList();},5000);
+
+// ════════════════════════════════════
 // TARGETS TABLE
-// ════════════════════════════════════════════
-function refreshTable(){
-    const tb=document.getElementById('targetsBody');
-    tb.innerHTML='';
-    Object.entries(obs).forEach(([id,o])=>{
-        const d=o.data;
-        const spd=SPEED_MAP[d.type]||200;
-        const eta=userPos?Math.round(map.distance(userPos,[d.lat,d.lng])/1000/spd*60)+'MIN':'--';
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${id.substring(0,6).toUpperCase()}</td>
-            <td><span class="tbl-type-badge">${(d.type||'?').split('-')[0].toUpperCase()}</span></td>
-            <td>${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}</td>
-            <td>${Math.round(d.angle||0)}° ${dir(d.angle||0)}</td>
-            <td>${getLifetime(d.timestamp)}</td>
-            <td style="color:var(--accent)">${eta}</td>`;
-        tr.onclick=()=>{closeSheet('tableModal');selectedId=id;updateUI(id,d);map.panTo([d.lat,d.lng]);};
-        tb.appendChild(tr);
-    });
-    if(!Object.keys(obs).length){
-        tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Активних цілей немає</td></tr>';
-    }
+// ════════════════════════════════════
+function buildTable(){
+  const tb=document.getElementById('tblBody');tb.innerHTML='';
+  const entries=Object.entries(obs);
+  if(!entries.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.25);padding:16px">Немає цілей</td></tr>';return;
+  }
+  entries.forEach(([id,o])=>{
+    const d=o.data,spd=SPD[d.type]||200;
+    const eta=userPos?`~${Math.round(map.distance(userPos,[d.lat,d.lng])/1000/spd*60)}хв`:'--';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${id.substring(0,5).toUpperCase()}</td><td><span class="t-badge">${(d.type||'?').split('-')[0].toUpperCase()}</span></td><td>${d.lat.toFixed(3)},${d.lng.toFixed(3)}</td><td>${Math.round(d.angle||0)}°${dir(d.angle||0)}</td><td style="color:var(--a)">${eta}</td>`;
+    tr.onclick=()=>{closeSheet('tblSheet');selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    tb.appendChild(tr);
+  });
 }
 
-// ════════════════════════════════════════════
-// HISTORY TIMELINE
-// ════════════════════════════════════════════
-function toggleHistory(){
-    histMode=!histMode;
-    const bar=document.getElementById('historyBar');
-    const btn=document.getElementById('histBtn');
-    bar.classList.toggle('show',histMode);
-    btn.classList.toggle('active-btn',histMode);
-    if(!histMode){stopHistPlay();document.getElementById('timeSlider').value=100;document.getElementById('timeLabel').textContent='LIVE';}
+// ════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════
+function toggleHist(){
+  hMode=!hMode;
+  const bar=document.getElementById('histBar');
+  bar.classList.toggle('show',hMode);
+  document.getElementById('histBtn').classList.toggle('on',hMode);
+  if(!hMode){stopHP();document.getElementById('tSlider').value=100;document.getElementById('tLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});}
 }
-function onTimeSlider(v){
-    const pct=v/100;
-    if(pct>=0.99){document.getElementById('timeLabel').textContent='LIVE';return;}
-    // Показуємо стан в певний момент часу
-    if(!historyLog.length) return;
-    const oldest=historyLog[0].ts, newest=historyLog[historyLog.length-1].ts;
-    const t=oldest+(newest-oldest)*pct;
-    const d=new Date(t);
-    document.getElementById('timeLabel').textContent=d.toLocaleTimeString('uk-UA',{hour12:false});
-    // Візуалізація — підсвічуємо маркери що були активні в цей момент
-    const active=new Set();
-    historyLog.filter(e=>e.ts<=t).forEach(e=>active.add(e.id));
-    Object.entries(obs).forEach(([id,o])=>{
-        const el=o.marker.getElement();
-        if(el) el.style.opacity=active.has(id)?'1':'0.2';
-    });
+function onTSlide(v){
+  const pct=+v/100;
+  const p=pct.toFixed(0);
+  document.getElementById('tSlider').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+  if(pct>=.99){document.getElementById('tLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});return;}
+  if(!hLog.length)return;
+  const oldest=hLog[0].ts,newest=hLog[hLog.length-1].ts;
+  const t=oldest+(newest-oldest)*pct;
+  document.getElementById('tLbl').textContent=new Date(t).toLocaleTimeString('uk-UA',{hour12:false});
+  const active=new Set();hLog.filter(e=>e.ts<=t).forEach(e=>active.add(e.id));
+  Object.entries(obs).forEach(([id,o])=>{const el=o.marker.getElement();if(el)el.style.opacity=active.has(id)?'1':'.15';});
 }
-function toggleHistPlay(){
-    histPlaying=!histPlaying;
-    document.getElementById('histPlayIcon').className=histPlaying?'fa-solid fa-pause':'fa-solid fa-play';
-    if(histPlaying){
-        let v=+document.getElementById('timeSlider').value;
-        histInterval=setInterval(()=>{
-            v=Math.min(100,v+0.5);
-            document.getElementById('timeSlider').value=v;
-            onTimeSlider(v);
-            if(v>=100) stopHistPlay();
-        },100);
-    } else { stopHistPlay(); }
+function toggleHPlay(){
+  hPlay=!hPlay;
+  document.getElementById('hPlayIco').className=hPlay?'fa-solid fa-pause':'fa-solid fa-play';
+  if(hPlay){
+    let v=+document.getElementById('tSlider').value;
+    hInt=setInterval(()=>{v=Math.min(100,v+.4);document.getElementById('tSlider').value=v;onTSlide(v);if(v>=100)stopHP();},80);
+  } else stopHP();
 }
-function stopHistPlay(){
-    histPlaying=false;
-    clearInterval(histInterval);
-    document.getElementById('histPlayIcon').className='fa-solid fa-play';
-}
+function stopHP(){hPlay=false;clearInterval(hInt);document.getElementById('hPlayIco').className='fa-solid fa-play';}
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // CLOCK
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 setInterval(()=>{
-    document.getElementById('sysTime').innerText=new Date().toLocaleTimeString('uk-UA',{hour12:false});
-    if(selectedId&&obs[selectedId]) document.getElementById('objLifetime').innerText=getLifetime(obs[selectedId].data.timestamp);
+  document.getElementById('sysTime').textContent=new Date().toLocaleTimeString('uk-UA',{hour12:false});
+  if(selId&&obs[selId])document.getElementById('tpAge').textContent=age(obs[selId].data.timestamp);
 },1000);
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // FIREBASE LISTENERS
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 db.on('child_added',  s=>sync(s.key,s.val()));
 db.on('child_changed',s=>sync(s.key,s.val()));
-db.on('child_removed',s=>removeObject(s.key));
+db.on('child_removed',s=>remove(s.key));
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 // ADMIN
-// ════════════════════════════════════════════
+// ════════════════════════════════════
 function spawnDrone(){
-    const c=map.getCenter();
-    db.push({lat:c.lat,lng:c.lng,type:document.getElementById('admType').value,
-        angle:parseInt(document.getElementById('admAngle').value)||0,
-        accuracy:parseInt(document.getElementById('admAcc').value)||5000,
-        timestamp:Date.now()
-    }).then(()=>showNotify("TARGET DEPLOYED"));
+  const c=map.getCenter();
+  db.push({lat:c.lat,lng:c.lng,type:document.getElementById('aType').value,
+    angle:parseInt(document.getElementById('aAngle').value)||0,
+    accuracy:parseInt(document.getElementById('aAcc').value)||5000,
+    timestamp:Date.now()
+  }).then(()=>toast('TARGET DEPLOYED'));
 }
-function clearDrones(){if(confirm("Purge?")) db.remove().then(()=>showNotify("PURGED"));}
+function clearDrones(){if(confirm('Purge?'))db.remove().then(()=>toast('PURGED'));}
 </script>
 </body>
 </html>
