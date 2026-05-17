@@ -23,15 +23,20 @@
   --bg:#08070a;--glass:rgba(12,6,8,.93);
   --brd:rgba(255,51,51,.22);--brd2:rgba(255,255,255,.07);
   --sh:0 8px 32px rgba(0,0,0,.85);
-  --TC:#ff3333;--ISZ:34;
   --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
 }
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
+
+/* MAP — regular leaflet */
 #map{position:absolute;inset:0;z-index:1;background:#000;}
 .leaflet-tile-pane,.leaflet-map-pane{will-change:transform;}
 
-/* ── SPLASH ── */
+/* 3D MAP overlay using MapTiler iframe */
+#map3d{position:absolute;inset:0;z-index:1;display:none;border:none;}
+#map3d.on{display:block;}
+
+/* SPLASH */
 #splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s;}
 .sl{font-family:'Orbitron';font-size:clamp(22px,5vw,30px);color:var(--a);letter-spacing:.18em;margin-bottom:4px;animation:glw 2s infinite;}
 @keyframes glw{0%,100%{text-shadow:0 0 15px var(--a)}50%{text-shadow:0 0 35px var(--a),0 0 70px rgba(255,51,51,.3)}}
@@ -41,7 +46,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 @keyframes sba{to{width:100%}}
 .stx{font-family:'Orbitron';font-size:8px;color:var(--a);letter-spacing:.14em;margin-top:10px;text-transform:uppercase;}
 
-/* ── PRIVACY ── */
+/* PRIVACY */
 #priv{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(14px);padding:14px;}
 .pvb{background:var(--glass);border:1px solid var(--a);padding:22px;border-radius:16px;max-width:430px;width:100%;animation:fu .3s ease;}
 @keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
@@ -51,7 +56,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .pvok{width:100%;padding:11px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Orbitron';font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:8px;transition:.2s;}
 .pvok:hover{background:var(--a);color:#000;}
 
-/* ── TOP BAR ── */
+/* TOP BAR */
 #topBar{position:absolute;top:calc(var(--st) + 10px);left:10px;right:10px;z-index:2000;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
 .tbl{display:flex;flex-direction:column;gap:5px;pointer-events:auto;}
 .pill{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--brd);border-radius:18px;padding:5px 11px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--sh);white-space:nowrap;}
@@ -62,11 +67,11 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 #actPill .n{font-family:'Orbitron';color:var(--a);font-size:14px;line-height:1;text-shadow:0 0 8px var(--a);}
 .wxpill{cursor:pointer;}
 
-/* ── CROSSHAIR (замінено на tactical reticle) ── */
-#reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:44px;height:44px;opacity:.55;}
+/* RETICLE */
+#reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:44px;height:44px;opacity:.52;}
 #reticle svg{width:100%;height:100%;}
 
-/* ── FAB ── */
+/* FAB */
 #fab{position:absolute;right:10px;bottom:calc(var(--sb) + 22px);z-index:2000;display:none;flex-direction:column;align-items:center;gap:5px;}
 .fb{width:40px;height:40px;border-radius:11px;border:1px solid var(--brd2);background:var(--glass);backdrop-filter:blur(14px);color:rgba(255,255,255,.52);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s;box-shadow:var(--sh);text-decoration:none;position:relative;}
 .fb:active{transform:scale(.91);}
@@ -74,15 +79,14 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .fb.gld{border-color:var(--gold);color:var(--gold);}
 .fb.gld:hover{background:rgba(245,166,35,.1);color:#fff;}
 .fsep{width:22px;height:1px;background:var(--brd);}
-.fb .dot{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--a);box-shadow:0 0 4px var(--a);}
 
-/* ── WEATHER PANEL ── */
+/* WEATHER */
 #wxPnl{position:absolute;top:calc(var(--st) + 78px);left:10px;z-index:2100;background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:14px;padding:14px 16px;min-width:190px;display:none;box-shadow:var(--sh);animation:fu .2s ease;}
 .wxi{font-size:30px;text-align:center;margin-bottom:7px;}
 .wxr{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;}
 .wxr b{color:#fff;font-family:'Orbitron';font-size:10px;}
 
-/* ── ALERT TOAST ── */
+/* ALERT */
 #alertToast{position:absolute;top:calc(var(--st)+58px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:#0a0808;border:1px solid var(--a);border-radius:12px;padding:10px 16px;box-shadow:0 0 24px rgba(255,51,51,.35);min-width:240px;max-width:92vw;animation:fu .3s ease;}
 .at-icon{font-size:18px;color:var(--a);flex-shrink:0;}
 .at-body{flex:1;}
@@ -90,8 +94,8 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .at-sub{font-size:11px;color:rgba(255,255,255,.6);}
 .at-close{background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;}
 
-/* ── TRACK PANEL ── */
-#trackPnl{position:absolute;bottom:calc(var(--sb)+82px);left:10px;right:58px;max-width:400px;z-index:2100;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fu .28s ease;}
+/* TRACK PANEL */
+#trackPnl{position:absolute;bottom:calc(var(--sb)+82px);left:10px;right:58px;max-width:400px;z-index:2100;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fu .28s ease;overflow-y:auto;max-height:70vh;}
 #trackPnl.on{display:block;}
 .tph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .tpt{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;}
@@ -101,8 +105,6 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .tpc .vl{font-family:'Orbitron';font-size:11px;color:#fff;}
 .tpc .vl.r{color:var(--a);}
 .tpc .vl.g{color:var(--ok);}
-.tpc .vl.b{color:var(--blue);}
-/* Характеристики цілі */
 .tpinfo{border-top:1px solid var(--brd2);padding-top:10px;margin-top:2px;}
 .tpi-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;}
 .tpi-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
@@ -110,7 +112,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .tpi-text b{color:rgba(255,255,255,.85);}
 .tpvec{margin-top:8px;padding:7px 9px;background:rgba(255,51,51,.06);border:1px solid rgba(255,51,51,.12);border-radius:7px;font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.45);line-height:1.6;}
 
-/* ── RADAR ── */
+/* RADAR */
 #radarPnl{position:absolute;bottom:calc(var(--sb)+82px);left:10px;z-index:2100;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;width:230px;display:none;box-shadow:var(--sh);animation:fu .28s ease;}
 #radarPnl.on{display:block;}
 .rdt{font-family:'Orbitron';font-size:9px;color:var(--a);letter-spacing:.15em;margin-bottom:9px;}
@@ -119,19 +121,19 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .rdi{font-size:9px;color:rgba(255,255,255,.6);padding:4px 0;border-bottom:1px solid var(--brd2);display:flex;justify-content:space-between;font-family:'Orbitron';}
 .rdi .re{color:var(--a);}
 
-/* ── HISTORY BAR ── */
+/* HISTORY BAR */
 #histBar{position:absolute;bottom:calc(var(--sb)+78px);left:10px;right:58px;z-index:2000;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--brd);border-radius:10px;padding:7px 12px;display:none;align-items:center;gap:8px;}
 #histBar.on{display:flex;}
 #histBar label{font-family:'Orbitron';font-size:8px;color:var(--a);white-space:nowrap;letter-spacing:.1em;}
-#hSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--a) 100%,rgba(255,255,255,.1) 100%);}
+#hSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
 #hSlider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
 #hLbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.38);white-space:nowrap;min-width:52px;text-align:right;}
 #hPlay{width:24px;height:24px;border-radius:6px;border:1px solid var(--brd);background:var(--a3);color:var(--a);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 
-/* ── TOAST ── */
+/* TOAST */
 #toast{position:absolute;top:calc(var(--st)+58px);left:50%;transform:translateX(-50%);z-index:3000;background:var(--a);color:#fff;padding:4px 14px;border-radius:18px;font-size:9px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Orbitron';letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 16px rgba(255,51,51,.4);}
 
-/* ── SHEETS ── */
+/* SHEETS */
 .bsbg{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);}
 .bsbg.on{display:flex;}
 .bs{background:#0b0708;border:1px solid var(--brd);border-bottom:none;border-radius:20px 20px 0 0;width:min(580px,100%);padding:18px 15px calc(var(--sb)+26px);max-height:90vh;overflow-y:auto;animation:shUp .3s cubic-bezier(.19,1,.22,1) forwards;}
@@ -141,81 +143,83 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 .bsclose{display:block;width:100%;margin-top:13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.28);font-family:'Orbitron';font-size:8px;letter-spacing:.2em;padding:9px;cursor:pointer;border-radius:7px;transition:.2s;}
 .bsclose:hover{color:#fff;}
 
-/* ── THEME GRID ── */
+/* THEME GRID */
 .thgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px;}
 .thcard{border:1px solid var(--brd2);border-radius:9px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
 .thcard:active{transform:scale(.96);}
 .thcard.on{border-color:var(--a);box-shadow:0 0 11px rgba(255,51,51,.3);}
 .thcard.on::after{content:'✓';position:absolute;top:4px;right:6px;color:var(--a);font-size:11px;font-weight:900;}
-.thprev{height:52px;position:relative;overflow:hidden;}
+.thprev{height:52px;overflow:hidden;position:relative;}
 .p0{background:linear-gradient(135deg,#0d1117,#161b22,#0a0a0a);}
 .p1{background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f);}
 .p2{background:linear-gradient(135deg,#060914,#0a0f24,#0d1530);}
 .p3{background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870);}
-.p4{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:14px;color:#00e5ff;text-shadow:0 0 8px #00e5ff;}
+/* 3D preview shows actual 3D hills look */
+.p4{background:linear-gradient(160deg,#2a1f0e,#3d2c14,#4a3520,#2a1a0a);position:relative;}
+.p4::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52'%3E%3Cpath d='M0 40 Q13 10 26 30 Q39 50 52 20' stroke='%23f5a62388' stroke-width='1.5' fill='none'/%3E%3Cpath d='M0 30 Q13 5 26 22 Q39 40 52 12' stroke='%23f5a62355' stroke-width='1' fill='none'/%3E%3C/svg%3E") center/cover;}
+.p4-lbl{position:absolute;bottom:3px;right:5px;font-family:'Orbitron';font-size:9px;color:#f5a623;text-shadow:0 0 6px #f5a623;}
 .p5{background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8);}
 .p6{background:linear-gradient(135deg,#1a0a0a,#2d0808,#1a0404);}
-.p7{background:linear-gradient(135deg,#0a0a1a,#080814,#050510);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:11px;color:rgba(100,200,100,.8);}
+.p7{background:linear-gradient(135deg,#0a0a1a,#080814,#050510);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:10px;color:rgba(100,200,100,.8);}
 .p8{background:linear-gradient(135deg,#1a1208,#2d1e0a,#3d2a0c);}
 .thname{padding:4px 5px;font-size:7px;font-family:'Orbitron';color:rgba(255,255,255,.48);letter-spacing:.07em;text-align:center;background:#050202;}
 .brrow{display:flex;align-items:center;gap:9px;margin-bottom:13px;}
 .brrow span{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);white-space:nowrap;letter-spacing:.1em;}
 .brval{font-family:'Orbitron';font-size:9px;color:var(--a);width:28px;text-align:right;}
+.rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
 
-/* ── SETTINGS ── */
+/* SETTINGS */
 .ssec{margin-bottom:15px;}
 .sslbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.28);letter-spacing:.15em;text-transform:uppercase;margin-bottom:9px;display:block;border-bottom:1px solid var(--brd2);padding-bottom:4px;}
 .srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
 .srow>span{font-size:11px;color:rgba(255,255,255,.62);}
-/* toggle */
 .tog{position:relative;width:36px;height:19px;flex-shrink:0;}
 .tog input{opacity:0;width:0;height:0;}
 .togsl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:19px;cursor:pointer;transition:.22s;}
 .togsl:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:#555;border-radius:50%;transition:.22s;}
 .tog input:checked+.togsl{background:var(--a);}
 .tog input:checked+.togsl:before{transform:translateX(17px);background:#fff;}
-/* swatches */
-.swg{display:flex;gap:5px;}
+.swg{display:flex;gap:5px;flex-wrap:wrap;}
 .sw{width:21px;height:21px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.14s;}
 .sw.on{border-color:#fff;transform:scale(1.22);}
-/* slider row */
 .slrow{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
 .slrow>span{font-size:11px;color:rgba(255,255,255,.62);flex-shrink:0;min-width:100px;}
 .slval{font-family:'Orbitron';font-size:9px;color:var(--a);width:28px;text-align:right;}
-/* range input */
-.rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
-.rng::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
-/* sound grid */
-.sndg{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-.sndb{background:rgba(255,255,255,.04);border:1px solid var(--brd2);color:rgba(255,255,255,.52);font-size:10px;padding:6px 7px;border-radius:6px;cursor:pointer;transition:.14s;text-align:left;}
-.sndb:hover,.sndb.on{border-color:var(--a);color:var(--a);}
-/* color mode buttons */
+
+/* PER-TYPE COLOR ROW */
+.type-color-grid{display:grid;gap:8px;margin-bottom:4px;}
+.tcr{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.03);border:1px solid var(--brd2);border-radius:8px;padding:7px 10px;}
+.tcr-name{font-size:10px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:6px;}
+.tcr-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.tcr-swg{display:flex;gap:4px;}
+.tcsw{width:18px;height:18px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:.12s;}
+.tcsw.on{border-color:#fff;transform:scale(1.2);}
+
 .cmodes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:9px;}
 .cmode-btn{background:rgba(255,255,255,.04);border:1px solid var(--brd2);color:rgba(255,255,255,.52);font-size:9px;padding:6px;border-radius:6px;cursor:pointer;transition:.14s;text-align:center;font-family:'Orbitron';letter-spacing:.05em;}
 .cmode-btn:hover,.cmode-btn.on{border-color:var(--a);color:var(--a);}
+.sndg{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.sndb{background:rgba(255,255,255,.04);border:1px solid var(--brd2);color:rgba(255,255,255,.52);font-size:10px;padding:6px 7px;border-radius:6px;cursor:pointer;transition:.14s;text-align:left;}
+.sndb:hover,.sndb.on{border-color:var(--a);color:var(--a);}
 
-/* ── TABLE ── */
+/* TABLE */
 #tblTbl{width:100%;border-collapse:collapse;font-size:10px;}
 #tblTbl th{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.28);letter-spacing:.15em;text-transform:uppercase;padding:5px 5px;border-bottom:1px solid var(--brd2);}
 #tblTbl td{padding:6px 5px;border-bottom:1px solid rgba(255,255,255,.03);color:rgba(255,255,255,.68);font-family:'Orbitron';font-size:9px;}
 #tblTbl tr:hover td{background:var(--a3);cursor:pointer;}
 .tbadge{background:var(--a2);border:1px solid var(--brd);color:var(--a);padding:1px 4px;border-radius:3px;font-size:8px;}
 
-/* ── ADMIN ── */
+/* ADMIN */
 #admpnl{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:10000;display:none;align-items:center;justify-content:center;padding:14px;}
 .admbox{max-width:370px;width:100%;border:1px solid var(--a);padding:18px;border-radius:13px;background:#000;}
 .admf{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.28);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px;}
 .admi,.adms{width:100%;background:#111;color:#fff;border:1px solid #1e1e1e;padding:9px 10px;font-family:'Orbitron';font-size:11px;outline:none;margin-bottom:9px;border-radius:6px;}
 .admb{width:100%;padding:10px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.18s;border-radius:7px;margin-top:4px;}
-.adm-ok{background:var(--a);color:#fff;}
-.adm-cl{background:rgba(255,51,51,.08);color:var(--a);border:1px solid var(--brd);}
-.adm-x{background:#151515;color:#555;margin-top:5px;}
+.adm-ok{background:var(--a);color:#fff;}.adm-cl{background:rgba(255,51,51,.08);color:var(--a);border:1px solid var(--brd);}.adm-x{background:#151515;color:#555;margin-top:5px;}
 .plink{position:absolute;bottom:calc(var(--sb)+3px);left:50%;transform:translateX(-50%);z-index:2001;font-size:7px;opacity:.22;color:#fff;text-decoration:none;font-family:'Orbitron';letter-spacing:.07em;white-space:nowrap;}
-
-/* ── OBLAST layer tooltip ── */
 .leaflet-tooltip.ob-tt{background:rgba(0,0,0,.75);border:1px solid rgba(255,51,51,.3);color:rgba(255,255,255,.7);font-family:'Orbitron';font-size:8px;letter-spacing:.05em;padding:3px 6px;}
 
-/* responsive */
 @media(min-width:600px){#fab{right:18px;bottom:calc(var(--sb)+30px);}#trackPnl,#histBar{right:66px;}#radarPnl{left:18px;}}
 @media(min-width:1024px){#fab{top:50%;transform:translateY(-50%);bottom:auto;}.fb{width:38px;height:38px;font-size:12px;}}
 </style>
@@ -275,7 +279,10 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
       <div class="thcard" id="tc1" onclick="selTh(1)"><div class="thprev p1"></div><div class="thname">SATELLITE</div></div>
       <div class="thcard" id="tc2" onclick="selTh(2)"><div class="thprev p2"></div><div class="thname">NIGHT BLUE</div></div>
       <div class="thcard" id="tc3" onclick="selTh(3)"><div class="thprev p3"></div><div class="thname">TOPO</div></div>
-      <div class="thcard" id="tc4" onclick="selTh(4)"><div class="thprev p4">3D</div><div class="thname">3D RELIEF</div></div>
+      <div class="thcard" id="tc4" onclick="selTh(4)">
+        <div class="thprev p4"><div class="p4-lbl">3D</div></div>
+        <div class="thname">3D HILLS</div>
+      </div>
       <div class="thcard" id="tc5" onclick="selTh(5)"><div class="thprev p5"></div><div class="thname">LIGHT</div></div>
       <div class="thcard" id="tc6" onclick="selTh(6)"><div class="thprev p6"></div><div class="thname">RED OPS</div></div>
       <div class="thcard" id="tc7" onclick="selTh(7)"><div class="thprev p7">NV</div><div class="thname">NIGHT VISION</div></div>
@@ -283,7 +290,8 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
     </div>
     <div class="brrow">
       <span>BRIGHTNESS</span>
-      <input type="range" id="brR" class="rng" min="10" max="140" value="60" oninput="setBr(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 39%,rgba(255,255,255,.1) 39%)">
+      <input type="range" id="brR" class="rng" min="10" max="140" value="60" oninput="setBr(this.value)"
+        style="flex:1;background:linear-gradient(to right,var(--a) 39%,rgba(255,255,255,.1) 39%)">
       <span class="brval" id="brV">60%</span>
     </div>
     <button class="bsclose" onclick="cls('thSh')">CLOSE</button>
@@ -296,21 +304,82 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
     <div class="bsdrag"></div>
     <div class="bstitle">SETTINGS</div>
 
-    <!-- Цілі -->
+    <!-- Колір по типу -->
     <div class="ssec">
-      <span class="sslbl">Вигляд цілей</span>
-      <div class="slrow"><span>Розмір іконки</span><input type="range" class="rng" id="iR" min="16" max="70" value="34" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 38%,rgba(255,255,255,.1) 38%)"><span class="slval" id="iV">34px</span></div>
-      <div class="srow"><span>Колір цілей</span>
-        <div class="swg" id="tcSw">
-          <div class="sw on" style="background:#ff3333" onclick="setTC('#ff3333',this)"></div>
-          <div class="sw" style="background:#ff9900" onclick="setTC('#ff9900',this)"></div>
-          <div class="sw" style="background:#ffcc00" onclick="setTC('#ffcc00',this)"></div>
-          <div class="sw" style="background:#00e5ff" onclick="setTC('#00e5ff',this)"></div>
-          <div class="sw" style="background:#00ff88" onclick="setTC('#00ff88',this)"></div>
-          <div class="sw" style="background:#cc44ff" onclick="setTC('#cc44ff',this)"></div>
+      <span class="sslbl">Колір цілей по типу</span>
+      <div class="type-color-grid">
+        <div class="tcr">
+          <div class="tcr-name"><div class="tcr-dot" id="dot_shahed-vp-standart" style="background:#ff9900"></div>Shahed-136</div>
+          <div class="tcr-swg" id="sw_shahed-vp-standart">
+            <div class="tcsw" style="background:#ff3333" onclick="setTypeColor('shahed-vp-standart','#ff3333',this)"></div>
+            <div class="tcsw on" style="background:#ff9900" onclick="setTypeColor('shahed-vp-standart','#ff9900',this)"></div>
+            <div class="tcsw" style="background:#ffcc00" onclick="setTypeColor('shahed-vp-standart','#ffcc00',this)"></div>
+            <div class="tcsw" style="background:#00e5ff" onclick="setTypeColor('shahed-vp-standart','#00e5ff',this)"></div>
+            <div class="tcsw" style="background:#00ff88" onclick="setTypeColor('shahed-vp-standart','#00ff88',this)"></div>
+            <div class="tcsw" style="background:#cc44ff" onclick="setTypeColor('shahed-vp-standart','#cc44ff',this)"></div>
+          </div>
+        </div>
+        <div class="tcr">
+          <div class="tcr-name"><div class="tcr-dot" id="dot_shahed-238-jet" style="background:#ff3333"></div>Shahed-238</div>
+          <div class="tcr-swg" id="sw_shahed-238-jet">
+            <div class="tcsw on" style="background:#ff3333" onclick="setTypeColor('shahed-238-jet','#ff3333',this)"></div>
+            <div class="tcsw" style="background:#ff9900" onclick="setTypeColor('shahed-238-jet','#ff9900',this)"></div>
+            <div class="tcsw" style="background:#ffcc00" onclick="setTypeColor('shahed-238-jet','#ffcc00',this)"></div>
+            <div class="tcsw" style="background:#00e5ff" onclick="setTypeColor('shahed-238-jet','#00e5ff',this)"></div>
+            <div class="tcsw" style="background:#00ff88" onclick="setTypeColor('shahed-238-jet','#00ff88',this)"></div>
+            <div class="tcsw" style="background:#cc44ff" onclick="setTypeColor('shahed-238-jet','#cc44ff',this)"></div>
+          </div>
+        </div>
+        <div class="tcr">
+          <div class="tcr-name"><div class="tcr-dot" id="dot_kalibr-cruise" style="background:#ff0000"></div>Kalibr</div>
+          <div class="tcr-swg" id="sw_kalibr-cruise">
+            <div class="tcsw on" style="background:#ff0000" onclick="setTypeColor('kalibr-cruise','#ff0000',this)"></div>
+            <div class="tcsw" style="background:#ff3333" onclick="setTypeColor('kalibr-cruise','#ff3333',this)"></div>
+            <div class="tcsw" style="background:#ff9900" onclick="setTypeColor('kalibr-cruise','#ff9900',this)"></div>
+            <div class="tcsw" style="background:#00e5ff" onclick="setTypeColor('kalibr-cruise','#00e5ff',this)"></div>
+            <div class="tcsw" style="background:#cc44ff" onclick="setTypeColor('kalibr-cruise','#cc44ff',this)"></div>
+            <div class="tcsw" style="background:#ffffff" onclick="setTypeColor('kalibr-cruise','#ffffff',this)"></div>
+          </div>
+        </div>
+        <div class="tcr">
+          <div class="tcr-name"><div class="tcr-dot" id="dot_tu-95ms-strat" style="background:#cc0000"></div>Tu-95MS</div>
+          <div class="tcr-swg" id="sw_tu-95ms-strat">
+            <div class="tcsw on" style="background:#cc0000" onclick="setTypeColor('tu-95ms-strat','#cc0000',this)"></div>
+            <div class="tcsw" style="background:#ff3333" onclick="setTypeColor('tu-95ms-strat','#ff3333',this)"></div>
+            <div class="tcsw" style="background:#ff9900" onclick="setTypeColor('tu-95ms-strat','#ff9900',this)"></div>
+            <div class="tcsw" style="background:#00e5ff" onclick="setTypeColor('tu-95ms-strat','#00e5ff',this)"></div>
+            <div class="tcsw" style="background:#ffcc00" onclick="setTypeColor('tu-95ms-strat','#ffcc00',this)"></div>
+            <div class="tcsw" style="background:#ffffff" onclick="setTypeColor('tu-95ms-strat','#ffffff',this)"></div>
+          </div>
+        </div>
+        <div class="tcr">
+          <div class="tcr-name"><div class="tcr-dot" id="dot_default" style="background:#ff3333"></div>Всі інші</div>
+          <div class="tcr-swg" id="sw_default">
+            <div class="tcsw on" style="background:#ff3333" onclick="setTypeColor('default','#ff3333',this)"></div>
+            <div class="tcsw" style="background:#ff9900" onclick="setTypeColor('default','#ff9900',this)"></div>
+            <div class="tcsw" style="background:#ffcc00" onclick="setTypeColor('default','#ffcc00',this)"></div>
+            <div class="tcsw" style="background:#00e5ff" onclick="setTypeColor('default','#00e5ff',this)"></div>
+            <div class="tcsw" style="background:#00ff88" onclick="setTypeColor('default','#00ff88',this)"></div>
+            <div class="tcsw" style="background:#cc44ff" onclick="setTypeColor('default','#cc44ff',this)"></div>
+          </div>
         </div>
       </div>
-      <div class="srow"><span>Режим відображення</span></div>
+    </div>
+
+    <!-- Розмір -->
+    <div class="ssec">
+      <span class="sslbl">Розмір іконки</span>
+      <div class="slrow">
+        <span>Розмір</span>
+        <input type="range" class="rng" id="iR" min="16" max="70" value="34" oninput="setISZ(this.value)"
+          style="flex:1;background:linear-gradient(to right,var(--a) 38%,rgba(255,255,255,.1) 38%)">
+        <span class="slval" id="iV">34px</span>
+      </div>
+    </div>
+
+    <!-- Режим відображення -->
+    <div class="ssec">
+      <span class="sslbl">Режим відображення</span>
       <div class="cmodes">
         <button class="cmode-btn on" id="cm_normal" onclick="setColorMode('normal',this)">🎯 NORMAL</button>
         <button class="cmode-btn" id="cm_heat" onclick="setColorMode('heat',this)">🔥 HEATMAP</button>
@@ -323,8 +392,6 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
       <span class="sslbl">Шари карти</span>
       <div class="srow"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleOblast()"><span class="togsl"></span></label></div>
       <div class="srow"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked><span class="togsl"></span></label></div>
-      <div class="srow"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="togsl"></span></label></div>
-      <div class="srow"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" checked><span class="togsl"></span></label></div>
       <div class="srow"><span>Radius 40km ring</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRange()"><span class="togsl"></span></label></div>
     </div>
 
@@ -333,7 +400,12 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
       <span class="sslbl">Сповіщення</span>
       <div class="srow"><span>Push-сповіщення</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="togsl"></span></label></div>
       <div class="srow"><span>Звуки</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="togsl"></span></label></div>
-      <div class="slrow"><span>Гучність</span><input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.1) 60%)"><span class="slval" id="volV">60%</span></div>
+      <div class="slrow">
+        <span>Гучність</span>
+        <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)"
+          style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.1) 60%)">
+        <span class="slval" id="volV">60%</span>
+      </div>
       <div class="sndg">
         <button class="sndb on" onclick="testSnd('new')">🔔 Нова ціль</button>
         <button class="sndb on" onclick="testSnd('del')">✅ Знищена</button>
@@ -342,10 +414,10 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
       </div>
     </div>
 
-    <!-- UI -->
+    <!-- UI color -->
     <div class="ssec">
-      <span class="sslbl">Інтерфейс</span>
-      <div class="srow"><span>Акцент UI</span>
+      <span class="sslbl">Акцент інтерфейсу</span>
+      <div class="srow"><span>Колір UI</span>
         <div class="swg" id="uiSw">
           <div class="sw on" style="background:#ff3333" onclick="setUI('#ff3333',this)"></div>
           <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
@@ -374,27 +446,28 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
   </div>
 </div>
 
-<!-- MAP -->
+<!-- MAP (leaflet 2d) -->
 <div id="map"></div>
 
-<!-- TACTICAL RETICLE (замінено хрестик) -->
+<!-- 3D MAP iframe (MapTiler embed) — shown when theme 4 selected -->
+<iframe id="map3d"
+  src="about:blank"
+  allow="geolocation"
+  allowfullscreen></iframe>
+
+<!-- RETICLE -->
 <div id="reticle">
   <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- outer ring -->
     <circle cx="22" cy="22" r="19" stroke="#ff3333" stroke-width="0.8" stroke-opacity="0.5"/>
-    <!-- cardinal ticks -->
     <line x1="22" y1="3" x2="22" y2="9" stroke="#ff3333" stroke-width="1.2" stroke-opacity="0.7"/>
     <line x1="22" y1="35" x2="22" y2="41" stroke="#ff3333" stroke-width="1.2" stroke-opacity="0.7"/>
     <line x1="3" y1="22" x2="9" y2="22" stroke="#ff3333" stroke-width="1.2" stroke-opacity="0.7"/>
     <line x1="35" y1="22" x2="41" y2="22" stroke="#ff3333" stroke-width="1.2" stroke-opacity="0.7"/>
-    <!-- diagonal ticks -->
     <line x1="7" y1="7" x2="10.5" y2="10.5" stroke="#ff3333" stroke-width="0.7" stroke-opacity="0.3"/>
     <line x1="37" y1="7" x2="33.5" y2="10.5" stroke="#ff3333" stroke-width="0.7" stroke-opacity="0.3"/>
     <line x1="7" y1="37" x2="10.5" y2="33.5" stroke="#ff3333" stroke-width="0.7" stroke-opacity="0.3"/>
     <line x1="37" y1="37" x2="33.5" y2="33.5" stroke="#ff3333" stroke-width="0.7" stroke-opacity="0.3"/>
-    <!-- center dot -->
     <circle cx="22" cy="22" r="2.5" fill="#ff3333" fill-opacity="0.8"/>
-    <!-- inner ring -->
     <circle cx="22" cy="22" r="7" stroke="#ff3333" stroke-width="0.6" stroke-opacity="0.35" stroke-dasharray="2 3"/>
   </svg>
 </div>
@@ -426,12 +499,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
       <span class="v" id="wxT" style="color:rgba(255,255,255,.35)">--</span>
     </div>
   </div>
-  <div>
-    <div id="actPill">
-      <i class="fa-solid fa-crosshairs" style="font-size:9px;opacity:.45"></i>
-      <span class="n" id="uavC">0</span>
-    </div>
-  </div>
+  <div><div id="actPill"><i class="fa-solid fa-crosshairs" style="font-size:9px;opacity:.45"></i><span class="n" id="uavC">0</span></div></div>
 </div>
 
 <!-- WEATHER PANEL -->
@@ -461,11 +529,13 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
   <div class="tpvec" id="tpVec">--</div>
 </div>
 
-<!-- RADAR PANEL -->
+<!-- RADAR -->
 <div id="radarPnl">
   <div class="rdt">⬟ RADAR · 40 KM</div>
   <canvas id="rdcv" width="160" height="160"></canvas>
-  <div class="rdlist" id="rdList"><div id="rdEmpty" style="font-size:9px;color:rgba(255,255,255,.28);text-align:center;padding:8px 0;font-family:'Orbitron'">Немає цілей</div></div>
+  <div class="rdlist" id="rdList">
+    <div id="rdEmpty" style="font-size:9px;color:rgba(255,255,255,.28);text-align:center;padding:8px 0;font-family:'Orbitron'">Немає цілей</div>
+  </div>
 </div>
 
 <!-- FAB -->
@@ -493,76 +563,62 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-s
 <a href="javascript:void(0)" class="plink" onclick="showPriv()">PRIVACY & SECURITY</a>
 
 <script>
-// ══════════════════════════════════
+// ════════════════════════════════
 // CONFIG
-// ══════════════════════════════════
-const FB = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
+// ════════════════════════════════
+const FB  = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
 const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
-const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
+const DIRS= ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
 
-// Характеристики цілей
 const TARGET_INFO = {
-  'shahed-vp-standart':{
-    name:'Shahed-136/131',emoji:'🚁',
-    speed:'185 км/г',range:'2500 км',
-    warhead:'40 кг HE осколкова',
-    desc:'Іранський барражуючий боєприпас. Навігація GPS+INS. Летить на малих висотах.',
-    threat:'СЕРЕДНЯ',color:'#ff9900'
-  },
-  'shahed-238-jet':{
-    name:'Shahed-238 Jet',emoji:'✈️',
-    speed:'550 км/г',range:'1800 км',
-    warhead:'50 кг HE',
-    desc:'Реактивна версія Shahed. Вища швидкість, складніший перехват.',
-    threat:'ВИСОКА',color:'#ff3333'
-  },
-  'kalibr-cruise':{
-    name:'Kalibr 3M-14',emoji:'🚀',
-    speed:'880 км/г',range:'2000+ км',
-    warhead:'450 кг HE або ядерна',
-    desc:'Крилата ракета морського/наземного базування. Надзвукова фаза при підльоті.',
-    threat:'КРИТИЧНА',color:'#ff0000'
-  },
-  'tu-95ms-strat':{
-    name:'Tu-95MS носій',emoji:'✈️',
-    speed:'830 км/г',range:'15000 км',
-    warhead:'Carrier — несе до 16 ракет Х-101/Х-55',
-    desc:'Стратегічний бомбардувальник. Пуск ракет з безпечної відстані.',
-    threat:'КРИТИЧНА',color:'#cc0000'
-  }
+  'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE осколкова',desc:'Іранський барражуючий боєприпас. Навігація GPS+INS. Летить на малих висотах.',threat:'СЕРЕДНЯ'},
+  'shahed-238-jet':{name:'Shahed-238 Jet',emoji:'✈️',speed:'550 км/г',range:'1800 км',warhead:'50 кг HE',desc:'Реактивна версія Shahed. Вища швидкість, складніший перехват.',threat:'ВИСОКА'},
+  'kalibr-cruise':{name:'Kalibr 3M-14',emoji:'🚀',speed:'880 км/г',range:'2000+ км',warhead:'450 кг HE або ядерна',desc:'Крилата ракета. Надзвукова фаза при підльоті.',threat:'КРИТИЧНА'},
+  'tu-95ms-strat':{name:'Tu-95MS',emoji:'✈️',speed:'830 км/г',range:'15000 км',warhead:'Несе до 16 ракет Х-101/Х-55',desc:'Стратегічний бомбардувальник. Пуск ракет з безпечної відстані.',threat:'КРИТИЧНА'},
+};
+
+// Кольори по типу (змінюються через UI)
+let TYPE_COLORS = {
+  'shahed-vp-standart': '#ff9900',
+  'shahed-238-jet':     '#ff3333',
+  'kalibr-cruise':      '#ff0000',
+  'tu-95ms-strat':      '#cc0000',
+  'default':            '#ff3333',
 };
 
 const THEME_URLS = [
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
-  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', // 3D = topo + tilt
-  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', // NV uses filter
-  'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // terrain fallback
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',          // 0 Ultra Dark
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // 1 Satellite
+  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', // 2 Night Blue
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                        // 3 Topo
+  null,                                                                        // 4 3D — handled separately
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',          // 5 Light
+  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',      // 6 Red Ops
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',           // 7 Night Vision
+  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',                          // 8 Terrain
 ];
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // STATE
-// ══════════════════════════════════
-let brightness=60, TC='#ff3333', ISZ=34;
+// ════════════════════════════════
+let brightness=60, ISZ=34;
 let colorMode='normal';
 let soundOn=true, vol=0.6;
 let userPos=null, uMark=null, selId=null;
 let obs={}, hLog=[], hMode=false, hPlaying=false, hInt=null;
 let audioCtx=null;
 let oblastLayer=null, rangeCircle=null;
-let heatLayer=null, heatOn=false;
+let heatLayer=null;
 let radarOpen=false, radarAngle=0, radarRAF=null;
 let pendingSync=new Map(), rafPending=false;
-let alertQueue=[];
+let is3D=false;
+let alertTimer=null;
+let pushEnabled=false;
 
-// ══════════════════════════════════
-// MAP INIT
-// ══════════════════════════════════
+// ════════════════════════════════
+// MAP
+// ════════════════════════════════
 const map=L.map('map',{
   zoomControl:false,attributionControl:false,
   maxBounds:[[43,21],[53,41]],minZoom:5,
@@ -572,216 +628,245 @@ const cvs=L.canvas({padding:.5});
 let tLayer=L.tileLayer(THEME_URLS[0],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
 setTimeout(()=>applyBrt(60),600);
 
-// ══════════════════════════════════
-// THEME
-// ══════════════════════════════════
-function applyBrt(v){document.querySelectorAll('.leaflet-tile-pane').forEach(el=>{el.style.filter=`brightness(${v}%)`;});}
+function applyBrt(v){
+  document.querySelectorAll('.leaflet-tile-pane').forEach(el=>{
+    el.style.filter=`brightness(${v}%)`;
+  });
+}
+
+// ════════════════════════════════
+// THEME — INDEX 4 = 3D via MapTiler embed
+// ════════════════════════════════
 function selTh(i){
+  // Update card UI
+  document.querySelectorAll('.thcard').forEach((c,j)=>c.classList.toggle('on',j===i));
+
+  if(i===4){
+    // Show real 3D map using MapTiler public demo
+    enable3D();
+    return;
+  }
+
+  // Hide 3D if was active
+  disable3D();
+
   map.removeLayer(tLayer);
   tLayer=L.tileLayer(THEME_URLS[i],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
   setTimeout(()=>{
     applyBrt(brightness);
-    // Night Vision green filter
-    const tp=document.querySelector('.leaflet-tile-pane');
-    if(i===7){tp.style.filter=`brightness(${brightness}%) sepia(1) hue-rotate(80deg) saturate(3)`;}
+    if(i===7){
+      // Night Vision filter
+      document.querySelector('.leaflet-tile-pane').style.filter=
+        `brightness(${brightness}%) sepia(1) hue-rotate(80deg) saturate(3)`;
+    }
   },350);
-  document.querySelectorAll('.thcard').forEach((c,j)=>c.classList.toggle('on',j===i));
-  const m=document.getElementById('map');
-  if(i===4){m.style.perspective='600px';m.style.transform='rotateX(6deg) scale(1.04)';}
-  else{m.style.perspective='';m.style.transform='';}
-  toast(['ULTRA DARK','SATELLITE','NIGHT BLUE','TOPO','3D RELIEF','LIGHT','RED OPS','NIGHT VISION','TERRAIN'][i]||'MAP CHANGED');
+
+  toast(['ULTRA DARK','SATELLITE','NIGHT BLUE','TOPO','3D HILLS','LIGHT','RED OPS','NIGHT VISION','TERRAIN'][i]);
 }
+
+function enable3D(){
+  is3D=true;
+  const iframe=document.getElementById('map3d');
+  const c=map.getCenter();
+  // MapTiler 3D viewer (public, no key needed for basic view)
+  // Uses OpenTopoMap + CSS perspective transform as 3D effect
+  // Real WebGL 3D via MapTiler Viewer embed
+  const maptilerUrl=`https://maps.maptiler.com/maps/streets/?maps=style:outdoor#${map.getZoom()}/${c.lat}/${c.lng}`;
+  iframe.src=maptilerUrl;
+  iframe.classList.add('on');
+  // Also keep leaflet hidden but functional
+  document.getElementById('map').style.opacity='0';
+  document.getElementById('map').style.pointerEvents='none';
+  toast('3D MAP — MapTiler');
+}
+
+function disable3D(){
+  if(!is3D)return;
+  is3D=false;
+  const iframe=document.getElementById('map3d');
+  iframe.classList.remove('on');
+  iframe.src='about:blank';
+  document.getElementById('map').style.opacity='1';
+  document.getElementById('map').style.pointerEvents='auto';
+}
+
 function setBr(v){
   brightness=+v;
   document.getElementById('brV').textContent=v+'%';
   const p=((v-10)/130*100).toFixed(0);
-  document.getElementById('brR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+  document.getElementById('brR').style.background=
+    `linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
   applyBrt(v);
 }
 
-// ══════════════════════════════════
-// OBLAST BORDERS
-// ══════════════════════════════════
-async function loadOblast(){
-  try{
-    const r=await fetch('https://raw.githubusercontent.com/corvin-rose/ukraine-regions-geojson/main/ukraine.geojson');
-    if(!r.ok)throw 0;
-    const d=await r.json();
-    oblastLayer=L.geoJSON(d,{
-      style:{color:'rgba(255,100,50,.4)',weight:1,fill:false,dashArray:'4,7'},
-      interactive:false,
-      onEachFeature:(f,l)=>l.bindTooltip(f.properties?.name||'',{className:'ob-tt',sticky:true})
-    });
-    if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
-  }catch(e){console.warn('Oblast GeoJSON failed',e);}
+// ════════════════════════════════
+// PER-TYPE COLORS
+// ════════════════════════════════
+function getColor(type){
+  return TYPE_COLORS[type] || TYPE_COLORS['default'];
 }
-function toggleOblast(){
-  if(!oblastLayer)return;
-  document.getElementById('togObl').checked?oblastLayer.addTo(map):map.removeLayer(oblastLayer);
-}
-
-// Range ring
-function toggleRange(){
-  const on=document.getElementById('togRng')?.checked;
-  if(on&&userPos){
-    if(rangeCircle)map.removeLayer(rangeCircle);
-    rangeCircle=L.circle(userPos,{radius:40000,color:'rgba(0,229,255,.35)',weight:1,fill:false,dashArray:'6,8',interactive:false}).addTo(map);
-  } else if(rangeCircle){map.removeLayer(rangeCircle);rangeCircle=null;}
+function setTypeColor(type,color,el){
+  TYPE_COLORS[type]=color;
+  // Update dot
+  const dot=document.getElementById('dot_'+type);
+  if(dot)dot.style.background=color;
+  // Deselect siblings
+  const swg=document.getElementById('sw_'+type);
+  if(swg)swg.querySelectorAll('.tcsw').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  // Refresh all markers of this type
+  Object.entries(obs).forEach(([id,o])=>{
+    if(o.data.type===type||(type==='default'&&!TYPE_COLORS[o.data.type])){
+      o.marker.setIcon(mkIcon(o.data));
+    }
+  });
 }
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // SETTINGS
-// ══════════════════════════════════
+// ════════════════════════════════
 function setISZ(v){
   ISZ=+v;
   document.getElementById('iV').textContent=v+'px';
   const p=((v-16)/54*100).toFixed(0);
-  document.getElementById('iR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+  document.getElementById('iR').style.background=
+    `linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
   Object.values(obs).forEach(o=>o.marker.setIcon(mkIcon(o.data)));
-}
-function setTC(c,el){
-  TC=c;
-  document.querySelectorAll('#tcSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');
-  Object.values(obs).forEach(o=>{
-    o.marker.setIcon(mkIcon(o.data));
-    if(o.circle)o.circle.setStyle({color:c,fillColor:c});
-    if(o.line)o.line.setStyle({color:c});
-    if(o.trail)o.trail.setStyle({color:c});
-  });
 }
 function setUI(c,el){
   document.documentElement.style.setProperty('--a',c);
   document.querySelectorAll('#uiSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');
 }
-function setVol(v){vol=v/100;document.getElementById('volV').textContent=v+'%';const p=+v;document.getElementById('volR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;}
+function setVol(v){
+  vol=v/100;
+  document.getElementById('volV').textContent=v+'%';
+  const p=+v;
+  document.getElementById('volR').style.background=
+    `linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.1) ${p}%)`;
+}
 
 // Color modes
 function setColorMode(m,el){
   colorMode=m;
   document.querySelectorAll('.cmode-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
-  if(m==='heat'){enableHeatmap();}else{disableHeatmap();}
-  if(m!=='heat')Object.values(obs).forEach(o=>o.marker.setIcon(mkIcon(o.data)));
-}
-function typeColor(type){
-  const mp={'shahed-vp-standart':'#ff9900','shahed-238-jet':'#ff3333','kalibr-cruise':'#ff0000','tu-95ms-strat':'#cc0000'};
-  return mp[type]||TC;
+  if(m==='heat')enableHeatmap();else disableHeatmap();
+  Object.values(obs).forEach(o=>o.marker.setIcon(mkIcon(o.data)));
 }
 function enableHeatmap(){
-  if(!heatLayer){
-    const pts=Object.values(obs).map(o=>[o.data.lat,o.data.lng,0.5]);
-    heatLayer=L.heatLayer(pts,{radius:35,blur:25,maxZoom:8,gradient:{.3:'#ff9900',.6:'#ff3333',1:'#ff0000'}}).addTo(map);
-  }
+  if(heatLayer)return;
+  const pts=Object.values(obs).map(o=>[o.data.lat,o.data.lng,.5]);
+  heatLayer=L.heatLayer(pts,{radius:35,blur:25,maxZoom:8,gradient:{.3:'#ff9900',.6:'#ff3333',1:'#ff0000'}}).addTo(map);
 }
 function disableHeatmap(){if(heatLayer){map.removeLayer(heatLayer);heatLayer=null;}}
-function refreshHeatmap(){
-  if(colorMode==='heat'&&heatLayer){
-    heatLayer.setLatLngs(Object.values(obs).map(o=>[o.data.lat,o.data.lng,0.5]));
-  }
+function refreshHeat(){if(colorMode==='heat'&&heatLayer)heatLayer.setLatLngs(Object.values(obs).map(o=>[o.data.lat,o.data.lng,.5]));}
+
+// Oblast
+async function loadOblast(){
+  try{
+    const r=await fetch('https://raw.githubusercontent.com/corvin-rose/ukraine-regions-geojson/main/ukraine.geojson');
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    oblastLayer=L.geoJSON(d,{style:{color:'rgba(255,100,50,.4)',weight:1,fill:false,dashArray:'4,7'},interactive:false,
+      onEachFeature:(f,l)=>l.bindTooltip(f.properties?.name||'',{className:'ob-tt',sticky:true})});
+    if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
+  }catch{}
+}
+function toggleOblast(){
+  if(!oblastLayer)return;
+  document.getElementById('togObl').checked?oblastLayer.addTo(map):map.removeLayer(oblastLayer);
+}
+function toggleRange(){
+  const on=document.getElementById('togRng')?.checked;
+  if(on&&userPos){
+    if(rangeCircle)map.removeLayer(rangeCircle);
+    rangeCircle=L.circle(userPos,{radius:40000,color:'rgba(0,229,255,.35)',weight:1,fill:false,dashArray:'6,8',interactive:false}).addTo(map);
+  }else if(rangeCircle){map.removeLayer(rangeCircle);rangeCircle=null;}
 }
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // SOUND
-// ══════════════════════════════════
+// ════════════════════════════════
 function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
 function tone(f,d,t='sine',v=.3){
   if(!soundOn)return;
-  try{const ctx=getAC();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v*vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d);}catch{}
+  try{const ctx=getAC();const o=ctx.createOscillator();const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o.type=t;o.frequency.value=f;
+    g.gain.setValueAtTime(v*vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d);
+    o.start();o.stop(ctx.currentTime+d);}catch{}
 }
 function sndNew(){tone(880,.07,'square',.2);setTimeout(()=>tone(660,.13,'square',.16),85);}
 function sndDel(){tone(440,.05,'sine',.11);setTimeout(()=>tone(330,.09,'sine',.07),65);}
 function sndAlm(){[0,140,280].forEach(d=>setTimeout(()=>tone(1200,.09,'sawtooth',.17),d));}
 function testSnd(t){if(t==='new')sndNew();else if(t==='del')sndDel();else if(t==='alm')sndAlm();else tone(600,.05,'sine',.1);}
 
-// ══════════════════════════════════
-// PUSH NOTIFICATIONS
-// ══════════════════════════════════
-let pushEnabled=false;
+// Push
 async function togglePush(){
   const cb=document.getElementById('togPush');
   if(cb.checked&&'Notification' in window){
     const p=await Notification.requestPermission();
     pushEnabled=p==='granted';
-    if(!pushEnabled){cb.checked=false;toast('Push відхилено');}
-    else toast('Push увімкнено');
-  }else{pushEnabled=false;}
+    if(!pushEnabled){cb.checked=false;toast('Push відхилено');}else toast('Push увімкнено');
+  }else pushEnabled=false;
 }
 function sendPush(title,body){
-  if(pushEnabled&&document.hidden){
-    try{new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23ff3333"/></svg>'});}catch{}
-  }
+  if(pushEnabled&&document.hidden)try{new Notification(title,{body});}catch{}
 }
 
-// ══════════════════════════════════
-// ALERT TOAST (нова ціль)
-// ══════════════════════════════════
-let alertTimer=null;
+// Alert toast
 function showAlert(title,sub){
   const el=document.getElementById('alertToast');
   document.getElementById('atTitle').textContent=title;
   document.getElementById('atSub').textContent=sub;
   el.style.display='flex';
   clearTimeout(alertTimer);
-  alertTimer=setTimeout(()=>closeAlert(),6000);
+  alertTimer=setTimeout(closeAlert,6000);
 }
 function closeAlert(){document.getElementById('alertToast').style.display='none';}
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // SHEETS
-// ══════════════════════════════════
+// ════════════════════════════════
 function opn(id){document.getElementById(id).classList.add('on');}
 function cls(id){document.getElementById(id).classList.remove('on');}
 function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
 function toast(t,d=1600){const el=document.getElementById('toast');el.textContent=t;el.style.opacity='1';clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity='0',d);}
 
-// ══════════════════════════════════
-// SPLASH / BOOT
-// ══════════════════════════════════
+// ════════════════════════════════
+// BOOT
+// ════════════════════════════════
 window.addEventListener('load',()=>{
-  const sp=document.getElementById('splash');
-  const tx=document.getElementById('stx');
-  const msgs=['Loading OSINT feeds...','Calibrating satellite link...','Loading oblast data...','System nominal'];
-  let i=0;
-  const iv=setInterval(()=>{if(i<msgs.length){tx.textContent=msgs[i++];}else clearInterval(iv);},700);
-  setTimeout(()=>{
-    sp.style.opacity='0';
-    setTimeout(()=>{
-      sp.style.display='none';
-      if(!localStorage.getItem('sdOK'))showPriv();
-      else launch();
-      checkAdm();
-    },700);
-  },3000);
+  const sp=document.getElementById('splash'),tx=document.getElementById('stx');
+  const msgs=['Loading OSINT feeds...','Calibrating satellite...','Loading oblast data...','System nominal'];
+  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},700);
+  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';
+    if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},700);},3000);
 });
 function checkAdm(){document.getElementById('admpnl').style.display=location.hash==='#admin'?'flex':'none';}
 window.addEventListener('hashchange',checkAdm);
 function showPriv(){document.getElementById('priv').style.display='flex';document.getElementById('map').style.filter='blur(18px) grayscale(1)';}
 function acceptP(){
   localStorage.setItem('sdOK','1');
-  const m=document.getElementById('priv');
-  m.style.opacity='0';m.style.transition='opacity .3s';
+  const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';
   setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);
 }
 function launch(){
   document.getElementById('fab').style.display='flex';
-  locateMe();
-  loadOblast();
-  toast('SYSTEM READY');
+  locateMe();loadOblast();toast('SYSTEM READY');
 }
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // FIREBASE
-// ══════════════════════════════════
+// ════════════════════════════════
 firebase.initializeApp({databaseURL:FB});
 const db=firebase.database().ref('drones');
 const presRef=firebase.database().ref('presence');
-firebase.database().ref('.info/connected').on('value',s=>{
-  if(s.val()){const c=presRef.push(true);c.onDisconnect().remove();}
-});
+firebase.database().ref('.info/connected').on('value',s=>{if(s.val()){const c=presRef.push(true);c.onDisconnect().remove();}});
 presRef.on('value',s=>document.getElementById('onlC').textContent=s.numChildren()||0);
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // GPS + WEATHER
-// ══════════════════════════════════
+// ════════════════════════════════
 function locateMe(){if(!localStorage.getItem('sdOK'))return;map.locate({setView:true,maxZoom:10});}
 map.on('locationfound',e=>{
   userPos=e.latlng;
@@ -812,9 +897,9 @@ async function fetchWX(lat,lng){
 }
 function toggleWX(){const p=document.getElementById('wxPnl');p.style.display=p.style.display==='block'?'none':'block';}
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // HELPERS
-// ══════════════════════════════════
+// ════════════════════════════════
 function dir(d){return DIRS[Math.round((+d)/45)%8]||'--';}
 function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);return`${Math.floor(s/60)}хв ${s%60}с`;}
 function vec(lat,lng,ang,spd){
@@ -822,39 +907,42 @@ function vec(lat,lng,ang,spd){
   return{lat:lat+dist/R*Math.cos(ar)*180/Math.PI,lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*180/Math.PI,dist};
 }
 
-// ══════════════════════════════════
-// ICON BUILDER
-// ══════════════════════════════════
+// ════════════════════════════════
+// ICON — тільки стрілка, без кола і хвоста
+// ════════════════════════════════
 function mkIcon(d){
   const ang=+d.angle||0, sz=ISZ;
-  const c=colorMode==='type'?typeColor(d.type):TC;
+  // Колір по типу завжди
+  const c=getColor(d.type);
   const showC=document.getElementById('togCrs')?.checked!==false;
-  const aW=Math.round(sz/5.5), aH=Math.round(sz/2.6);
-  const cLbl=showC?`<div style="position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:7px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 5px #000;letter-spacing:.04em">${Math.round(ang)}°${dir(ang)}</div>`:'';
-  const html=`<div style="width:${sz}px;height:${sz}px;transform:rotate(${ang}deg);position:relative;display:flex;align-items:center;justify-content:center;">
-    <div style="position:absolute;top:-${aH}px;left:50%;margin-left:-${aW}px;width:0;height:0;border-left:${aW}px solid transparent;border-right:${aW}px solid transparent;border-bottom:${Math.round(aH*1.6)}px solid ${c};filter:drop-shadow(0 0 3px ${c});"></div>
-    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;filter:invert(27%) sepia(91%) saturate(6000%) hue-rotate(354deg) brightness(90%) contrast(115%);">
+  const aW=Math.round(sz/5), aH=Math.round(sz/2.5);
+
+  // Курс-лейбл (під маркером, не обертається разом)
+  const cLbl=showC
+    ?`<div style="position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:7px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 5px #000;letter-spacing:.04em">${Math.round(ang)}°${dir(ang)}</div>`
+    :'';
+
+  const html=`<div style="width:${sz}px;height:${sz+14}px;position:relative;display:flex;align-items:flex-start;justify-content:center;">
+    <!-- Стрілка вперед (вгору за замовчуванням, обертається разом з wrapper) -->
+    <div style="width:${sz}px;height:${sz}px;transform:rotate(${ang}deg);transform-origin:center center;position:relative;display:flex;align-items:center;justify-content:center;">
+      <!-- Тільки стрілка-трикутник, без іконки дрона і кола -->
+      <div style="width:0;height:0;position:absolute;top:-${aH}px;left:50%;margin-left:-${aW}px;
+        border-left:${aW}px solid transparent;
+        border-right:${aW}px solid transparent;
+        border-bottom:${Math.round(aH*1.8)}px solid ${c};
+        filter:drop-shadow(0 0 4px ${c});"></div>
+      <!-- Центральна точка -->
+      <div style="width:5px;height:5px;border-radius:50%;background:${c};box-shadow:0 0 5px ${c};position:absolute;"></div>
+    </div>
     ${cLbl}
   </div>`;
+
   return L.divIcon({className:'',html,iconSize:[sz,sz+14],iconAnchor:[sz/2,sz/2]});
 }
 
-// ══════════════════════════════════
-// TRAIL
-// ══════════════════════════════════
-const trailPts={};
-const TMAX=18;
-function updateTrail(id,lat,lng){
-  if(document.getElementById('togTrl')?.checked===false)return;
-  if(!trailPts[id])trailPts[id]=[];
-  trailPts[id].push([lat,lng]);
-  if(trailPts[id].length>TMAX)trailPts[id].shift();
-  if(obs[id]?.trail)obs[id].trail.setLatLngs(trailPts[id]);
-}
-
-// ══════════════════════════════════
-// SYNC — batched rAF
-// ══════════════════════════════════
+// ════════════════════════════════
+// SYNC — NO circle, NO trail line
+// ════════════════════════════════
 function sync(id,d){
   if(!d||!d.lat||!d.lng)return;
   if((Date.now()-(d.timestamp||Date.now()))/60000>45){remove(id);return;}
@@ -866,60 +954,47 @@ function flush(){
   pendingSync.forEach((d,id)=>doSync(id,d));
   pendingSync.clear();
   updCounts();
-  refreshHeatmap();
+  refreshHeat();
 }
 function doSync(id,d){
   const ang=+d.angle||0;
-  const rad=(ang+180-90)*Math.PI/180;
-  const tail=[d.lat+Math.cos(rad)*.025,d.lng+Math.sin(rad)*.025];
-  const errR=d.accuracy||5000;
+  const c=getColor(d.type);
+
   hLog.push({id,d,ts:Date.now()});
   if(hLog.length>900)hLog.splice(0,100);
-  updateTrail(id,d.lat,d.lng);
 
   if(obs[id]){
     obs[id].marker.setLatLng([d.lat,d.lng]);
     obs[id].marker.setIcon(mkIcon(d));
-    if(obs[id].circle&&document.getElementById('togCir')?.checked!==false)obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
-    if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
     obs[id].data=d;
     if(selId===id)showTrack(id,d);
   }else{
     sndNew();
-    // Alert
     const info=TARGET_INFO[d.type]||{};
-    const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
-    showAlert(`⚠ НОВА ЦІЛЬ · ${typName}`, `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)} · ${Math.round(ang)}° ${dir(ang)}`);
-    sendPush(`SKY DEFENSE: Нова ціль`,`${typName} · ${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`);
+    const nm=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
+    showAlert(`⚠ НОВА ЦІЛЬ · ${nm}`,`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)} · ${Math.round(ang)}° ${dir(ang)}`);
+    sendPush('SKY DEFENSE: Нова ціль',`${nm} · ${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`);
 
-    const c=colorMode==='type'?typeColor(d.type):TC;
-    const circle=document.getElementById('togCir')?.checked!==false
-      ?L.circle([d.lat,d.lng],{renderer:cvs,radius:errR,color:c,weight:1,fillColor:c,fillOpacity:.06,dashArray:'4,8',interactive:false}).addTo(map):null;
     const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
-    const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:1,opacity:.4,dashArray:'2,8'}).addTo(map);
-    const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.5,opacity:.45}).addTo(map);
     marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
-    obs[id]={marker,circle,line,trail,data:d};
+    // ONLY marker — no circle, no trail
+    obs[id]={marker,data:d};
   }
 }
 function remove(id){
   if(!obs[id])return;
   sndDel();
   map.removeLayer(obs[id].marker);
-  if(obs[id].circle)map.removeLayer(obs[id].circle);
-  if(obs[id].line)map.removeLayer(obs[id].line);
-  if(obs[id].trail)map.removeLayer(obs[id].trail);
-  delete trailPts[id];
   if(selId===id)closeTrack();
   delete obs[id];
   updCounts();
-  refreshHeatmap();
+  refreshHeat();
 }
 function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs).length;}
 
-// ══════════════════════════════════
-// TRACK PANEL — з характеристиками
-// ══════════════════════════════════
+// ════════════════════════════════
+// TRACK PANEL
+// ════════════════════════════════
 function showTrack(id,d){
   const p=document.getElementById('trackPnl');p.classList.add('on');
   const spd=SPD[d.type]||200, ang=+d.angle||0;
@@ -934,65 +1009,54 @@ function showTrack(id,d){
     const km=map.distance(userPos,[d.lat,d.lng])/1000;
     document.getElementById('tpETA').textContent=`${km.toFixed(1)} км · ~${Math.round(km/spd*60)} хв`;
   }else document.getElementById('tpETA').textContent='GPS off';
-
-  // Характеристики
   const ibox=document.getElementById('tpInfo');
   if(info.name){
     const thr=info.threat||'--';
-    const thrCol=thr==='КРИТИЧНА'?'#ff0000':thr==='ВИСОКА'?'#ff3333':thr==='СЕРЕДНЯ'?'#ff9900':'#ffcc00';
+    const tc=thr==='КРИТИЧНА'?'#ff0000':thr==='ВИСОКА'?'#ff3333':thr==='СЕРЕДНЯ'?'#ff9900':'#ffcc00';
     ibox.innerHTML=`
       <div class="tpi-row"><span class="tpi-ico">${info.emoji||'🎯'}</span><div class="tpi-text"><b>${info.name}</b><br>${info.desc}</div></div>
       <div class="tpi-row"><span class="tpi-ico">⚡</span><div class="tpi-text"><b>Швидкість:</b> ${info.speed} &nbsp; <b>Дальність:</b> ${info.range}</div></div>
       <div class="tpi-row"><span class="tpi-ico">💥</span><div class="tpi-text"><b>Боєголовка:</b> ${info.warhead}</div></div>
-      <div class="tpi-row"><span class="tpi-ico">⚠️</span><div class="tpi-text"><b>Рівень загрози: <span style="color:${thrCol}">${thr}</span></b></div></div>
-    `;
+      <div class="tpi-row"><span class="tpi-ico">⚠️</span><div class="tpi-text"><b>Рівень загрози: <span style="color:${tc}">${thr}</span></b></div></div>`;
   }else ibox.innerHTML='';
 }
 function closeTrack(){document.getElementById('trackPnl').classList.remove('on');selId=null;}
 map.on('click',closeTrack);
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // RADAR
-// ══════════════════════════════════
+// ════════════════════════════════
 function toggleRadar(){
   radarOpen=!radarOpen;
   document.getElementById('radarPnl').classList.toggle('on',radarOpen);
   document.getElementById('rdBtn').classList.toggle('on',radarOpen);
-  if(radarOpen){if(!radarRAF)startRdAnim();}else stopRdAnim();
+  if(radarOpen){if(!radarRAF)startRd();}else stopRd();
 }
-function startRdAnim(){
+function startRd(){
   const cv=document.getElementById('rdcv'),ctx=cv.getContext('2d');
   function fr(){radarAngle=(radarAngle+2)%360;drawRd(ctx,cv.width,cv.height);radarRAF=requestAnimationFrame(fr);}
   radarRAF=requestAnimationFrame(fr);
 }
-function stopRdAnim(){if(radarRAF){cancelAnimationFrame(radarRAF);radarRAF=null;}}
+function stopRd(){if(radarRAF){cancelAnimationFrame(radarRAF);radarRAF=null;}}
 function drawRd(ctx,w,h){
   const cx=w/2,cy=h/2,R=cx-4;
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle='#030105';ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);ctx.fill();
-  [.25,.5,.75,1].forEach(f=>{
-    ctx.strokeStyle=f===1?'rgba(255,51,51,.4)':'rgba(255,51,51,.1)';ctx.lineWidth=f===1?1.5:1;
-    ctx.beginPath();ctx.arc(cx,cy,R*f,0,Math.PI*2);ctx.stroke();
-  });
-  ctx.strokeStyle='rgba(255,51,51,.09)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  [.25,.5,.75,1].forEach(f=>{ctx.strokeStyle=f===1?'rgba(255,51,51,.4)':'rgba(255,51,51,.1)';ctx.lineWidth=f===1?1.5:1;ctx.beginPath();ctx.arc(cx,cy,R*f,0,Math.PI*2);ctx.stroke();});
+  ctx.strokeStyle='rgba(255,51,51,.09)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
   const sr=(radarAngle-90)*Math.PI/180;
   ctx.save();ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,sr-Math.PI/3,sr);ctx.closePath();
   const gr=ctx.createRadialGradient(cx,cy,0,cx,cy,R);gr.addColorStop(0,'rgba(255,51,51,0)');gr.addColorStop(1,'rgba(255,51,51,.22)');
   ctx.fillStyle=gr;ctx.fill();ctx.restore();
-  ctx.strokeStyle='rgba(255,51,51,.75)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(sr),cy+R*Math.sin(sr));ctx.stroke();
-  if(userPos){
-    Object.values(obs).forEach(o=>{
-      const km=map.distance(userPos,[o.data.lat,o.data.lng])/1000;if(km>40)return;
-      const br=Math.atan2(o.data.lng-userPos.lng,o.data.lat-userPos.lat),dr=km/40*R;
-      const px=cx+dr*Math.sin(br),py=cy-dr*Math.cos(br);
-      ctx.fillStyle='#ff3333';ctx.shadowColor='#ff3333';ctx.shadowBlur=5;
-      ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-    });
-  }
-  ctx.fillStyle='#f5a623';ctx.shadowColor='#f5a623';ctx.shadowBlur=7;
-  ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(255,51,51,.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(sr),cy+R*Math.sin(sr));ctx.stroke();
+  if(userPos)Object.values(obs).forEach(o=>{
+    const km=map.distance(userPos,[o.data.lat,o.data.lng])/1000;if(km>40)return;
+    const br=Math.atan2(o.data.lng-userPos.lng,o.data.lat-userPos.lat),dr=km/40*R;
+    const px=cx+dr*Math.sin(br),py=cy-dr*Math.cos(br);
+    ctx.fillStyle=getColor(o.data.type);ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=5;
+    ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  });
+  ctx.fillStyle='#f5a623';ctx.shadowColor='#f5a623';ctx.shadowBlur=7;ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
 }
 function buildRdList(){
   const lst=document.getElementById('rdList'),emp=document.getElementById('rdEmpty');
@@ -1000,20 +1064,19 @@ function buildRdList(){
   const nr=Object.entries(obs).filter(([,o])=>map.distance(userPos,[o.data.lat,o.data.lng])/1000<=40)
     .sort(([,a],[,b])=>map.distance(userPos,[a.data.lat,a.data.lng])-map.distance(userPos,[b.data.lat,b.data.lng]));
   lst.innerHTML='';
-  if(!nr.length){emp.textContent='Немає цілей в радіусі 40 км';lst.appendChild(emp);return;}
+  if(!nr.length){emp.textContent='Немає цілей в 40 км';lst.appendChild(emp);return;}
   nr.forEach(([id,o])=>{
     const d=o.data,km=map.distance(userPos,[d.lat,d.lng])/1000,spd=SPD[d.type]||200,eta=Math.round(km/spd*60);
     const row=document.createElement('div');row.className='rdi';
     row.innerHTML=`<span>${id.substring(0,5)} · ${(d.type||'?').split('-')[0].toUpperCase()}</span><span class="re">${km.toFixed(1)}km ~${eta}хв</span>`;
-    row.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
-    lst.appendChild(row);
+    row.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};lst.appendChild(row);
   });
 }
 setInterval(()=>{if(radarOpen)buildRdList();},5000);
 
-// ══════════════════════════════════
-// TARGETS TABLE
-// ══════════════════════════════════
+// ════════════════════════════════
+// TABLE
+// ════════════════════════════════
 function buildTbl(){
   const tb=document.getElementById('tblBody');tb.innerHTML='';
   const en=Object.entries(obs);
@@ -1023,14 +1086,13 @@ function buildTbl(){
     const eta=userPos?`~${Math.round(map.distance(userPos,[d.lat,d.lng])/1000/spd*60)}хв`:'--';
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${id.substring(0,5).toUpperCase()}</td><td><span class="tbadge">${(d.type||'?').split('-')[0].toUpperCase()}</span></td><td>${d.lat.toFixed(3)},${d.lng.toFixed(3)}</td><td>${Math.round(d.angle||0)}°${dir(d.angle||0)}</td><td style="color:var(--a)">${eta}</td>`;
-    tr.onclick=()=>{cls('tblSh');selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
-    tb.appendChild(tr);
+    tr.onclick=()=>{cls('tblSh');selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};tb.appendChild(tr);
   });
 }
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // HISTORY
-// ══════════════════════════════════
+// ════════════════════════════════
 function toggleHist(){
   hMode=!hMode;
   document.getElementById('histBar').classList.toggle('on',hMode);
@@ -1042,8 +1104,7 @@ function onHSlide(v){
   document.getElementById('hSlider').style.background=`linear-gradient(to right,var(--a) ${v}%,rgba(255,255,255,.1) ${v}%)`;
   if(pct>=.99){document.getElementById('hLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});return;}
   if(!hLog.length)return;
-  const oldest=hLog[0].ts,newest=hLog[hLog.length-1].ts;
-  const t=oldest+(newest-oldest)*pct;
+  const oldest=hLog[0].ts,newest=hLog[hLog.length-1].ts,t=oldest+(newest-oldest)*pct;
   document.getElementById('hLbl').textContent=new Date(t).toLocaleTimeString('uk-UA',{hour12:false});
   const active=new Set();hLog.filter(e=>e.ts<=t).forEach(e=>active.add(e.id));
   Object.entries(obs).forEach(([id,o])=>{const el=o.marker.getElement();if(el)el.style.opacity=active.has(id)?'1':'.12';});
@@ -1055,29 +1116,33 @@ function toggleHPlay(){
 }
 function stopHP(){hPlaying=false;clearInterval(hInt);document.getElementById('hPlayI').className='fa-solid fa-play';}
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // CLOCK
-// ══════════════════════════════════
+// ════════════════════════════════
 setInterval(()=>{
   document.getElementById('sysTm').textContent=new Date().toLocaleTimeString('uk-UA',{hour12:false});
   if(selId&&obs[selId])document.getElementById('tpAge').textContent=age(obs[selId].data.timestamp);
 },1000);
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // FIREBASE
-// ══════════════════════════════════
+// ════════════════════════════════
 db.on('child_added',  s=>sync(s.key,s.val()));
 db.on('child_changed',s=>sync(s.key,s.val()));
 db.on('child_removed',s=>remove(s.key));
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // ADMIN
-// ══════════════════════════════════
+// ════════════════════════════════
 function spawnDrone(){
   const c=map.getCenter();
-  db.push({lat:c.lat,lng:c.lng,type:document.getElementById('aTyp').value,angle:parseInt(document.getElementById('aAng').value)||0,accuracy:parseInt(document.getElementById('aAcc').value)||5000,timestamp:Date.now()}).then(()=>toast('TARGET DEPLOYED'));
+  db.push({lat:c.lat,lng:c.lng,type:document.getElementById('aTyp').value,
+    angle:parseInt(document.getElementById('aAng').value)||0,
+    accuracy:parseInt(document.getElementById('aAcc').value)||5000,
+    timestamp:Date.now()
+  }).then(()=>toast('TARGET DEPLOYED'));
 }
-function clearDrones(){if(confirm('Purge all targets?'))db.remove().then(()=>toast('PURGED'));}
+function clearDrones(){if(confirm('Purge all?'))db.remove().then(()=>toast('PURGED'));}
 </script>
 </body>
 </html>
