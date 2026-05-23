@@ -1,1063 +1,593 @@
 <!DOCTYPE html>
-
 <html lang="uk">
-
 <head>
-
-    <meta charset="utf-8">
-
-    <title>SKY DEFENSE - Strategic Monitor</title>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-    
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
-    
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-
-    
-
-    <style>
-
-        :root { 
-
-            --accent: #ff3333; /* Змінено на червоний */
-
-            --danger: #ff3333;
-
-            --warning: #ffcc00;
-
-            --success: #00ff88;
-
-            --bg-dark: #0a0805;
-
-            --glass: rgba(15, 5, 5, 0.85);
-
-            --neon-border: rgba(255, 51, 51, 0.3);
-
-            --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
-
-            --mono-gold: #ffcc00;
-
-        }
-
-
-
-        * { -webkit-user-select: none; -moz-user-select: none; user-select: none; box-sizing: border-box; }
-
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
-
-        
-
-        #splash-screen {
-
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-
-            background: #000; z-index: 9999; display: flex; flex-direction: column;
-
-            align-items: center; justify-content: center; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-
-        }
-
-        .boot-loader { width: 250px; text-align: left; font-family: 'Orbitron'; }
-
-        .boot-text { font-size: 10px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-
-        .progress-bar { width: 100%; height: 2px; background: rgba(255, 51, 51, 0.1); position: relative; overflow: hidden; }
-
-        .progress-fill { 
-
-            width: 0%; height: 100%; background: var(--accent); 
-
-            box-shadow: 0 0 15px var(--accent); animation: load 2.5s forwards; 
-
-        }
-
-        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
-
-        .logo-anim { font-size: 24px; font-family: 'Orbitron'; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-
-
-        #privacy-modal {
-
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-
-            background: rgba(0,0,0,0.9); z-index: 9000; display: none;
-
-            align-items: center; justify-content: center; backdrop-filter: blur(10px);
-
-        }
-
-        .policy-box {
-
-            background: var(--glass); border: 1px solid var(--accent);
-
-            padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;
-
-            text-align: center; box-shadow: 0 0 40px rgba(255, 51, 51, 0.15);
-
-            animation: modalFlyIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-
-        }
-
-        @keyframes modalFlyIn {
-
-            0% { transform: scale(0.8) translateY(50px); opacity: 0; }
-
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-
-        }
-
-        .policy-box h2 { font-family: 'Orbitron'; color: var(--accent); font-size: 18px; margin: 0 0 15px 0; letter-spacing: 2px; }
-
-        .policy-content {
-
-            text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.7);
-
-            max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding: 15px;
-
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 51, 51, 0.1);
-
-        }
-
-        .policy-content strong { color: var(--accent); }
-
-        .accept-btn {
-
-            background: transparent; border: 1px solid var(--accent); color: var(--accent);
-
-            padding: 12px 40px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s;
-
-            font-weight: bold; letter-spacing: 1px;
-
-        }
-
-        .accept-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
-
-
-
-        #map { width: 100%; height: 100%; z-index: 1; background: #000; position: relative; }
-
-        #map::after {
-
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-
-            background: repeating-linear-gradient(0deg, rgba(255, 51, 51, 0.03) 0px, rgba(255, 51, 51, 0.03) 1px, transparent 1px, transparent 2px);
-
-            pointer-events: none; z-index: 1000;
-
-        }
-
-
-
-        /* КЛЮЧОВІ ЗМІНИ ДЛЯ ДРОНІВ */
-
-        .uav-icon img {
-
-            width: 48px; height: 48px;
-
-            /* Фільтр змінено для отримання чистого червоного кольору */
-
-            filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px var(--accent));
-
-        }
-
-        .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
-
-        @keyframes targetPulse {
-
-            0%, 100% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(80%) drop-shadow(0 0 3px var(--accent)); }
-
-            50% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(120%) drop-shadow(0 0 15px var(--accent)); }
-
-        }
-
-
-
-        .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.5; }
-
-        .main-crosshair span { position: absolute; width: 8px; height: 8px; border-color: var(--accent); border-style: solid; }
-
-        .tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; } .tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
-
-        .bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; } .br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
-
-
-
-        .top-ui { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; }
-
-        .status-group { display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
-
-        .box { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
-
-        .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
-
-
-
-        .side-panel { position: absolute; top: 20px; right: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 280px; border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-
-        .side-panel.active { right: 20px; }
-
-        .panel-header { padding: 15px; border-bottom: 1px solid rgba(255, 51, 51, 0.1); display: flex; justify-content: space-between; align-items: center; }
-
-        .panel-header span { font-family: 'Orbitron'; font-weight: 700; color: var(--accent); font-size: 14px; }
-
-        .panel-body { padding: 20px; }
-
-        .data-block { margin-bottom: 15px; }
-
-        .data-label { color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; letter-spacing: 1px; }
-
-        .data-value { font-family: 'Orbitron'; color: #fff; font-size: 14px; }
-
-        
-
-        .live-timer { color: var(--success); text-shadow: 0 0 5px var(--success); }
-
-
-
-        .bottom-nav { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); padding: 10px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-
-        .c-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; text-decoration: none; }
-
-        .c-btn:hover { background: rgba(255, 51, 51, 0.1); border-color: var(--accent); color: var(--accent); }
-
-        
-
-        .support-btn { border-color: var(--mono-gold); color: var(--mono-gold); }
-
-        .support-btn:hover { background: rgba(255, 204, 0, 0.15); border-color: #fff; color: #fff; box-shadow: 0 0 15px var(--mono-gold); }
-
-
-
-        #mapNotify { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 3000; background: var(--accent); color: #fff; padding: 5px 20px; border-radius: 4px; font-size: 10px; font-weight: 900; opacity: 0; transition: 0.3s; pointer-events: none; font-family: 'Orbitron'; }
-
-        .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
-
-        .privacy-link:hover { opacity: 1; color: var(--accent); }
-
-
-
-        #adminPanel {
-
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-
-            background: rgba(0,0,0,0.95); z-index: 10000; display: none;
-
-            padding: 30px; backdrop-filter: blur(10px); overflow-y: auto;
-
-        }
-
-        .admin-box {
-
-            max-width: 450px; margin: 0 auto; border: 1px solid var(--accent);
-
-            padding: 25px; border-radius: 15px; background: #000;
-
-            box-shadow: 0 0 50px rgba(255, 51, 51, 0.2);
-
-        }
-
-        .admin-input, .admin-select {
-
-            width: 100%; background: #111; color: #fff; border: 1px solid #333;
-
-            padding: 12px; margin-top: 5px; font-family: 'Orbitron'; font-size: 12px;
-
-        }
-
-        .admin-btn {
-
-            width: 100%; padding: 12px; margin-top: 15px; border: none;
-
-            cursor: pointer; font-family: 'Orbitron'; font-weight: bold;
-
-            transition: 0.2s;
-
-        }
-
-        .btn-add { background: var(--accent); color: #fff; }
-
-        .btn-clear { background: var(--danger); color: #fff; margin-top: 10px; opacity: 0.8; }
-
-        .btn-add:hover { box-shadow: 0 0 15px var(--accent); }
-
-
-
-        @media (max-width: 600px) {
-
-            .top-ui { flex-direction: column; gap: 8px; }
-
-            .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
-
-            .side-panel.active { right: 20px; left: 20px; }
-
-        }
-
-    </style>
-
+<meta charset="utf-8">
+<title>SKY DEFENSE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+
+<style>
+/* ═══════════════ RESET & VARS ═══════════════ */
+:root{
+  --a:#ff3333; --a2:rgba(255,51,51,0.18); --a3:rgba(255,51,51,0.08);
+  --ok:#00e676; --warn:#ffcc00; --gold:#f5a623;
+  --bg:#09080a; --glass:rgba(14,8,8,0.92);
+  --border:rgba(255,51,51,0.22); --border2:rgba(255,255,255,0.07);
+  --shadow:0 8px 32px rgba(0,0,0,0.85);
+  --tc:#ff3333; --isz:36px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --thermal-mode:off;
+}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;width:100%;height:100%;background:var(--bg);font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
+
+/* ═══════════════ MAP ═══════════════ */
+#map{position:absolute;inset:0;z-index:1;background:#000;}
+/* Performance: GPU layers for tile pane */
+.leaflet-tile-pane{will-change:transform;}
+.leaflet-map-pane{will-change:transform;}
+
+/* ═══════════════ SPLASH ═══════════════ */
+#splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s;}
+.s-logo{font-family:'Orbitron';font-size:clamp(20px,6vw,32px);color:var(--a);letter-spacing:.15em;margin-bottom:6px;animation:gp 2s infinite;}
+@keyframes gp{0%,100%{text-shadow:0 0 20px var(--a)}50%{text-shadow:0 0 40px var(--a),0 0 80px rgba(255,51,51,.3)}}
+.s-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.25em;margin-bottom:32px;}
+.s-bar-wrap{width:200px;height:1px;background:rgba(255,255,255,.08);}
+.s-bar{height:100%;background:var(--a);width:0;animation:sb 2.5s ease forwards;box-shadow:0 0 8px var(--a);}
+@keyframes sb{to{width:100%}}
+.s-txt{font-family:'Orbitron';font-size:9px;color:var(--a);letter-spacing:.15em;margin-top:10px;text-transform:uppercase;}
+
+/* ═══════════════ PRIVACY ═══════════════ */
+#privModal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px);padding:16px;}
+.priv-box{background:var(--glass);border:1px solid var(--a);padding:24px;border-radius:16px;max-width:440px;width:100%;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.priv-box h2{font-family:'Orbitron';color:var(--a);font-size:15px;margin:0 0 12px;letter-spacing:.1em;}
+.priv-body{font-size:11px;line-height:1.7;color:rgba(255,255,255,.6);max-height:160px;overflow-y:auto;margin-bottom:16px;padding:12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,51,51,.1);border-radius:8px;}
+.priv-body strong{color:var(--a);}
+.priv-ok{width:100%;padding:12px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Orbitron';font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:8px;transition:.25s;}
+.priv-ok:hover{background:var(--a);color:#000;}
+
+/* ═══════════════ TOP STATUS BAR ═══════════════ */
+#topBar{
+  position:absolute;top:calc(var(--safe-t) + 12px);left:12px;right:12px;
+  z-index:2000;display:flex;justify-content:space-between;align-items:flex-start;
+  pointer-events:none;
+}
+.tb-left{display:flex;flex-direction:column;gap:5px;pointer-events:auto;}
+.tb-pill{
+  background:var(--glass);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 10px;font-size:10px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;
+  box-shadow:var(--shadow);white-space:nowrap;
+}
+.tb-pill .v{color:#fff;font-family:'Orbitron';font-size:10px;}
+.tb-pill .v.red{color:var(--a);text-shadow:0 0 6px var(--a);}
+.tb-pill .v.ok{color:var(--ok);}
+.tb-right{pointer-events:auto;}
+#activePill{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;box-shadow:var(--shadow);}
+#activePill .num{font-family:'Orbitron';color:var(--a);font-size:13px;line-height:1;text-shadow:0 0 8px var(--a);}
+
+/* ═══════════════ CROSSHAIR ═══════════════ */
+#xhair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:32px;height:32px;opacity:.4;}
+#xhair:before,#xhair:after{content:'';position:absolute;background:var(--a);}
+#xhair:before{width:1px;height:100%;left:50%;top:0;}
+#xhair:after{height:1px;width:100%;top:50%;left:0;}
+.xh-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;border:1px solid var(--a);border-radius:50%;}
+
+/* ═══════════════ FLOATING ACTION BAR ═══════════════ */
+/* Компактна вертикальна панель справа */
+#fab{
+  position:absolute;
+  right:12px;
+  bottom:calc(var(--safe-b) + 24px);
+  z-index:2000;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.fab-btn{
+  width:40px;height:40px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+  color:rgba(255,255,255,.55);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  box-shadow:var(--shadow);
+  text-decoration:none;
+  position:relative;
+}
+.fab-btn:active{transform:scale(.93);}
+.fab-btn:hover,.fab-btn.on{border-color:var(--a);color:var(--a);background:var(--a3);}
+.fab-btn.gold-btn{border-color:var(--gold);color:var(--gold);}
+.fab-btn.gold-btn:hover{background:rgba(245,166,35,.1);color:#fff;}
+.fab-sep{width:24px;height:1px;background:var(--border);}
+/* badge dot */
+.fab-btn .bdot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--a);box-shadow:0 0 4px var(--a);}
+
+/* ═══════════════ WEATHER CHIP ═══════════════ */
+#wxCursor{cursor:pointer;}
+#wxPanel{
+  position:absolute;top:calc(var(--safe-t) + 80px);right:12px;
+  z-index:2100;background:var(--glass);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;min-width:190px;display:none;
+  box-shadow:var(--shadow);animation:fadeUp .25s ease;
+}
+.wx-icon{font-size:32px;text-align:center;margin-bottom:8px;}
+.wx-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;}
+.wx-row b{color:#fff;font-family:'Orbitron';font-size:10px;}
+
+/* ═══════════════ TRACK PANEL (click on drone) ═══════════════ */
+#trackPanel{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 80px);
+  left:12px;right:12px;
+  max-width:380px;
+  z-index:2100;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;
+  display:none;box-shadow:var(--shadow);
+  animation:fadeUp .3s ease;
+}
+#trackPanel.show{display:block;}
+.tp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;}
+.tp-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:0;line-height:1;}
+.tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tp-cell .lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px;}
+.tp-cell .val{font-family:'Orbitron';font-size:11px;color:#fff;}
+.tp-cell .val.red{color:var(--a);}
+.tp-cell .val.ok{color:var(--ok);}
+.tp-vector{margin-top:8px;padding-top:8px;border-top:1px solid var(--border2);font-size:10px;color:rgba(255,255,255,.45);font-family:'Orbitron';}
+.tp-details{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);
+  font-size:10px;
+}
+.tp-details .spec-row{
+  display:flex;justify-content:space-between;margin-bottom:4px;
+}
+.tp-details .spec-label{
+  color:rgba(255,255,255,.5);font-size:9px;
+}
+.tp-details .spec-value{
+  color:#fff;font-family:'Orbitron';font-size:9px;
+}
+
+/* ═══════════════ RADAR PANEL ═══════════════ */
+#radarPanel{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 80px);
+  left:12px;
+  z-index:2100;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;width:240px;
+  display:none;box-shadow:var(--shadow);animation:fadeUp .3s ease;
+}
+#radarPanel.show{display:block;}
+.radar-title{font-family:'Orbitron';font-size:10px;color:var(--a);letter-spacing:.15em;margin-bottom:10px;}
+#radarCanvas{display:block;margin:0 auto 10px;border-radius:50%;background:#040208;}
+.radar-list{max-height:120px;overflow-y:auto;}
+.radar-item{font-size:10px;color:rgba(255,255,255,.6);padding:4px 0;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;font-family:'Orbitron';}
+.radar-item .ri-eta{color:var(--a);}
+#radarEmpty{font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:8px 0;font-family:'Orbitron';}
+
+/* ═══════════════ BOTTOM SHEET BASE ═══════════════ */
+.bsheet-bg{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);}
+.bsheet-bg.show{display:flex;}
+.bsheet{
+  background:#0c0808;border:1px solid var(--border);border-bottom:none;
+  border-radius:20px 20px 0 0;width:min(560px,100%);
+  padding:20px 16px calc(var(--safe-b) + 28px);
+  max-height:88vh;overflow-y:auto;
+  animation:shUp .32s cubic-bezier(.19,1,.22,1) forwards;
+}
+@keyframes shUp{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.bsh-drag{width:36px;height:3px;background:rgba(255,255,255,.12);border-radius:99px;margin:0 auto 18px;}
+.bsh-title{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.2em;text-align:center;margin-bottom:16px;}
+.bsh-close{display:block;width:100%;margin-top:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);font-family:'Orbitron';font-size:9px;letter-spacing:.2em;padding:10px;cursor:pointer;border-radius:8px;transition:.2s;}
+.bsh-close:hover{color:#fff;}
+
+/* THEME GRID */
+.th-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.th-card{border:1px solid var(--border2);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.th-card:active{transform:scale(.97);}
+.th-card.on{border-color:var(--a);box-shadow:0 0 12px rgba(255,51,51,.3);}
+.th-card.on::after{content:'✓';position:absolute;top:4px;right:6px;color:var(--a);font-size:11px;font-weight:900;}
+.th-prev{height:54px;}
+.p0{background:linear-gradient(135deg,#0d1117,#161b22,#0a0a0a);}
+.p1{background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f);}
+.p2{background:linear-gradient(135deg,#060914,#0a0f24,#0d1530);}
+.p3{background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870);}
+.p4{height:54px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:13px;color:#00e5ff;text-shadow:0 0 8px #00e5ff;}
+.p5{background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8);}
+.p6{background:linear-gradient(135deg,#000000,#434343,#000000);}
+.p7{background:linear-gradient(135deg,#000000,#000000,#000000);}
+.p8{background:linear-gradient(135deg,#000000,#000000,#000000);}
+.p9{background:linear-gradient(135deg,#000000,#000000,#000000);}
+.p10{background:linear-gradient(135deg,#000000,#000000,#000000);}
+.p11{background:linear-gradient(135deg,#000000,#000000,#000000);}
+.th-name{padding:4px 5px;font-size:7px;font-family:'Orbitron';color:rgba(255,255,255,.5);letter-spacing:.08em;text-align:center;background:#060303;}
+/* Bright row */
+.br-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.br-row span{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);white-space:nowrap;letter-spacing:.1em;}
+.rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
+.rng-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
+
+/* SETTINGS */
+.set-sec{margin-bottom:16px;}
+.set-sec-lbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;display:block;border-bottom:1px solid var(--border2);padding-bottom:5px;}
+.set-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.set-row > span{font-size:12px;color:rgba(255,255,255,.65);}
+/* toggle */
+.tog{position:relative;width:38px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:20px;cursor:pointer;transition:.25s;}
+.tog-sl:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#555;border-radius:50%;transition:.25s;}
+.tog input:checked+.tog-sl{background:var(--a);}
+.tog input:checked+.tog-sl:before{transform:translateX(18px);background:#fff;}
+/* swatches */
+.swg{display:flex;gap:6px;}
+.sw{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.15s;}
+.sw.on{border-color:#fff;transform:scale(1.2);}
+/* slider row in settings */
+.sl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sl-row > span{font-size:11px;color:rgba(255,255,255,.65);flex-shrink:0;width:110px;}
+.sl-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
+/* sound grid */
+.snd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.snd-btn{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:rgba(255,255,255,.55);font-size:10px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.15s;text-align:left;}
+.snd-btn:hover,.snd-btn.on{border-color:var(--a);color:var(--a);}
+
+/* TABLE SHEET */
+#tblTable{width:100%;border-collapse:collapse;font-size:10px;}
+#tblTable th{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--border2);}
+#tblTable td{padding:6px 6px;border-bottom:1px solid rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:'Orbitron';font-size:9px;}
+#tblTable tr:hover td{background:var(--a3);cursor:pointer;}
+.t-badge{background:var(--a2);border:1px solid var(--border);color:var(--a);padding:1px 5px;border-radius:3px;font-size:8px;}
+
+/* HISTORY BAR */
+#histBar{
+  position:absolute;
+  bottom:calc(var(--safe-b) + 76px);
+  left:12px;right:58px;
+  z-index:2000;
+  background:var(--glass);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:10px;
+  padding:7px 12px;
+  display:none;align-items:center;gap:8px;
+}
+#histBar.show{display:flex;}
+#histBar label{font-family:'Orbitron';font-size:8px;color:var(--a);white-space:nowrap;letter-spacing:.1em;}
+#tSlider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+#tSlider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
+#tLbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.4);white-space:nowrap;min-width:56px;text-align:right;}
+#hPlayBtn{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--a3);color:var(--a);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+
+/* NOTIFY TOAST */
+#toast{
+  position:absolute;top:calc(var(--safe-t) + 60px);left:50%;transform:translateX(-50%);
+  z-index:3000;background:var(--a);color:#fff;
+  padding:4px 14px;border-radius:20px;font-size:9px;font-weight:700;
+  opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Orbitron';
+  letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 16px rgba(255,51,51,.4);
+}
+
+/* ADMIN */
+#adminPanel{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px;}
+.adm-box{max-width:380px;width:100%;border:1px solid var(--a);padding:20px;border-radius:14px;background:#000;}
+.adm-fld{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px;}
+.adm-inp,.adm-sel{width:100%;background:#111;color:#fff;border:1px solid #222;padding:9px 10px;font-family:'Orbitron';font-size:11px;outline:none;margin-bottom:10px;border-radius:6px;}
+.adm-btn{width:100%;padding:10px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.2s;border-radius:7px;margin-top:4px;}
+.adm-ok{background:var(--a);color:#fff;}
+.adm-del{background:rgba(255,51,51,.1);color:var(--a);border:1px solid var(--border);}
+.adm-cls{background:#181818;color:#555;margin-top:6px;}
+
+/* Privacy link */
+.priv-lnk{position:absolute;bottom:calc(var(--safe-b) + 4px);left:50%;transform:translateX(-50%);z-index:2001;font-size:7px;opacity:.25;color:#fff;text-decoration:none;font-family:'Orbitron';letter-spacing:.08em;white-space:nowrap;}
+
+/* ═══════════════ UAV MARKER ═══════════════ */
+/* Wrapper обертається на кут дрона; стрілка завжди вперед (вгору) */
+.uav-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+/* Course label */
+.c-lbl{position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  font-family:'Orbitron';font-size:7px;white-space:nowrap;
+  letter-spacing:.05em;pointer-events:none;
+  text-shadow:1px 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.8);
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(min-width:600px){
+  #fab{bottom:calc(var(--safe-b) + 32px);right:20px;}
+  #trackPanel{bottom:calc(var(--safe-b) + 90px);left:20px;max-width:340px;}
+  #radarPanel{bottom:calc(var(--safe-b) + 90px);left:20px;}
+  #histBar{bottom:calc(var(--safe-b) + 86px);left:20px;right:70px;}
+}
+@media(min-width:1024px){
+  #fab{top:50%;transform:translateY(-50%);bottom:auto;right:16px;}
+  .fab-btn{width:38px;height:38px;font-size:13px;}
+}
+</style>
 </head>
-
 <body oncontextmenu="return false;">
 
-
-
-<div id="splash-screen">
-
-    <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
-
-    <div class="boot-loader">
-
-        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
-
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-
-    </div>
-
+<!-- SPLASH -->
+<div id="splash">
+  <div class="s-logo">SKY DEFENSE</div>
+  <div class="s-sub">STRATEGIC MONITOR · UA</div>
+  <div class="s-bar-wrap"><div class="s-bar"></div></div>
+  <div class="s-txt" id="sTxt">Initializing...</div>
 </div>
 
-
-
-<div id="privacy-modal">
-
-    <div class="policy-box">
-
-        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
-
-        <div class="policy-content">
-
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
-
-            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
-
-        </div>
-
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
-
+<!-- PRIVACY -->
+<div id="privModal">
+  <div class="priv-box">
+    <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
+    <div class="priv-body">
+      <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Потрібна для розрахунку ETA та радарної функції. Зберігається локально.</p>
+      <p><strong>2. ПРИВАТНІСТЬ:</strong> Жодних даних на сервер. Все локально.</p>
+      <p><strong>3. ДЖЕРЕЛА:</strong> OSINT-моніторинг, можлива похибка.</p>
+      <p><strong>4. УВАГА:</strong> Не офіційне джерело тривоги. Слухайте ПС ЗСУ.</p>
     </div>
-
+    <button class="priv-ok" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+  </div>
 </div>
 
-
-
+<!-- ADMIN -->
 <div id="adminPanel">
-
-    <div class="admin-box">
-
-        <h2 style="color: var(--accent); font-family: 'Orbitron'; font-size: 16px; margin-bottom: 20px; text-align: center;">COMMAND CENTER</h2>
-
-        
-
-        <div class="data-block">
-
-            <span class="data-label">Type of Target</span>
-
-            <select id="admType" class="admin-select">
-
-                <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-
-                <option value="shahed-238-jet">Shahed-238 (Jet)</option>
-
-                <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
-
-                <option value="tu-95ms-strat">Tu-95MS Strategy</option>
-
-            </select>
-
-        </div>
-
-
-
-        <div class="data-block">
-
-            <span class="data-label">Angle (0-360°)</span>
-
-            <input type="number" id="admAngle" class="admin-input" value="0">
-
-        </div>
-
-
-
-        <div class="data-block">
-
-            <span class="data-label">Accuracy Radius (meters)</span>
-
-            <input type="number" id="admAcc" class="admin-input" value="5000">
-
-        </div>
-
-
-
-        <button class="admin-btn btn-add" onclick="spawnDrone()">DEPLOY TARGET</button>
-
-        <button class="admin-btn btn-clear" onclick="clearDrones()">PURGE ALL DATA</button>
-
-        <button class="admin-btn" style="background: #222; color: #fff;" onclick="location.hash=''">CLOSE PANEL</button>
-
-        
-
-        <p style="font-size: 9px; color: #555; text-align: center; margin-top: 15px;">Target will appear at crosshair position</p>
-
-    </div>
-
+  <div class="adm-box">
+    <div style="font-family:'Orbitron';color:var(--a);font-size:13px;margin-bottom:14px;text-align:center">COMMAND CENTER</div>
+    <span class="adm-fld">Target Type</span>
+    <select id="aType" class="adm-sel">
+      <option value="shahed-vp-standart">Shahed-136</option>
+      <option value="shahed-238-jet">Shahed-238 Jet</option>
+      <option value="kalibr-cruise">Kalibr Cruise</option>
+      <option value="tu-95ms-strat">Tu-95MS Strategic</option>
+    </select>
+    <span class="adm-fld">Angle 0–360°</span>
+    <input type="number" id="aAngle" class="adm-inp" value="180">
+    <span class="adm-fld">Accuracy Radius (m)</span>
+    <input type="number" id="aAcc" class="adm-inp" value="5000">
+    <button class="adm-btn adm-ok" onclick="spawnDrone()">DEPLOY TARGET</button>
+    <button class="adm-btn adm-del" onclick="clearDrones()">PURGE ALL</button>
+    <button class="adm-btn adm-cls" onclick="location.hash=''">CLOSE</button>
+  </div>
 </div>
 
+<!-- THEME SHEET -->
+<div class="bsheet-bg" id="themeSheet" onclick="bgClose(event,'themeSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">MAP LAYER</div>
+    <div class="th-grid">
+      <div class="th-card on" id="tc0" onclick="selTheme(0)"><div class="th-prev p0"></div><div class="th-name">ULTRA DARK</div></div>
+      <div class="th-card" id="tc1" onclick="selTheme(1)"><div class="th-prev p1"></div><div class="th-name">SATELLITE</div></div>
+      <div class="th-card" id="tc2" onclick="selTheme(2)"><div class="th-prev p2"></div><div class="th-name">NIGHT BLUE</div></div>
+      <div class="th-card" id="tc3" onclick="selTheme(3)"><div class="th-prev p3"></div><div class="th-name">TOPO</div></div>
+      <div class="th-card" id="tc4" onclick="selTheme(4)"><div class="th-prev p4">3D</div><div class="th-name">3D RELIEF</div></div>
+      <div class="th-card" id="tc5" onclick="selTheme(5)"><div class="th-prev p5"></div><div class="th-name">LIGHT</div></div>
+      <div class="th-card" id="tc6" onclick="selTheme(6)"><div class="th-prev p6"></div><div class="th-name">OSM STANDARD</div></div>
+      <div class="th-card" id="tc7" onclick="selTheme(7)"><div class="th-prev p7"></div><div class="th-name">STAMEN TONER</div></div>
+      <div class="th-card" id="tc8" onclick="selTheme(8)"><div class="th-prev p8"></div><div class="th-name">STAMEN TERRAIN</div></div>
+      <div class="th-card" id="tc9" onclick="selTheme(9)"><div class="th-prev p9"></div><div class="th-name">CARTO VOYAGER</div></div>
+      <div class="th-card" id="tc10" onclick="selTheme(10)"><div class="th-prev p10"></div><div class="th-name">CARTO VOYAGER LABELS</div></div>
+      <div class="th-card" id="tc11" onclick="selTheme(11)"><div class="th-prev p11"></div><div class="th-name">CARTO VOYAGER NO LABELS</div></div>
+    </div>
+    <div class="br-row">
+      <span>BRIGHTNESS</span>
+      <input type="range" id="brightR" class="rng" min="15" max="130" value="60" oninput="setBright(this.value)" style="background:linear-gradient(to right,var(--a) 39%,rgba(255,255,255,.1) 39%)">
+      <span class="rng-val" id="brightV">60%</span>
+    </div>
+    <button class="bsh-close" onclick="closeSheet('themeSheet')">CLOSE</button>
+  </div>
+</div>
 
+<!-- SETTINGS SHEET -->
+<div class="bsheet-bg" id="setSheet" onclick="bgClose(event,'setSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">SETTINGS</div>
 
+    <div class="set-sec">
+      <span class="set-sec-lbl">Вигляд цілей</span>
+      <div class="sl-row">
+        <span>Розмір іконки</span>
+        <input type="range" class="rng" id="iszR" min="18" max="64" value="36" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 50%,rgba(255,255,255,.1) 50%)">
+        <span class="sl-val" id="iszV">36px</span>
+      </div>
+      <div class="set-row"><span>Колір цілей</span>
+        <div class="swg" id="tcSw">
+          <div class="sw on" style="background:#ff3333" onclick="setTC('#ff3333',this)"></div>
+          <div class="sw" style="background:#ff9900" onclick="setTC('#ff9900',this)"></div>
+          <div class="sw" style="background:#ffcc00" onclick="setTC('#ffcc00',this)"></div>
+          <div class="sw" style="background:#00e5ff" onclick="setTC('#00e5ff',this)"></div>
+          <div class="sw" style="background:#00ff88" onclick="setTC('#00ff88',this)"></div>
+          <div class="sw" style="background:#cc44ff" onclick="setTC('#cc44ff',this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <span class="set-sec-lbl">Інтерфейс</span>
+      <div class="set-row"><span>Акцент UI</span>
+        <div class="swg" id="uiSw">
+          <div class="sw on" style="background:#ff3333" onclick="setUI('#ff3333',this)"></div>
+          <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
+          <div class="sw" style="background:#ffcc00" onclick="setUI('#ffcc00',this)"></div>
+          <div class="sw" style="background:#00e5ff" onclick="setUI('#00e5ff',this)"></div>
+          <div class="sw" style="background:#00ff88" onclick="setUI('#00ff88',this)"></div>
+          <div class="sw" style="background:#cc44ff" onclick="setUI('#cc44ff',this)"></div>
+        </div>
+      </div>
+      <div class="set-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCourse" checked><span class="tog-sl"></span></label></div>
+      <div class="set-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrail" checked><span class="tog-sl"></span></label></div>
+      <div class="set-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCircle" checked><span class="tog-sl"></span></label></div>
+    </div>
+
+    <div class="set-sec">
+      <span class="set-sec-lbl">Теплова карта</span>
+      <div class="set-row"><span>Режим кольору</span>
+        <select id="thermalMode" onchange="setThermalMode(this.value)">
+          <option value="off">Вимкнено</option>
+          <option value="type">За типом цели</option>
+          <option value="speed">За швидкістю</option>
+          <option value="altitude">За висотою</option>
+        </select>
+      </div>
+      <div class="set-row"><span>Швидкість min (км/г)</span>
+        <input type="number" id="thermalMinSpeed" value="0" min="0" max="1000" oninput="updateThermalSettings()" style="width:60px;">
+      </div>
+      <div class="set-row"><span>Швидкість max (км/г)</span>
+        <input type="number" id="thermalMaxSpeed" value="600" min="0" max="1000" oninput="updateThermalSettings()" style="width:60px;">
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <span class="set-sec-lbl">Звуки</span>
+      <div class="set-row"><span>Звукові сповіщення</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="tog-sl"></span></label></div>
+      <div class="sl-row">
+        <span>Гучність</span>
+        <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.1) 60%)">
+        <span class="sl-val" id="volV">60%</span>
+      </div>
+      <div class="snd-grid">
+        <button class="snd-btn on" onclick="testSnd('new')">🔔 Нова ціль</button>
+        <button class="snd-btn on" onclick="testSnd('del')">✅ Знищена</button>
+        <button class="snd-btn on" onclick="testSnd('alm')">🚨 Тривога</button>
+        <button class="snd-btn" onclick="testSnd('tick')">⏱ Тік</button>
+      </div>
+    </div>
+
+    <button class="bsh-close" onclick="closeSheet('setSheet')">CLOSE</button>
+  </div>
+</div>
+
+<!-- TABLE SHEET -->
+<div class="bsheet-bg" id="tblSheet" onclick="bgClose(event,'tblSheet')">
+  <div class="bsheet">
+    <div class="bsh-drag"></div>
+    <div class="bsh-title">АКТИВНІ ЦІЛІ</div>
+    <table id="tblTable">
+      <thead><tr><th>ID</th><th>Тип</th><th>Позиція</th><th>Курс</th><th>ETA</th></tr></thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+    <button class="bsh-close" style="margin-top:14px" onclick="closeSheet('tblSheet')">CLOSE</button>
+  </div>
+</div>
+
+<!-- MAP -->
 <div id="map"></div>
+<div id="xhair"><div class="xh-ring"></div></div>
+<div id="toast"></div>
 
-
-
-<div class="main-crosshair">
-
-    <span class="tl"></span><span class="tr"></span>
-
-    <span class="bl"></span><span class="br"></span>
-
-</div>
-
-
-
-<div id="mapNotify">SYNC COMPLETED</div>
-
-
-
-<div class="top-ui">
-
-    <div class="status-group">
-
-        <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
-
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
-
+<!-- TOP BAR -->
+<div id="topBar">
+  <div class="tb-left">
+    <div class="tb-pill"><i class="fa-solid fa-clock" style="font-size:9px;opacity:.5"></i><span class="v" id="sysTime">00:00:00</span></div>
+    <div class="tb-pill">
+      <i class="fa-solid fa-users" style="font-size:9px;opacity:.5"></i>
+      <span style="opacity:.5;font-size:9px">ON</span><span class="v red" id="onlineC">1</span>
+      <span style="opacity:.3">·</span>
+      <i class="fa-solid fa-satellite-dish" style="font-size:9px;opacity:.5"></i>
+      <span class="v" id="gpsV" style="color:rgba(255,255,255,.4)">GPS</span>
     </div>
-
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
-
-</div>
-
-
-
-<div id="sidePanel" class="side-panel">
-
-    <div class="panel-header">
-
-        <span>TRACKING INFO</span>
-
-        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
-
+    <div class="tb-pill" id="wxCursor" onclick="toggleWX()">
+      <i class="fa-solid fa-cloud-sun" style="font-size:9px;opacity:.5"></i>
+      <span class="v" id="wxT" style="color:rgba(255,255,255,.4)">--</span>
     </div>
-
-    <div class="panel-body">
-
-        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-
-        <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">0 хв 0 сек</div></div>
-
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
-
-        <div class="data-block" style="display: flex; justify-content: space-between;">
-
-            <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-
-            <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
-
-        </div>
-
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
-
+  </div>
+  <div class="tb-right">
+    <div id="activePill">
+      <i class="fa-solid fa-crosshairs" style="font-size:10px;opacity:.5"></i>
+      <span class="num" id="uavC">0</span>
     </div>
-
+  </div>
 </div>
 
-
-
-<div class="bottom-nav" id="ui-nav" style="display: none;">
-
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати проєкт">
-
-        <i class="fa-solid fa-heart"></i>
-
-    </a>
-
-    <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
-
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
-
-    <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
-
+<!-- WEATHER PANEL -->
+<div id="wxPanel">
+  <div class="wx-icon" id="wxIco">--</div>
+  <div class="wx-row"><span>Температура</span><b id="wx1">--</b></div>
+  <div class="wx-row"><span>Відчувається</span><b id="wx2">--</b></div>
+  <div class="wx-row"><span>Вологість</span><b id="wx3">--</b></div>
+  <div class="wx-row"><span>Вітер</span><b id="wx4">--</b></div>
+  <div class="wx-row"><span>Видимість</span><b id="wx5">--</b></div>
+  <div class="wx-row"><span>Умови</span><b id="wx6">--</b></div>
 </div>
 
+<!-- TRACK PANEL -->
+<div id="trackPanel">
+  <div class="tp-head">
+    <div class="tp-type" id="tpType">--</div>
+    <button class="tp-close" onclick="closeTrack()">×</button>
+  </div>
+  <div class="tp-grid">
+    <div class="tp-cell"><div class="lbl">Позиція</div><div class="val red" id="tpPos">--</div></div>
+    <div class="tp-cell"><div class="lbl">Курс</div><div class="val" id="tpAng">--</div></div>
+    <div class="tp-cell"><div class="lbl">Час виявл.</div><div class="val ok" id="tpAge">--</div></div>
+    <div class="tp-cell"><div class="lbl">ETA до вас</div><div class="val red" id="tpETA">--</div></div>
+  </div>
+  <div class="tp-vector" id="tpVec">--</div>
+  <div class="tp-details" id="tpDetails"></div>
+</div>
 
+<!-- RADAR PANEL -->
+<div id="radarPanel">
+  <div class="radar-title">⬟ RADAR · 40 KM</div>
+  <canvas id="radarCanvas" width="160" height="160"></canvas>
+  <div class="radar-list" id="radarList">
+    <div id="radarEmpty">Немає цілей в радіусі 40 км</div>
+  </div>
+</div>
 
-<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
+<!-- FAB (Floating Action Bar — вертикально справа) -->
+<div id="fab">
+  <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="fab-btn gold-btn" title="Підтримати"><i class="fa-solid fa-heart"></i></a>
+  <div class="fab-sep"></div>
+  <button class="fab-btn" onclick="openSheet('themeSheet')" title="Теми карти"><i class="fa-solid fa-layer-group"></i></button>
+  <button class="fab-btn" onclick="openSheet('setSheet')" title="Налаштування"><i class="fa-solid fa-gear"></i></button>
+  <button class="fab-btn" id="radarBtn" onclick="toggleRadar()" title="Радар 40 км"><i class="fa-solid fa-circle-dot"></i></button>
+  <button class="fab-btn" id="histBtn" onclick="toggleHist()" title="Історія"><i class="fa-solid fa-clock-rotate-left"></i></button>
+  <button class="fab-btn" onclick="openSheet('tblSheet');buildTable()" title="Таблиця"><i class="fa-solid fa-table-list"></i></button>
+  <div class="fab-sep"></div>
+  <button class="fab-btn" onclick="locateMe()" title="Моя позиція"><i class="fa-solid fa-location-crosshairs"></i></button>
+  <button class="fab-btn" onclick="location.reload()" title="Оновити"><i class="fa-solid fa-rotate"></i></button>
+</div>
 
+<!-- HISTORY BAR -->
+<div id="histBar">
+  <label>HIST</label>
+  <button id="hPlayBtn" onclick="toggleHPlay()"><i class="fa-solid fa-play" id="hPlayIco"></i></button>
+  <input type="range" id="tSlider" min="0" max="100" value="100" oninput="onTSlide(this.value)"
+    style="background:linear-gradient(to right,var(--a) 100%,rgba(255,255,255,.1) 100%)">
+  <span id="tLbl">LIVE</span>
+</div>
 
+<a href="javascript:void(0)" class="priv-lnk" onclick="showPrivacy()">PRIVACY & SECURITY</a>
 
 <script>
-
-    const themes = [
-
-        { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-
-        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-
-        { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
-
-    ];
-
-
-
-    let tIdx = 0;
-
-    const map = L.map('map', { 
-
-        zoomControl: false, 
-
-        attributionControl: false,
-
-        maxBounds: [[43, 21], [53, 41]], 
-
-        minZoom: 5
-
-    }).setView([48.4, 32.5], 6);
-
-    
-
-    let layer = L.tileLayer(themes[0].url).addTo(map);
-
-
-
-    function nextTheme() {
-
-        tIdx = (tIdx + 1) % themes.length;
-
-        map.removeLayer(layer);
-
-        layer = L.tileLayer(themes[tIdx].url).addTo(map);
-
-        showNotify("LAYER: " + themes[tIdx].name);
-
-    }
-
-
-
-    function showNotify(text) {
-
-        const notify = document.getElementById('mapNotify');
-
-        notify.innerText = text;
-
-        notify.style.opacity = "1";
-
-        setTimeout(() => notify.style.opacity = "0", 1500);
-
-    }
-
-
-
-    window.addEventListener('load', () => {
-
-        const splash = document.getElementById('splash-screen');
-
-        const bootStatus = document.getElementById('bootStatus');
-
-        setTimeout(() => bootStatus.innerText = "Loading OSINT Modules...", 1000);
-
-        setTimeout(() => bootStatus.innerText = "Establishing Satellite Link...", 2000);
-
-        setTimeout(() => {
-
-            splash.style.opacity = '0';
-
-            setTimeout(() => {
-
-                splash.style.display = 'none';
-
-                if (!localStorage.getItem('policyAccepted')) {
-
-                    showPrivacy();
-
-                } else {
-
-                    fullStartup();
-
-                }
-
-                checkAdmin();
-
-            }, 800);
-
-        }, 2600);
-
-    });
-
-
-
-    function checkAdmin() {
-
-        if (window.location.hash === '#admin') {
-
-            document.getElementById('adminPanel').style.display = 'block';
-
-        } else {
-
-            document.getElementById('adminPanel').style.display = 'none';
-
-        }
-
-    }
-
-    window.addEventListener('hashchange', checkAdmin);
-
-
-
-    function spawnDrone() {
-
-        const center = map.getCenter();
-
-        const type = document.getElementById('admType').value;
-
-        const angle = parseInt(document.getElementById('admAngle').value) || 0;
-
-        const acc = parseInt(document.getElementById('admAcc').value) || 5000;
-
-        
-
-        const data = {
-
-            lat: center.lat,
-
-            lng: center.lng,
-
-            type: type,
-
-            angle: angle,
-
-            accuracy: acc,
-
-            timestamp: Date.now()
-
-        };
-
-        
-
-        db.push(data).then(() => {
-
-            showNotify("TARGET DEPLOYED");
-
-        });
-
-    }
-
-
-
-    function clearDrones() {
-
-        if(confirm("Confirm system purge? All targets will be deleted.")) {
-
-            db.remove().then(() => showNotify("SYSTEM PURGED"));
-
-        }
-
-    }
-
-
-
-    function showPrivacy() {
-
-        document.getElementById('privacy-modal').style.display = 'flex';
-
-        document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
-
-        document.getElementById('map').style.pointerEvents = 'none';
-
-    }
-
-
-
-    function acceptPolicy() {
-
-        localStorage.setItem('policyAccepted', 'true');
-
-        document.getElementById('privacy-modal').style.opacity = '0';
-
-        setTimeout(() => {
-
-            document.getElementById('privacy-modal').style.display = 'none';
-
-            document.getElementById('map').style.filter = 'none';
-
-            document.getElementById('map').style.pointerEvents = 'auto';
-
-            fullStartup();
-
-        }, 500);
-
-    }
-
-
-
-    function fullStartup() {
-
-        document.getElementById('ui-nav').style.display = 'flex';
-
-        locateMe();
-
-        showNotify("SYSTEM READY");
-
-    }
-
-
-
-    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-
-    firebase.initializeApp(firebaseConfig);
-
-    const db = firebase.database().ref('drones');
-
-
-
-    const onlineDisplay = document.getElementById('onlineCount');
-
-    const presenceRef = firebase.database().ref('presence');
-
-    const connectedRef = firebase.database().ref('.info/connected');
-
-
-
-    connectedRef.on('value', (snap) => {
-
-        if (snap.val() === true) {
-
-            const con = presenceRef.push(true);
-
-            con.onDisconnect().remove();
-
-        }
-
-    });
-
-
-
-    presenceRef.on('value', (snap) => {
-
-        onlineDisplay.innerText = snap.numChildren() || 0;
-
-    });
-
-
-
-    const SPEED_MAP = {
-
-        'shahed-vp-standart': 185, 
-
-        'shahed-238-jet': 550, 
-
-        'kalibr-cruise': 880, 
-
-        'tu-95ms-strat': 750
-
-    };
-
-    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
-
-
-
-    let userPos = null;
-
-    let userMarker = null;
-
-    let selectedId = null;
-
-
-
-    function locateMe() { 
-
-        if (!localStorage.getItem('policyAccepted')) return;
-
-        map.locate({setView: true, maxZoom: 10}); 
-
-    }
-
-
-
-    map.on('locationfound', (e) => {
-
-        userPos = e.latlng;
-
-        document.getElementById('gpsStatus').innerText = "LINK ACTIVE";
-
-        document.getElementById('gpsStatus').style.color = "var(--success)";
-
-        if (userMarker) map.removeLayer(userMarker);
-
-        userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#ff9d00', fillOpacity: 0.8 }).addTo(map);
-
-    });
-
-
-
-    let obs = {};
-
-
-
-    function getLifetime(timestamp) {
-
-        if (!timestamp) return "0 хв 0 сек";
-
-        const diff = Date.now() - timestamp;
-
-        const totalSec = Math.floor(diff / 1000);
-
-        const min = Math.floor(totalSec / 60);
-
-        const sec = totalSec % 60;
-
-        return `${min} хв ${sec} сек`;
-
-    }
-
-
-
-    function sync(id, d) {
-
-        if (!d) return;
-
-        const now = Date.now();
-
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
-
-            removeObject(id);
-
-            return;
-
-        }
-
-
-
-        const angleRad = (d.angle - 90) * Math.PI / 180;
-
-        const vectorLen = 0.015; 
-
-        const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
-
-        const errorRadius = d.accuracy || 5000; 
-
-
-
-        if (obs[id]) {
-
-            obs[id].marker.setLatLng([d.lat, d.lng]);
-
-            obs[id].circle.setLatLng([d.lat, d.lng]);
-
-            obs[id].circle.setRadius(errorRadius);
-
-            const img = obs[id].marker.getElement()?.querySelector('img');
-
-            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
-
-            obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
-
-            obs[id].data = d;
-
-
-
-            if (selectedId === id) updateUI(id, d);
-
-        } else {
-
-            const circle = L.circle([d.lat, d.lng], {
-
-                radius: errorRadius,
-
-                color: '#ff3333', // Червоний колір кола
-
-                weight: 1,
-
-                fillColor: '#ff3333',
-
-                fillOpacity: 0.1,
-
-                dashArray: '5, 10',
-
-                interactive: false
-
-            }).addTo(map);
-
-
-
-            const iconSize = 48;
-
-            const icon = L.divIcon({ 
-
-                className: 'uav-icon active-uav', 
-
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
-
-                iconSize: [iconSize, iconSize], 
-
-                iconAnchor: [iconSize/2, iconSize/2] 
-
-            });
-
-
-
-            const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-
-                color: '#ff3333', // Червона лінія напрямку
-
-                weight: 1, 
-
-                opacity: 0.6, 
-
-                dashArray: '2, 5' 
-
-            }).addTo(map);
-
-
-
-            marker.on('click', (e) => {
-
-                L.DomEvent.stopPropagation(e);
-
-                selectedId = id;
-
-                updateUI(id, d);
-
-            });
-
-
-
-            obs[id] = { marker, line, circle, data: d };
-
-        }
-
-        updateCounters();
-
-    }
-
-
-
-    function removeObject(id) {
-
-        if(obs[id]) {
-
-            map.removeLayer(obs[id].marker);
-
-            map.removeLayer(obs[id].line);
-
-            map.removeLayer(obs[id].circle);
-
-            if (selectedId === id) closeInfo();
-
-            delete obs[id];
-
-            updateCounters();
-
-        }
-
-    }
-
-
-
-    function updateUI(id, d) {
-
-        document.getElementById('sidePanel').classList.add('active');
-
-        document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
-
-        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-
-        document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-
-        document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
-
-        document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
-
-
-
-        if (userPos) {
-
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-
-            const speed = (SPEED_MAP[d.type] || 200);
-
-            const timeMinutes = Math.round(distance / speed * 60);
-
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
-
-        }
-
-    }
-
-
-
-    function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
-
-    
-
-    function closeInfo() { 
-
-        document.getElementById('sidePanel').classList.remove('active'); 
-
-        selectedId = null;
-
-    }
-
-
-
-    map.on('click', () => { closeInfo(); });
-
-
-
-    setInterval(() => {
-
-        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-
-        if (selectedId && obs[selectedId]) {
-
-            document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
-
-        }
-
-    }, 1000);
-
-
-
-    db.on('child_added', s => sync(s.key, s.val()));
-
-    db.on('child_changed', s => sync(s.key, s.val()));
-
-    db.on('child_removed', s => removeObject(s.key));
-
-</script>
-
-
-
-</body>
-
-</html> 
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+const FB = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
+const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
+const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','](streamdown:incomplete-link)
