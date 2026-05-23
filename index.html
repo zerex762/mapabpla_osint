@@ -224,7 +224,7 @@
         <div class="policy-content">
             <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
             <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та можуть мати похибку.</p>
+            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та могут мати похибку.</p>
             <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
         </div>
         <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
@@ -323,284 +323,591 @@
 <a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
 
 <script>
-    const themes = [
-        { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-        { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
+/* ==============================================================
+   SETTINGS & HELPERS
+   ============================================================== */
+const themes = [
+    { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
+    { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+    { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
+];
+let tIdx = 0;
+
+const map = L.map('map', {
+    zoomControl: false,
+    attributionControl: false,
+    maxBounds: [[43, 21], [53, 41]],
+    minZoom: 5
+}).setView([48.4, 32.5], 6);
+let layer = L.tileLayer(themes[0].url).addTo(map);
+
+function nextTheme() {
+    tIdx = (tIdx + 1) % themes.length;
+    map.removeLayer(layer);
+    layer = L.tileLayer(themes[tIdx].url).addTo(map);
+    showNotify("LAYER: " + themes[tIdx].name);
+}
+function showNotify(text) {
+    const n = document.getElementById('mapNotify');
+    n.textContent = text;
+    n.style.opacity = "1";
+    setTimeout(() => n.style.opacity = "0", 1500);
+}
+
+/* ==============================================================
+   SPLASH SCREEN – guaranteed hide
+   ============================================================== */
+window.addEventListener('load', () => {
+    const splash   = document.getElementById('splash-screen');
+    const bootText = document.getElementById('bootStatus');
+    const msgs = [
+        'Loading OSINT modules...',
+        'Establishing satellite link...',
+        'Systems nominal'
     ];
+    let i = 0;
+    const iv = setInterval(() => {
+        if (i < msgs.length) {
+            bootText.textContent = msgs[i++];
+        } else clearInterval(iv);
+    }, 800);
 
-    let tIdx = 0;
-    const map = L.map('map', {
-        zoomControl: false,
-        attributionControl: false,
-        maxBounds: [[43, 21], [53, 41]],
-        minZoom: 5
-    }).setView([48.4, 32.5], 6);
-    let layer = L.tileLayer(themes[0].url).addTo(map);
-
-    function nextTheme() {
-        tIdx = (tIdx + 1) % themes.length;
-        map.removeLayer(layer);
-        layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        showNotify("LAYER: " + themes[tIdx].name);
-    }
-
-    function showNotify(text) {
-        const notify = document.getElementById('mapNotify');
-        notify.innerText = text;
-        notify.style.opacity = "1";
-        setTimeout(() => notify.style.opacity = "0", 1500);
-    }
-
-    window.addEventListener('load', () => {
-        const splash = document.getElementById('splash-screen');
-        const bootStatus = document.getElementById('bootStatus');
-        setTimeout(() => bootStatus.innerText = "Loading OSINT Modules...", 1000);
-        setTimeout(() => bootStatus.innerText = "Establishing Satellite Link...", 2000);
+    function hideSplash() {
+        splash.style.opacity = '0';
+        splash.style.transition = 'opacity .35s';
         setTimeout(() => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                if (!localStorage.getItem('policyAccepted')) {
-                    showPrivacy();
-                } else {
-                    fullStartup();
-                }
-                checkAdmin();
-            }, 800);
-        }, 2600);
-    });
+            splash.style.display = 'none';
+            try { startup(); } catch (e) {
+                console.error('Startup failed:', e);
+                // Even if startup fails we still show the UI so user isn’t stuck on a black screen
+                document.getElementById('ui-nav').style.display = 'flex';
+                showNotify('SYSTEM READY (with errors)');
+            }
+        }, 350);
+    }
 
-    function checkAdmin() {
-        if (window.location.hash === '#admin') {
-            document.getElementById('adminPanel').style.display = 'block';
-        } else {
-            document.getElementById('adminPanel').style.display = 'none';
+    if (localStorage.getItem('policyAccepted')) {
+        setTimeout(hideSplash, 2000); // let the splash animation finish
+    } else {
+        showPrivacy(); // will call hideSplash after user accepts
+    }
+
+    // Safety net: if for any reason splash is still shown after 15 s, hide it forcibly
+    setTimeout(() => {
+        if (splash.style.display !== 'none') {
+            console.warn('Splash timeout – forcing hide');
+            hideSplash();
         }
+    }, 15000);
+});
+
+/* ==============================================================
+   PRIVACY MODAL
+   ============================================================== */
+function showPrivacy() {
+    document.getElementById('privacy-modal').style.display = 'flex';
+    document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
+    document.getElementById('map').style.pointerEvents = 'none';
+}
+function acceptPrivacy() {
+    localStorage.setItem('policyAccepted', 'true');
+    const modal = document.getElementById('privacy-modal');
+    modal.style.opacity = '0';
+    modal.style.transition = 'opacity .35s';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.getElementById('map').style.filter = 'none';
+        document.getElementById('map').style.pointerEvents = 'auto';
+        hideSplash();   // defined above
+    }, 500);
+}
+
+/* ==============================================================
+   ADMIN PANEL
+   ============================================================== */
+function checkAdmin() {
+    if (window.location.hash === '#admin') {
+        document.getElementById('adminPanel').style.display = 'block';
+    } else {
+        document.getElementById('adminPanel').style.display = 'none';
     }
-    window.addEventListener('hashchange', checkAdmin);
+}
+window.addEventListener('hashchange', checkAdmin);
 
-    function spawnDrone() {
-        const center = map.getCenter();
-        const type = document.getElementById('admType').value;
-        const angle = parseInt(document.getElementById('admAngle').value) || 0;
-        const acc = parseInt(document.getElementById('admAcc').value) || 5000;
+/* ==============================================================
+   FIREBASE SETUP (safe wrapper)
+   ============================================================== */
+let db = null;          // will hold the Firebase reference if init succeeds
+let firebaseReady = false;
 
-        const data = {
-            lat: center.lat,
-            lng: center.lng,
-            type: type,
-            angle: angle,
-            accuracy: acc,
-            timestamp: Date.now()
-        };
-
-        db.push(data).then(() => {
-            showNotify("TARGET DEPLOYED");
-        });
+function initFirebase() {
+    try {
+        // <-- REPLACE THIS URL WITH YOUR OWN PROJECT'S DATABASE URL -->
+        const fbUrl = "https://shmap-8c0fa-default-rtdb.firebaseio.com"; // example placeholder
+        firebase.initializeApp({ databaseURL: fbUrl });
+        db = firebase.database().ref('drones');
+        firebaseReady = true;
+        console.log('Firebase initialised successfully');
+    } catch (err) {
+        console.warn('Firebase init failed – running in demo mode', err);
+        firebaseReady = false;
+        db = null; // we will treat missing db as “no data”
     }
+}
+initFirebase();
 
-    function clearDrones() {
-        if (confirm("Confirm system purge? All targets will be deleted.")) {
-            db.remove().then(() => showNotify("SYSTEM PURGED"));
-        }
-    }
-
-    function showPrivacy() {
-        document.getElementById('privacy-modal').style.display = 'flex';
-        document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
-        document.getElementById('map').style.pointerEvents = 'none';
-    }
-
-    function acceptPolicy() {
-        localStorage.setItem('policyAccepted', 'true');
-        document.getElementById('privacy-modal').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('privacy-modal').style.display = 'none';
-            document.getElementById('map').style.filter = 'none';
-            document.getElementById('map').style.pointerEvents = 'auto';
-            fullStartup();
-        }, 500);
-    }
-
-    function fullStartup() {
-        document.getElementById('ui-nav').style.display = 'flex';
-        locateMe();
-        showNotify("SYSTEM READY");
-    }
-
-    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('drones');
-
-    const onlineDisplay = document.getElementById('onlineCount');
+/* ==============================================================
+   ONLINE PRESENCE (only if Firebase ready)
+   ============================================================== */
+const onlineDisplay = document.getElementById('onlineCount');
+if (firebaseReady) {
     const presenceRef = firebase.database().ref('presence');
     const connectedRef = firebase.database().ref('.info/connected');
 
-    connectedRef.on('value', (snap) => {
+    connectedRef.on('value', snap => {
         if (snap.val() === true) {
             const con = presenceRef.push(true);
             con.onDisconnect().remove();
         }
     });
 
-    presenceRef.on('value', (snap) => {
-        onlineDisplay.innerText = snap.numChildren() || 0;
+    presenceRef.on('value', snap => {
+        onlineDisplay.textContent = snap.numChildren() || 0;
     });
+} else {
+    // demo mode – just show a static number
+    onlineDisplay.textContent = '1';
+}
 
-    const SPEED_MAP = {
-        'shahed-vp-standart': 185,
-        'shahed-238-jet': 550,
-        'kalibr-cruise': 880,
-        'tu-95ms-strat': 750
-    };
-    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+/* ==============================================================
+   SPEED MAP & FALLBACK ICON
+   ============================================================== */
+const SPEED_MAP = {
+    'shahed-vp-standart': 185,
+    'shahed-238-jet': 550,
+    'kalibr-cruise': 880,
+    'tu-95ms-strat': 750
+};
+const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 
-    let userPos = null;
-    let userMarker = null;
-    let selectedId = null;
+let userPos = null;
+let userMarker = null;
+let selectedId = null;
 
-    function locateMe() {
-        if (!localStorage.getItem('policyAccepted')) return;
-        map.locate({ setView: true, maxZoom: 10 });
+/* ==============================================================
+   GEOLOCATION
+   ============================================================== */
+function locateMe() {
+    if (!localStorage.getItem('policyAccepted')) return;
+    map.locate({ setView: true, maxZoom: 10, timeout: 12000 });
+}
+map.on('locationfound', e => {
+    userPos = e.latlng;
+    document.getElementById('gpsStatus').textContent = 'LINK ACTIVE';
+    document.getElementById('gpsStatus').style.color = 'var(--success)';
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(userPos, {
+        radius: 6, color: '#fff', weight: 2,
+        fillColor: '#ff9d00', fillOpacity: 0.8
+    }).addTo(map);
+});
+map.on('locationerror', e => {
+    console.warn('Location error:', e.message);
+    document.getElementById('gpsStatus').textContent = 'ERROR';
+    document.getElementById('gpsStatus').style.color = 'var(--danger)';
+    userPos = null;
+    if (userMarker) map.removeLayer(userMarker);
+    // fallback to centre of Ukraine
+    userMarker = L.circleMarker([48.4, 32.5], {
+        radius: 6, color: '#fff', weight: 2,
+        fillColor: '#ff9d00', fillOpacity: 0.8
+    }).addTo(map);
+});
+
+/* ==============================================================
+   WEATHER FETCH (wrapped in try/catch)
+   ============================================================== */
+async function fetchWeather(lat, lng) {
+    try {
+        const resp = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility&timezone=auto`
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const cw = data.current_weather;
+        const h = data.hourly;
+        const wmo = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
+        const wmoD = {0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
+        document.getElementById('wxT').textContent = `${Math.round(cw.temperature)}°`;
+        document.getElementById('wxIco').textContent = wmo[cw.weathercode] || '🌡';
+        document.getElementById('wx1').textContent = `${Math.round(cw.temperature)}°C`;
+        document.getElementById('wx2').textContent = h?.apparent_temperature ? `${Math.round(h.apparent_temperature[0])}°C` : '--';
+        document.getElementById('wx3').textContent = h?.relativehumidity_2m ? `${h.relativehumidity_2m[0]}%` : '--';
+        document.getElementById('wx4').textContent = `${Math.round(cw.windspeed)} км/г`;
+        document.getElementById('wx5').textContent = h?.visibility ? `${(h.visibility[0]/1000).toFixed(1)} км` : '--';
+        document.getElementById('wx6').textContent = wmoD[cw.weathercode] || '--';
+    } catch (err) {
+        console.warn('Weather fetch error:', err);
+        document.getElementById('wxT').textContent = '--';
+        document.getElementById('wxIco').textContent = '🌡';
+        document.getElementById('wx1').textContent = '--°C';
+        document.getElementById('wx2').textContent = '--';
+        document.getElementById('wx3').textContent = '--';
+        document.getElementById('wx4').textContent = '--';
+        document.getElementById('wx5').textContent = '--';
+        document.getElementById('wx6').textContent = '--';
+    }
+}
+function toggleWX() {
+    const p = document.getElementById('wxPanel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+}
+
+/* ==============================================================
+   DATA SYNC (Firebase listeners) – safe for demo mode
+   ============================================================== */
+let obs = {}; // id => {marker, line, circle, data}
+function sync(id, raw) {
+    if (!raw) return;
+    const now = Date.now();
+    if ((now - (raw.timestamp || now)) / 1000 / 60 > 45) {
+        removeObject(id);
+        return;
     }
 
-    map.on('locationfound', (e) => {
-        userPos = e.latlng;
-        document.getElementById('gpsStatus').innerText = "LINK ACTIVE";
-        document.getElementById('gpsStatus').style.color = "var(--success)";
-        if (userMarker) map.removeLayer(userMarker);
-        userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#ff9d00', fillOpacity: 0.8 }).addTo(map);
-    });
+    const angleRad = (raw.angle - 90) * Math.PI / 180;
+    const vecLen = 0.015;
+    const tail = [raw.lat - Math.cos(angleRad) * vecLen, raw.lng - Math.sin(angleRad) * vecLen];
+    const errRadius = raw.accuracy || 5000;
 
-    let obs = {};
+    if (obs[id]) {
+        obs[id].marker.setLatLng([raw.lat, raw.lng]);
+        obs[id].circle.setLatLng([raw.lat, raw.lng]);
+        obs[id].circle.setRadius(errRadius);
+        const img = obs[id].marker.getElement()?.querySelector('img');
+        if (img) img.style.transform = `rotate(${raw.angle || 0}deg)`;
+        obs[id].line.setLatLngs([[raw.lat, raw.lng], tail]);
+        obs[id].data = raw;
+        if (selectedId === id) updateUI(id, raw);
+    } else {
+        const circle = L.circle([raw.lat, raw.lng], {
+            radius: errRadius,
+            color: '#ff3333',
+            weight: 1,
+            fillColor: '#ff3333',
+            fillOpacity: 0.1,
+            dashArray: '5,10',
+            interactive: false
+        }).addTo(map);
 
-    function getLifetime(timestamp) {
-        if (!timestamp) return "0 хв 0 сек";
-        const diff = Date.now() - timestamp;
-        const totalSec = Math.floor(diff / 1000);
-        const min = Math.floor(totalSec / 60);
-        const sec = totalSec % 60;
-        return `${min} хв ${sec} сек`;
+        const iconSize = 48;
+        const icon = L.divIcon({
+            className: 'uav-icon active-uav',
+            html: `<img src="${raw.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${raw.angle || 0}deg);">`,
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize/2, iconSize/2]
+        });
+
+        const marker = L.marker([raw.lat, raw.lng], { icon: icon }).addTo(map);
+        const line = L.polyline([[raw.lat, raw.lng], tail], {
+            color: '#ff3333',
+            weight: 1,
+            opacity: 0.6,
+            dashArray: '2,5'
+        }).addTo(map);
+
+        marker.on('click', e => {
+            L.DomEvent.stopPropagation(e);
+            selectedId = id;
+            updateUI(id, raw);
+        });
+
+        obs[id] = { marker, line, circle, data: raw };
     }
-
-    function sync(id, d) {
-        if (!d) return;
-        const now = Date.now();
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
-            removeObject(id);
-            return;
-        }
-
-        const angleRad = (d.angle - 90) * Math.PI / 180;
-        const vectorLen = 0.015;
-        const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
-        const errorRadius = d.accuracy || 5000;
-
-        if (obs[id]) {
-            obs[id].marker.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setRadius(errorRadius);
-            const img = obs[id].marker.getElement()?.querySelector('img');
-            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
-            obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
-            obs[id].data = d;
-
-            if (selectedId === id) updateUI(id, d);
-        } else {
-            const circle = L.circle([d.lat, d.lng], {
-                radius: errorRadius,
-                color: '#ff3333',
-                weight: 1,
-                fillColor: '#ff3333',
-                fillOpacity: 0.1,
-                dashArray: '5, 10',
-                interactive: false
-            }).addTo(map);
-
-            const iconSize = 48;
-            const icon = L.divIcon({
-                className: 'uav-icon active-uav',
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`,
-                iconSize: [iconSize, iconSize],
-                iconAnchor: [iconSize / 2, iconSize / 2]
-            });
-
-            const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], tailEnd], {
-                color: '#ff3333',
-                weight: 1,
-                opacity: 0.6,
-                dashArray: '2, 5'
-            }).addTo(map);
-
-            marker.on('click', (e) => {
-                L.DomEvent.stopPropagation(e);
-                selectedId = id;
-                updateUI(id, d);
-            });
-
-            obs[id] = { marker, line, circle, data: d };
-        }
+    updateCounters();
+}
+function removeObject(id) {
+    if (obs[id]) {
+        map.removeLayer(obs[id].marker);
+        map.removeLayer(obs[id].line);
+        map.removeLayer(obs[id].circle);
+        if (selectedId === id) closeInfo();
+        delete obs[id];
         updateCounters();
     }
+}
+function updateCounters() {
+    document.getElementById('uavCount').textContent = Object.keys(obs).length;
+}
 
-    function removeObject(id) {
-        if (obs[id]) {
-            map.removeLayer(obs[id].marker);
-            map.removeLayer(obs[id].line);
-            map.removeLayer(obs[id].circle);
-            if (selectedId === id) closeInfo();
-            delete obs[id];
-            updateCounters();
-        }
+/* ==============================================================
+   UI UPDATE (side panel)
+   ============================================================== */
+function getLifetime(ts) {
+    if (!ts) return '0 хв 0 сек';
+    const diff = Date.now() - ts;
+    const totalSec = Math.floor(diff / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min} хв ${sec} сек`;
+}
+function updateUI(id, d) {
+    document.getElementById('sidePanel').classList.add('active');
+    document.getElementById('objId').textContent = `REF_${id.substring(0,6).toUpperCase()}`;
+    document.getElementById('objType').textContent = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
+    document.getElementById('objCoords').textContent = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+    document.getElementById('objAngle').textContent = `${Math.round(d.angle || 0)}°`;
+    document.getElementById('objLifetime').textContent = getLifetime(d.timestamp);
+
+    if (userPos) {
+        const distance = map.distance(userPos, [d.lat, d.lng]) / 1000;
+        const speed = SPEED_MAP[d.type] || 200;
+        const etaMin = Math.round(distance / speed * 60);
+        document.getElementById('objRange').innerHTML =
+            `${distance.toFixed(1)} KM<br><span style="color:var(--accent);font-size:10px;">ETA: ~${etaMin} MIN</span>`;
+    }
+}
+function closeInfo() {
+    document.getElementById('sidePanel').classList.remove('active');
+    selectedId = null;
+}
+map.on('click', () => { closeInfo(); });
+
+/* ==============================================================
+   SPAWN / CLEAR (admin)
+   ============================================================== */
+function spawnDrone() {
+    if (!firebaseReady) {
+        showNotify('Firebase not available – demo mode');
+        return;
+    }
+    const centre = map.getCenter();
+    const type = document.getElementById('admType').value;
+    const angle = parseInt(document.getElementById('admAngle').value) || 0;
+    const acc = parseInt(document.getElementById('admAcc').value) || 5000;
+
+    db.push({
+        lat: centre.lat,
+        lng: centre.lng,
+        type: type,
+        angle: angle,
+        accuracy: acc,
+        timestamp: Date.now()
+    }).then(() => showNotify('TARGET DEPLOYED'))
+      .catch(err => {
+          console.error('Spawn error:', err);
+          showNotify('SPAWN FAILED');
+      });
+}
+function clearDrones() {
+    if (!firebaseReady) {
+        showNotify('Firebase not available – demo mode');
+        return;
+    }
+    if (confirm('Confirm system purge? All targets will be deleted.')) {
+        db.remove()
+            .then(() => showNotify('SYSTEM PURGED'))
+            .catch(err => {
+                console.error('Clear error:', err);
+                showNotify('CLEAR FAILED');
+            });
+    }
+}
+
+/* ==============================================================
+   MAIN STARTUP (called after splash hides)
+   ============================================================== */
+function startup() {
+    document.getElementById('ui-nav').style.display = 'flex';
+    locateMe();
+    showNotify('SYSTEM READY');
+}
+
+/* ==============================================================
+   TIMESTAMP / TICK
+   ============================================================== */
+setInterval(() => {
+    document.getElementById('sysTime').textContent = new Date().toLocaleTimeString('uk-UA', { hour12: false });
+    if (selectedId && obs[selectedId]) {
+        document.getElementById('objLifetime').textContent = getLifetime(obs[selectedId].data.timestamp);
+    }
+}, 1000);
+
+/* ==============================================================
+   FIREBASE LISTENERS (only if ready)
+   ============================================================== */
+if (firebaseReady) {
+    db.on('child_added',  snap => sync(snap.key, snap.val()));
+    db.on('child_changed', snap => sync(snap.key, snap.val()));
+    db.on('child_removed', snap => removeObject(snap.key));
+}
+
+/* ==============================================================
+   RADAR LOGIC
+   ============================================================== */
+let radarOpen = false;
+let radarAnim = null;
+let radarAngle = 0;
+
+function toggleRadar() {
+    radarOpen = !radarOpen;
+    const panel = document.getElementById('radarPanel');
+    panel.style.display = radarOpen ? 'block' : 'none';
+    if (radarOpen) {
+        drawRadar();
+        if (!radarAnim) startRadarAnim();
+    } else {
+        stopRadarAnim();
+    }
+}
+function startRadarAnim() {
+    const canvas = document.getElementById('radarCanvas');
+    const ctx = canvas.getContext('2d');
+    function frame() {
+        radarAngle = (radarAngle + 2) % 360;
+        drawRadarFrame(ctx, canvas.width, canvas.height);
+        radarAnim = requestAnimationFrame(frame);
+    }
+    radarAnim = requestAnimationFrame(frame);
+}
+function stopRadarAnim() {
+    if (radarAnim) {
+        cancelAnimationFrame(radarAnim);
+        radarAnim = null;
+    }
+}
+function drawRadar() {
+    const canvas = document.getElementById('radarCanvas');
+    const ctx = canvas.getContext('2d');
+    drawRadarFrame(ctx, canvas.width, canvas.height);
+    buildRadarList();
+}
+function drawRadarFrame(ctx, w, h) {
+    const cx = w / 2, cy = h / 2, R = cx - 4;
+    ctx.clearRect(0, 0, w, h);
+
+    // background
+    ctx.fillStyle = '#040208';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // range rings
+    [0.25, 0.5, 0.75, 1].forEach(f => {
+        ctx.strokeStyle = f === 1 ? 'rgba(255,51,51,0.4)' : 'rgba(255,51,51,0.12)';
+        ctx.lineWidth = f === 1 ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * f, 0, Math.PI * 2);
+        ctx.stroke();
+    });
+
+    // cross hairs
+    ctx.strokeStyle = 'rgba(255,51,51,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - R, cy);
+    ctx.lineTo(cx + R, cy);
+    ctx.moveTo(cx, cy - R);
+    ctx.lineTo(cx, cy + R);
+    ctx.stroke();
+
+    // sweep
+    const sweepRad = (radarAngle - 90) * Math.PI / 180;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, sweepRad - Math.PI / 3, sweepRad);
+    ctx.closePath();
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    grad.addColorStop(0, 'rgba(255,51,51,0.0)');
+    grad.addColorStop(1, 'rgba(255,51,51,0.25)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+
+    // sweep line
+    ctx.strokeStyle = 'rgba(255,51,51,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + R * Math.cos(sweepRad), cy + R * Math.sin(sweepRad));
+    ctx.stroke();
+
+    // dots for targets inside 40 km
+    if (userPos) {
+        Object.values(obs).forEach(o => {
+            const d = o.data;
+            const km = map.distance(userPos, [d.lat, d.lng]) / 1000;
+            if (km > 40) return;
+            const bearing = Math.atan2(d.lng - userPos.lng, d.lat - userPos.lat);
+            const dr = km / 40 * R;
+            const px = cx + dr * Math.sin(bearing);
+            const py = cy - dr * Math.cos(bearing);
+            ctx.fillStyle = '#ff3333';
+            ctx.shadowColor = '#ff3333';
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
     }
 
-    function updateUI(id, d) {
-        document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('objId').innerText = "REF_" + id.substring(0, 6).toUpperCase();
-        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-        document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-        document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
-        document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
+    // self dot
+    ctx.fillStyle = '#f5a623';
+    ctx.shadowColor = '#f5a623';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
 
-        if (userPos) {
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const speed = (SPEED_MAP[d.type] || 200);
-            const timeMinutes = Math.round(distance / speed * 60);
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
-        }
+    radarAngle = (radarAngle + 1.5) % 360;
+}
+function buildRadarList() {
+    const list = document.getElementById('radarList');
+    const empty = document.getElementById('radarEmpty');
+    if (!userPos) {
+        empty.style.display = 'block';
+        empty.textContent = 'GPS недоступний';
+        list.innerHTML = '';
+        list.appendChild(empty);
+        return;
     }
-
-    function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
-
-    function closeInfo() {
-        document.getElementById('sidePanel').classList.remove('active');
-        selectedId = null;
+    const near = Object.entries(obs)
+        .filter(([, o]) => map.distance(userPos, [o.data.lat, o.data.lng]) / 1000 <= 40)
+        .sort(([, a], [, b]) => map.distance(userPos, [a.data.lat, a.data.lng]) -
+                         map.distance(userPos, [b.data.lat, b.data.lng]));
+    list.innerHTML = '';
+    if (!near.length) {
+        empty.style.display = 'block';
+        list.appendChild(empty);
+        return;
     }
+    near.forEach(([id, o]) => {
+        const d = o.data;
+        const km = map.distance(userPos, [d.lat, d.lng]) / 1000;
+        const spd = SPEED_MAP[d.type] || 200;
+        const eta = Math.round(km / spd * 60);
+        const row = document.createElement('div');
+        row.className = 'radar-item';
+        row.innerHTML = `<span>${id.substring(0,5)} • ${(d.type || '?').split('-')[0].toUpperCase()}</span><span class="ri-eta">${km.toFixed(1)}km ~${eta}хв</span>`;
+        row.onclick = () => {
+            selectedId = id;
+            updateUI(id, d);
+            map.panTo([d.lat, d.lng]);
+        };
+        list.appendChild(row);
+    });
+}
+// refresh radar list every 5 seconds while radar is open
+setInterval(() => {
+    if (radarOpen) buildRadarList();
+}, 5000);
 
-    map.on('click', () => { closeInfo(); });
-
-    setInterval(() => {
-        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-        if (selectedId && obs[selectedId]) {
-            document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
-        }
-    }, 1000);
-
-    db.on('child_added', s => sync(s.key, s.val()));
-    db.on('child_changed', s => sync(s.key, s.val()));
-    db.on('child_removed', s => removeObject(s.key));
-
-    /* --------------------- RADAR LOGIC --------------------- */
-    let radarOpen = false;
-    let radarAnim = null;
-    let radarAngle = 0;
-
-    function toggleRadar() {
-        radarOpen = !radarOpen;
-        const panel = document.getElementById('radarPanel');
-        panel.style.display = radarOpen ? 'block' : 'none';
-        if (radarOpen) {
-            drawRadar();
-            if (!radar
+/* ==============================================================
+   END OF SCRIPT
+   ============================================================== */
+</script>
+</body>
+</html>
