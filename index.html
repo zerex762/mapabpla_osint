@@ -227,7 +227,7 @@
             <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та могут мати похибку.</p>
             <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
         </div>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+        <button class="accept-btn" onclick="acceptPrivacy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
     </div>
 </div>
 
@@ -317,6 +317,7 @@
     <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="toggleRadar()" title="Радар"><i class="fas fa-radar"></i></button>
+    <button class="c-btn" onclick="spawnTestTarget()" title="Тестова ціль"><i class="fa-solid fa-bolt"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
 </div>
 
@@ -328,7 +329,7 @@
    ============================================================== */
 const themes = [
     { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-    { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+    { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile={z}/{y}/{x}' },
     { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
 ];
 let tIdx = 0;
@@ -442,7 +443,7 @@ let firebaseReady = false;
 
 function initFirebase() {
     try {
-        // <-- REPLACE THIS URL WITH YOUR OWN PROJECT'S DATABASE URL -->
+        // *** REPLACE THIS WITH YOUR OWN DATABASE URL ***
         const fbUrl = "https://shmap-8c0fa-default-rtdb.firebaseio.com"; // example placeholder
         firebase.initializeApp({ databaseURL: fbUrl });
         db = firebase.database().ref('drones');
@@ -681,233 +682,4 @@ function spawnDrone() {
         showNotify('Firebase not available – demo mode');
         return;
     }
-    const centre = map.getCenter();
-    const type = document.getElementById('admType').value;
-    const angle = parseInt(document.getElementById('admAngle').value) || 0;
-    const acc = parseInt(document.getElementById('admAcc').value) || 5000;
-
-    db.push({
-        lat: centre.lat,
-        lng: centre.lng,
-        type: type,
-        angle: angle,
-        accuracy: acc,
-        timestamp: Date.now()
-    }).then(() => showNotify('TARGET DEPLOYED'))
-      .catch(err => {
-          console.error('Spawn error:', err);
-          showNotify('SPAWN FAILED');
-      });
-}
-function clearDrones() {
-    if (!firebaseReady) {
-        showNotify('Firebase not available – demo mode');
-        return;
-    }
-    if (confirm('Confirm system purge? All targets will be deleted.')) {
-        db.remove()
-            .then(() => showNotify('SYSTEM PURGED'))
-            .catch(err => {
-                console.error('Clear error:', err);
-                showNotify('CLEAR FAILED');
-            });
-    }
-}
-
-/* ==============================================================
-   MAIN STARTUP (called after splash hides)
-   ============================================================== */
-function startup() {
-    document.getElementById('ui-nav').style.display = 'flex';
-    locateMe();
-    showNotify('SYSTEM READY');
-}
-
-/* ==============================================================
-   TIMESTAMP / TICK
-   ============================================================== */
-setInterval(() => {
-    document.getElementById('sysTime').textContent = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-    if (selectedId && obs[selectedId]) {
-        document.getElementById('objLifetime').textContent = getLifetime(obs[selectedId].data.timestamp);
-    }
-}, 1000);
-
-/* ==============================================================
-   FIREBASE LISTENERS (only if ready)
-   ============================================================== */
-if (firebaseReady) {
-    db.on('child_added',  snap => sync(snap.key, snap.val()));
-    db.on('child_changed', snap => sync(snap.key, snap.val()));
-    db.on('child_removed', snap => removeObject(snap.key));
-}
-
-/* ==============================================================
-   RADAR LOGIC
-   ============================================================== */
-let radarOpen = false;
-let radarAnim = null;
-let radarAngle = 0;
-
-function toggleRadar() {
-    radarOpen = !radarOpen;
-    const panel = document.getElementById('radarPanel');
-    panel.style.display = radarOpen ? 'block' : 'none';
-    if (radarOpen) {
-        drawRadar();
-        if (!radarAnim) startRadarAnim();
-    } else {
-        stopRadarAnim();
-    }
-}
-function startRadarAnim() {
-    const canvas = document.getElementById('radarCanvas');
-    const ctx = canvas.getContext('2d');
-    function frame() {
-        radarAngle = (radarAngle + 2) % 360;
-        drawRadarFrame(ctx, canvas.width, canvas.height);
-        radarAnim = requestAnimationFrame(frame);
-    }
-    radarAnim = requestAnimationFrame(frame);
-}
-function stopRadarAnim() {
-    if (radarAnim) {
-        cancelAnimationFrame(radarAnim);
-        radarAnim = null;
-    }
-}
-function drawRadar() {
-    const canvas = document.getElementById('radarCanvas');
-    const ctx = canvas.getContext('2d');
-    drawRadarFrame(ctx, canvas.width, canvas.height);
-    buildRadarList();
-}
-function drawRadarFrame(ctx, w, h) {
-    const cx = w / 2, cy = h / 2, R = cx - 4;
-    ctx.clearRect(0, 0, w, h);
-
-    // background
-    ctx.fillStyle = '#040208';
-    ctx.beginPath();
-    ctx.arc(cx, cy, R + 2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // range rings
-    [0.25, 0.5, 0.75, 1].forEach(f => {
-        ctx.strokeStyle = f === 1 ? 'rgba(255,51,51,0.4)' : 'rgba(255,51,51,0.12)';
-        ctx.lineWidth = f === 1 ? 1.5 : 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, R * f, 0, Math.PI * 2);
-        ctx.stroke();
-    });
-
-    // cross hairs
-    ctx.strokeStyle = 'rgba(255,51,51,0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx - R, cy);
-    ctx.lineTo(cx + R, cy);
-    ctx.moveTo(cx, cy - R);
-    ctx.lineTo(cx, cy + R);
-    ctx.stroke();
-
-    // sweep
-    const sweepRad = (radarAngle - 90) * Math.PI / 180;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, sweepRad - Math.PI / 3, sweepRad);
-    ctx.closePath();
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-    grad.addColorStop(0, 'rgba(255,51,51,0.0)');
-    grad.addColorStop(1, 'rgba(255,51,51,0.25)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.restore();
-
-    // sweep line
-    ctx.strokeStyle = 'rgba(255,51,51,0.8)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + R * Math.cos(sweepRad), cy + R * Math.sin(sweepRad));
-    ctx.stroke();
-
-    // dots for targets inside 40 km
-    if (userPos) {
-        Object.values(obs).forEach(o => {
-            const d = o.data;
-            const km = map.distance(userPos, [d.lat, d.lng]) / 1000;
-            if (km > 40) return;
-            const bearing = Math.atan2(d.lng - userPos.lng, d.lat - userPos.lat);
-            const dr = km / 40 * R;
-            const px = cx + dr * Math.sin(bearing);
-            const py = cy - dr * Math.cos(bearing);
-            ctx.fillStyle = '#ff3333';
-            ctx.shadowColor = '#ff3333';
-            ctx.shadowBlur = 6;
-            ctx.beginPath();
-            ctx.arc(px, py, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        });
-    }
-
-    // self dot
-    ctx.fillStyle = '#f5a623';
-    ctx.shadowColor = '#f5a623';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    radarAngle = (radarAngle + 1.5) % 360;
-}
-function buildRadarList() {
-    const list = document.getElementById('radarList');
-    const empty = document.getElementById('radarEmpty');
-    if (!userPos) {
-        empty.style.display = 'block';
-        empty.textContent = 'GPS недоступний';
-        list.innerHTML = '';
-        list.appendChild(empty);
-        return;
-    }
-    const near = Object.entries(obs)
-        .filter(([, o]) => map.distance(userPos, [o.data.lat, o.data.lng]) / 1000 <= 40)
-        .sort(([, a], [, b]) => map.distance(userPos, [a.data.lat, a.data.lng]) -
-                         map.distance(userPos, [b.data.lat, b.data.lng]));
-    list.innerHTML = '';
-    if (!near.length) {
-        empty.style.display = 'block';
-        list.appendChild(empty);
-        return;
-    }
-    near.forEach(([id, o]) => {
-        const d = o.data;
-        const km = map.distance(userPos, [d.lat, d.lng]) / 1000;
-        const spd = SPEED_MAP[d.type] || 200;
-        const eta = Math.round(km / spd * 60);
-        const row = document.createElement('div');
-        row.className = 'radar-item';
-        row.innerHTML = `<span>${id.substring(0,5)} • ${(d.type || '?').split('-')[0].toUpperCase()}</span><span class="ri-eta">${km.toFixed(1)}km ~${eta}хв</span>`;
-        row.onclick = () => {
-            selectedId = id;
-            updateUI(id, d);
-            map.panTo([d.lat, d.lng]);
-        };
-        list.appendChild(row);
-    });
-}
-// refresh radar list every 5 seconds while radar is open
-setInterval(() => {
-    if (radarOpen) buildRadarList();
-}, 5000);
-
-/* ==============================================================
-   END OF SCRIPT
-   ============================================================== */
-</script>
-</body>
-</html>
+    const centre_
