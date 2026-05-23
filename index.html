@@ -590,4 +590,35 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:var(--bg);font-fa
 const FB = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
 const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
-const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','](streamdown:incomplete-link)
+const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
+const URLS = [
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', // 0: POSITRON DARK
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // 1: WORLD IMAGERY
+  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', // 2: STADIAMAPS ALIDEA SMOOTH DARK
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', // 3: OPENTOPOMAP
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', // 4: OPENTOPOMAP (for 3D, same layer with CSS tilt)
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', // 5: POSITRON LIGHT
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', // 6: OSM STANDARD
+  'https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png', // 7: STAMEN TONER
+  'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', // 8: STAMEN TERRAIN
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', // 9: CARTO VOYAGER
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', // 10: CARTO VOYAGER LABELS
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', // 11: CARTO VOYAGER NO LABELS
+];
+
+let brightness=60, TC='#ff3333', ISZ=36;
+let soundOn=true, vol=0.6;
+let userPos=null, uMarker=null, selId=null;
+let obs={}, hLog=[], hMode=false, hPlay=false, hInt=null;
+let audioCtx=null;
+let thermalMode='off';
+let thermalMinSpeed=0;
+let thermalMaxSpeed=600;
+
+// Drone specifications for detailed info
+const droneSpecs = {
+  'shahed-vp-standart': {
+    name: 'Shahed-136',
+    type: 'Безпілотний літачний апарат',
+    damage: 'Кумулятивна',
+    blastRadius: '5-*_
