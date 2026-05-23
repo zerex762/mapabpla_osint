@@ -177,509 +177,81 @@
         font-family: 'Orbitron';
     }
 
-    #adminPanel {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.95); z-index: 10000; display: none;
-        padding: 30px; backdrop-filter: blur(10px); overflow-y: auto;
+    /* ---------- TABLE SHEET (active targets) ---------- */
+    .bsheet-bg{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);}
+    .bsheet-bg.show{display:flex;}
+    .bsheet{
+        background:#0c0808;border:1px solid var(--border);border-bottom:none;
+        border-radius:20px 20px 0 0;width:min(560px,100%);
+        padding:20px 16px calc(var(--safe-b) + 28px);
+        max-height:88vh;overflow-y:auto;
+        animation:shUp .32s cubic-bezier(.19,1,.22,1) forwards;
     }
-    .admin-box {
-        max-width: 450px; margin: 0 auto; border: 1px solid var(--accent);
-        padding: 25px; border-radius: 15px; background: #000;
-        box-shadow: 0 0 50px rgba(255, 51, 51, 0.2);
-    }
-    .admin-input, .admin-select {
-        width: 100%; background: #111; color: #fff; border: 1px solid #333;
-        padding: 12px; margin-top: 5px; font-family: 'Orbitron'; font-size: 12px;
-    }
-    .admin-btn {
-        width: 100%; padding: 12px; margin-top: 15px; border: none;
-        cursor: pointer; font-family: 'Orbitron'; font-weight: bold;
-        transition: 0.2s;
-    }
-    .btn-add { background: var(--accent); color: #fff; }
-    .btn-clear { background: var(--danger); color: #fff; margin-top: 10px; opacity: 0.8; }
-    .btn-add:hover { box-shadow: 0 0 15px var(--accent); }
-
-    @media (max-width: 600px) {
-        .top-ui { flex-direction: column; gap: 8px; }
-        .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
-        .side-panel.active { right: 20px; left: 20px; }
-        #radarPanel { bottom: 20px; left: 20px; width: calc(100% - 40px); }
-    }
-</style>
-</head>
-<body oncontextmenu="return false;">
-
-<div id="splash-screen">
-    <div class="logo-anim" style="color:var(--accent)">SKY DEFENSE</div>
-    <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Initializing Systems...</div>
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-    </div>
-</div>
-
-<div id="privacy-modal">
-    <div class="policy-box">
-        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
-        <div class="policy-content">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на OSINT-моніторингу та могут мати похибку.</p>
-            <p><strong>4. ПРАВИЛО:</strong> Додаток не є офіційним джерелом тривоги. Слухайте ПС ЗСУ.</p>
-        </div>
-        <button class="accept-btn" onclick="acceptPrivacy()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
-    </div>
-</div>
-
-<div id="adminPanel">
-    <div class="admin-box">
-        <h2 style="color: var(--accent); font-family: 'Orbitron'; font-size: 16px; margin-bottom: 20px; text-align: center;">COMMAND CENTER</h2>
-
-        <div class="data-block">
-            <span class="data-label">Type of Target</span>
-            <select id="admType" class="admin-select">
-                <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-                <option value="shahed-238-jet">Shahed-238 (Jet)</option>
-                <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
-                <option value="tu-95ms-strat">Tu-95MS Strategy</option>
-            </select>
-        </div>
-
-        <div class="data-block">
-            <span class="data-label">Angle (0-360°)</span>
-            <input type="number" id="admAngle" class="admin-input" value="0">
-        </div>
-
-        <div class="data-block">
-            <span class="data-label">Accuracy Radius (meters)</span>
-            <input type="number" id="admAcc" class="admin-input" value="5000">
-        </div>
-
-        <button class="admin-btn btn-add" onclick="spawnDrone()">DEPLOY TARGET</button>
-        <button class="admin-btn btn-clear" onclick="clearDrones()">PURGE ALL DATA</button>
-        <button class="admin-btn" style="background: #222; color: #fff;" onclick="location.hash=''">CLOSE PANEL</button>
-
-        <p style="font-size: 9px; color: #555; text-align: center; margin-top: 15px;">Target will appear at crosshair position</p>
-    </div>
-</div>
-
-<div id="map"></div>
-
-<div class="main-crosshair">
-    <span class="tl"></span><span class="tr"></span>
-    <span class="bl"></span><span class="br"></span>
-</div>
-
-<div id="mapNotify">SYNC COMPLETED</div>
-
-<div class="top-ui">
-    <div class="status-group">
-        <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-        <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
-        <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
-    </div>
-    <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
-</div>
-
-<div id="sidePanel" class="side-panel">
-    <div class="panel-header">
-        <span>TRACKING INFO</span>
-        <i class="fas fa-times" onclick="closeInfo()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
-    </div>
-    <div class="panel-body">
-        <div class="data-block"><span class="data-label">Class</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Detection Time</span><div class="data-value live-timer" id="objLifetime">0 хв 0 сек</div></div>
-        <div class="data-block"><span class="data-label">Position</span><div class="data-value" id="objCoords" style="color: var(--accent);">--</div></div>
-        <div class="data-block" style="display: flex; justify-content: space-between;">
-            <div style="width: 50%;"><span class="data-label">Range / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width: 50%;"><span class="data-label">Course</span><div class="data-value" id="objAngle">--</div></div>
-        </div>
-        <div class="data-block"><span class="data-label">Reference</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.6;">--</div></div>
-    </div>
-</div>
-
-<!-- Radar Panel -->
-<div id="radarPanel">
-    <div class="radar-title">
-        <span>RADAR • 40 KM</span>
-        <i class="fas fa-times" onclick="toggleRadar()" style="cursor:pointer; font-size:14px;opacity:0.6;"></i>
-    </div>
-    <canvas id="radarCanvas" width="200" height="200"></canvas>
-    <div class="radar-list" id="radarList">
-        <div id="radarEmpty">Немає цілей в радіусі 40 км</div>
-    </div>
-</div>
-
-<div class="bottom-nav" id="ui-nav" style="display: none;">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати проєкт">
-        <i class="fa-solid fa-heart"></i>
-    </a>
-    <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
-    <button class="c-btn" onclick="toggleRadar()" title="Радар"><i class="fas fa-radar"></i></button>
-    <button class="c-btn" onclick="spawnTestTarget()" title="Тестова ціль"><i class="fa-solid fa-bolt"></i></button>
-    <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
-</div>
-
-<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">PRIVACY & SECURITY PROTOCOL</a>
-
-<script>
-/* ==============================================================
-   SETTINGS & HELPERS
-   ============================================================== */
-const themes = [
-    { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-    { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile={z}/{y}/{x}' },
-    { name: "LIGHT MODE", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
-];
-let tIdx = 0;
-
-const map = L.map('map', {
-    zoomControl: false,
-    attributionControl: false,
-    maxBounds: [[43, 21], [53, 41]],
-    minZoom: 5
-}).setView([48.4, 32.5], 6);
-let layer = L.tileLayer(themes[0].url).addTo(map);
-
-function nextTheme() {
-    tIdx = (tIdx + 1) % themes.length;
-    map.removeLayer(layer);
-    layer = L.tileLayer(themes[tIdx].url).addTo(map);
-    showNotify("LAYER: " + themes[tIdx].name);
-}
-function showNotify(text) {
-    const n = document.getElementById('mapNotify');
-    n.textContent = text;
-    n.style.opacity = "1";
-    setTimeout(() => n.style.opacity = "0", 1500);
-}
-
-/* ==============================================================
-   SPLASH SCREEN – guaranteed hide
-   ============================================================== */
-window.addEventListener('load', () => {
-    const splash   = document.getElementById('splash-screen');
-    const bootText = document.getElementById('bootStatus');
-    const msgs = [
-        'Loading OSINT modules...',
-        'Establishing satellite link...',
-        'Systems nominal'
-    ];
-    let i = 0;
-    const iv = setInterval(() => {
-        if (i < msgs.length) {
-            bootText.textContent = msgs[i++];
-        } else clearInterval(iv);
-    }, 800);
-
-    function hideSplash() {
-        splash.style.opacity = '0';
-        splash.style.transition = 'opacity .35s';
-        setTimeout(() => {
-            splash.style.display = 'none';
-            try { startup(); } catch (e) {
-                console.error('Startup failed:', e);
-                // Even if startup fails we still show the UI so user isn’t stuck on a black screen
-                document.getElementById('ui-nav').style.display = 'flex';
-                showNotify('SYSTEM READY (with errors)');
-            }
-        }, 350);
-    }
-
-    if (localStorage.getItem('policyAccepted')) {
-        setTimeout(hideSplash, 2000); // let the splash animation finish
-    } else {
-        showPrivacy(); // will call hideSplash after user accepts
-    }
-
-    // Safety net: if for any reason splash is still shown after 15 s, hide it forcibly
-    setTimeout(() => {
-        if (splash.style.display !== 'none') {
-            console.warn('Splash timeout – forcing hide');
-            hideSplash();
-        }
-    }, 15000);
-});
-
-/* ==============================================================
-   PRIVACY MODAL
-   ============================================================== */
-function showPrivacy() {
-    document.getElementById('privacy-modal').style.display = 'flex';
-    document.getElementById('map').style.filter = 'blur(15px) grayscale(1)';
-    document.getElementById('map').style.pointerEvents = 'none';
-}
-function acceptPrivacy() {
-    localStorage.setItem('policyAccepted', 'true');
-    const modal = document.getElementById('privacy-modal');
-    modal.style.opacity = '0';
-    modal.style.transition = 'opacity .35s';
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.getElementById('map').style.filter = 'none';
-        document.getElementById('map').style.pointerEvents = 'auto';
-        hideSplash();   // defined above
-    }, 500);
-}
-
-/* ==============================================================
-   ADMIN PANEL
-   ============================================================== */
-function checkAdmin() {
-    if (window.location.hash === '#admin') {
-        document.getElementById('adminPanel').style.display = 'block';
-    } else {
-        document.getElementById('adminPanel').style.display = 'none';
-    }
-}
-window.addEventListener('hashchange', checkAdmin);
-
-/* ==============================================================
-   FIREBASE SETUP (safe wrapper)
-   ============================================================== */
-let db = null;          // will hold the Firebase reference if init succeeds
-let firebaseReady = false;
-
-function initFirebase() {
-    try {
-        // *** REPLACE THIS WITH YOUR OWN DATABASE URL ***
-        const fbUrl = "https://shmap-8c0fa-default-rtdb.firebaseio.com"; // example placeholder
-        firebase.initializeApp({ databaseURL: fbUrl });
-        db = firebase.database().ref('drones');
-        firebaseReady = true;
-        console.log('Firebase initialised successfully');
-    } catch (err) {
-        console.warn('Firebase init failed – running in demo mode', err);
-        firebaseReady = false;
-        db = null; // we will treat missing db as “no data”
-    }
-}
-initFirebase();
-
-/* ==============================================================
-   ONLINE PRESENCE (only if Firebase ready)
-   ============================================================== */
-const onlineDisplay = document.getElementById('onlineCount');
-if (firebaseReady) {
-    const presenceRef = firebase.database().ref('presence');
-    const connectedRef = firebase.database().ref('.info/connected');
-
-    connectedRef.on('value', snap => {
-        if (snap.val() === true) {
-            const con = presenceRef.push(true);
-            con.onDisconnect().remove();
-        }
-    });
-
-    presenceRef.on('value', snap => {
-        onlineDisplay.textContent = snap.numChildren() || 0;
-    });
-} else {
-    // demo mode – just show a static number
-    onlineDisplay.textContent = '1';
-}
-
-/* ==============================================================
-   SPEED MAP & FALLBACK ICON
-   ============================================================== */
-const SPEED_MAP = {
-    'shahed-vp-standart': 185,
-    'shahed-238-jet': 550,
-    'kalibr-cruise': 880,
-    'tu-95ms-strat': 750
-};
-const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
-
-let userPos = null;
-let userMarker = null;
-let selectedId = null;
-
-/* ==============================================================
-   GEOLOCATION
-   ============================================================== */
-function locateMe() {
-    if (!localStorage.getItem('policyAccepted')) return;
-    map.locate({ setView: true, maxZoom: 10, timeout: 12000 });
-}
-map.on('locationfound', e => {
-    userPos = e.latlng;
-    document.getElementById('gpsStatus').textContent = 'LINK ACTIVE';
-    document.getElementById('gpsStatus').style.color = 'var(--success)';
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.circleMarker(userPos, {
-        radius: 6, color: '#fff', weight: 2,
-        fillColor: '#ff9d00', fillOpacity: 0.8
-    }).addTo(map);
-});
-map.on('locationerror', e => {
-    console.warn('Location error:', e.message);
-    document.getElementById('gpsStatus').textContent = 'ERROR';
-    document.getElementById('gpsStatus').style.color = 'var(--danger)';
-    userPos = null;
-    if (userMarker) map.removeLayer(userMarker);
-    // fallback to centre of Ukraine
-    userMarker = L.circleMarker([48.4, 32.5], {
-        radius: 6, color: '#fff', weight: 2,
-        fillColor: '#ff9d00', fillOpacity: 0.8
-    }).addTo(map);
-});
-
-/* ==============================================================
-   WEATHER FETCH (wrapped in try/catch)
-   ============================================================== */
-async function fetchWeather(lat, lng) {
-    try {
-        const resp = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility&timezone=auto`
-        );
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        const cw = data.current_weather;
-        const h = data.hourly;
-        const wmo = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
-        const wmoD = {0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
-        document.getElementById('wxT').textContent = `${Math.round(cw.temperature)}°`;
-        document.getElementById('wxIco').textContent = wmo[cw.weathercode] || '🌡';
-        document.getElementById('wx1').textContent = `${Math.round(cw.temperature)}°C`;
-        document.getElementById('wx2').textContent = h?.apparent_temperature ? `${Math.round(h.apparent_temperature[0])}°C` : '--';
-        document.getElementById('wx3').textContent = h?.relativehumidity_2m ? `${h.relativehumidity_2m[0]}%` : '--';
-        document.getElementById('wx4').textContent = `${Math.round(cw.windspeed)} км/г`;
-        document.getElementById('wx5').textContent = h?.visibility ? `${(h.visibility[0]/1000).toFixed(1)} км` : '--';
-        document.getElementById('wx6').textContent = wmoD[cw.weathercode] || '--';
-    } catch (err) {
-        console.warn('Weather fetch error:', err);
-        document.getElementById('wxT').textContent = '--';
-        document.getElementById('wxIco').textContent = '🌡';
-        document.getElementById('wx1').textContent = '--°C';
-        document.getElementById('wx2').textContent = '--';
-        document.getElementById('wx3').textContent = '--';
-        document.getElementById('wx4').textContent = '--';
-        document.getElementById('wx5').textContent = '--';
-        document.getElementById('wx6').textContent = '--';
-    }
-}
-function toggleWX() {
-    const p = document.getElementById('wxPanel');
-    p.style.display = p.style.display === 'block' ? 'none' : 'block';
-}
-
-/* ==============================================================
-   DATA SYNC (Firebase listeners) – safe for demo mode
-   ============================================================== */
-let obs = {}; // id => {marker, line, circle, data}
-function sync(id, raw) {
-    if (!raw) return;
-    const now = Date.now();
-    if ((now - (raw.timestamp || now)) / 1000 / 60 > 45) {
-        removeObject(id);
-        return;
-    }
-
-    const angleRad = (raw.angle - 90) * Math.PI / 180;
-    const vecLen = 0.015;
-    const tail = [raw.lat - Math.cos(angleRad) * vecLen, raw.lng - Math.sin(angleRad) * vecLen];
-    const errRadius = raw.accuracy || 5000;
-
-    if (obs[id]) {
-        obs[id].marker.setLatLng([raw.lat, raw.lng]);
-        obs[id].circle.setLatLng([raw.lat, raw.lng]);
-        obs[id].circle.setRadius(errRadius);
-        const img = obs[id].marker.getElement()?.querySelector('img');
-        if (img) img.style.transform = `rotate(${raw.angle || 0}deg)`;
-        obs[id].line.setLatLngs([[raw.lat, raw.lng], tail]);
-        obs[id].data = raw;
-        if (selectedId === id) updateUI(id, raw);
-    } else {
-        const circle = L.circle([raw.lat, raw.lng], {
-            radius: errRadius,
-            color: '#ff3333',
-            weight: 1,
-            fillColor: '#ff3333',
-            fillOpacity: 0.1,
-            dashArray: '5,10',
-            interactive: false
-        }).addTo(map);
-
-        const iconSize = 48;
-        const icon = L.divIcon({
-            className: 'uav-icon active-uav',
-            html: `<img src="${raw.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${raw.angle || 0}deg);">`,
-            iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize/2, iconSize/2]
-        });
-
-        const marker = L.marker([raw.lat, raw.lng], { icon: icon }).addTo(map);
-        const line = L.polyline([[raw.lat, raw.lng], tail], {
-            color: '#ff3333',
-            weight: 1,
-            opacity: 0.6,
-            dashArray: '2,5'
-        }).addTo(map);
-
-        marker.on('click', e => {
-            L.DomEvent.stopPropagation(e);
-            selectedId = id;
-            updateUI(id, raw);
-        });
-
-        obs[id] = { marker, line, circle, data: raw };
-    }
-    updateCounters();
-}
-function removeObject(id) {
-    if (obs[id]) {
-        map.removeLayer(obs[id].marker);
-        map.removeLayer(obs[id].line);
-        map.removeLayer(obs[id].circle);
-        if (selectedId === id) closeInfo();
-        delete obs[id];
-        updateCounters();
-    }
-}
-function updateCounters() {
-    document.getElementById('uavCount').textContent = Object.keys(obs).length;
-}
-
-/* ==============================================================
-   UI UPDATE (side panel)
-   ============================================================== */
-function getLifetime(ts) {
-    if (!ts) return '0 хв 0 сек';
-    const diff = Date.now() - ts;
-    const totalSec = Math.floor(diff / 1000);
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return `${min} хв ${sec} сек`;
-}
-function updateUI(id, d) {
-    document.getElementById('sidePanel').classList.add('active');
-    document.getElementById('objId').textContent = `REF_${id.substring(0,6).toUpperCase()}`;
-    document.getElementById('objType').textContent = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-    document.getElementById('objCoords').textContent = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-    document.getElementById('objAngle').textContent = `${Math.round(d.angle || 0)}°`;
-    document.getElementById('objLifetime').textContent = getLifetime(d.timestamp);
-
-    if (userPos) {
-        const distance = map.distance(userPos, [d.lat, d.lng]) / 1000;
-        const speed = SPEED_MAP[d.type] || 200;
-        const etaMin = Math.round(distance / speed * 60);
-        document.getElementById('objRange').innerHTML =
-            `${distance.toFixed(1)} KM<br><span style="color:var(--accent);font-size:10px;">ETA: ~${etaMin} MIN</span>`;
-    }
-}
-function closeInfo() {
-    document.getElementById('sidePanel').classList.remove('active');
-    selectedId = null;
-}
-map.on('click', () => { closeInfo(); });
-
-/* ==============================================================
-   SPAWN / CLEAR (admin)
-   ============================================================== */
-function spawnDrone() {
-    if (!firebaseReady) {
-        showNotify('Firebase not available – demo mode');
-        return;
-    }
-    const centre_
+    @keyframes shUp{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+    .bsh-drag{width:36px;height:3px;background:rgba(255,255,255,.12);border-radius:99px;margin:0 auto 18px;}
+    .bsh-title{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.2em;text-align:center;margin-bottom:16px;}
+    .bsh-close{display:block;width:100%;margin-top:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);font-family:'Orbitron';font-size:9px;letter-spacing:.2em;padding:10px;cursor:pointer;border-radius:8px;transition:.2s;}
+    .bsh-close:hover{color:#fff;}
+    /* THEME GRID (re‑used vars from :root) */
+    .th-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+    .th-card{border:1px solid var(--border2);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+    .th-card:active{transform:scale(.97);}
+    .th-card.on{border-color:var(--a);box-shadow:0 0 12px rgba(255,51,51,.3);}
+    .th-card.on::after{content:'✓';position:absolute;top:4px;right:6px;color:var(--a);font-size:11px;font-weight:900;}
+    .th-prev{height:54px;}
+    .p0{background:linear-gradient(135deg,#0d1117,#161b22,#0a0a0a);}
+    .p1{background:linear-gradient(135deg,#1a3a1a,#2d5a1b,#4a7c3f);}
+    .p2{background:linear-gradient(135deg,#060914,#0a0f24,#0d1530);}
+    .p3{background:linear-gradient(135deg,#c8d8a0,#b0c080,#98a870);}
+    .p4{height:54px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:13px;color:#00e5ff;text-shadow:0 0 8px #00e5ff;}
+    .p5{background:linear-gradient(135deg,#e8e0d0,#d4c9b5,#c8bea8);}
+    .p6{background:linear-gradient(135deg,#000000,#434343,#000000);}
+    .p7{background:linear-gradient(135deg,#000000,#000000,#000000);}
+    .p8{background:linear-gradient(135deg,#000000,#000000,#000000);}
+    .p9{background:linear-gradient(135deg,#000000,#000000,#000000);}
+    .p10{background:linear-gradient(135deg,#000000,#000000,#000000);}
+    .p11{background:linear-gradient(135deg,#000000,#000000,#000000);}
+    .th-name{padding:4px 5px;font-size:7px;font-family:'Orbitron';color:rgba(255,255,255,.5);letter-spacing:.08em;text-align:center;background:#060303;}
+    /* Bright row */
+    .br-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .br-row span{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);white-space:nowrap;letter-spacing:.1em;}
+    .rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+    .rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 5px var(--a);}
+    .rng-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
+    /* SETTINGS */
+    .set-sec{margin-bottom:16px;}
+    .set-sec-lbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;display:block;border-bottom:1px solid var(--border2);padding-bottom:5px;}
+    .set-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .set-row > span{font-size:12px;color:rgba(255,255,255,.65);}
+    /* toggle */
+    .tog{position:relative;width:38px;height:20px;flex-shrink:0;}
+    .tog input{opacity:0;width:0;height:0;}
+    .tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:20px;cursor:pointer;transition:.25s;}
+    .tog-sl:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#555;border-radius:50%;transition:.25s;}
+    .tog input:checked+.tog-sl{background:var(--a);}
+    .tog input:checked+.tog-sl:before{transform:translateX(18px);background:#fff;}
+    /* swatches */
+    .swg{display:flex;gap:6px;}
+    .sw{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.15s;}
+    .sw.on{border-color:#fff;transform:scale(1.2);}
+    .sl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    .sl-row > span{font-size:11px;color:rgba(255,255,255,.65);flex-shrink:0;width:110px;}
+    .sl-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:30px;text-align:right;}
+    .snd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+    .snd-btn{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:rgba(255,255,255,.55);font-size:10px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.15s;text-align:left;}
+    .snd-btn:hover,.snd-btn.on{border-color:var(--a);color:var(--a);}
+    /* TABLE SHEET */
+    #tblTable{width:100%;border-collapse:collapse;font-size:10px;}
+    #tblTable th{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--border2);}
+    #tblTable td{padding:6px 6px;border-bottom:1px solid rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:'Orbitron';font-size:9px;}
+    #tblTable tr:hover td{background:var(--a3);cursor:pointer;}
+    .t-badge{background:var(--a2);border:1px solid var(--border);color:var(--a);padding:1px 5px;border-radius:3px;font-size:8px;}
+    /* END OF TABLE SHEET STYLES */
+    /* Re‑use the CSS variables from :root for the sheet */
+    :root {
+        --border:rgba(255,51,51,0.22);
+        --border2:rgba(255,255,255,0.07);
+        --a:#ff3333;
+        --a2:rgba(255,51,51,0.18);
+        --a3:rgba(255,51,51,0.08);
+        --safe-b:env(safe-area-inset-bottom
