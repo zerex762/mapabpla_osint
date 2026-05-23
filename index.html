@@ -102,7 +102,6 @@
     .box { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 8px; box-shadow: var(--panel-shadow); }
     .glow { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-family: 'Orbitron'; }
 
-    /* ── БІЖУЧИЙ РЯДОК З ПРИВІТАННЯМ ── */
     .ticker-container {
         width: 100%; max-width: 450px; background: var(--glass); backdrop-filter: blur(10px);
         border: 1px solid var(--neon-border); border-radius: 6px; overflow: hidden;
@@ -131,7 +130,23 @@
     
     .live-timer { color: var(--success); text-shadow: 0 0 5px var(--success); }
 
-    /* ── ПАНЕЛЬ РАДАРА ── */
+    /* Панель списку цілей ліворуч */
+    .list-panel { position: absolute; top: 140px; left: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 290px; max-height: calc(100vh - 260px); border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); display: flex; flex-direction: column; }
+    .list-panel.active { left: 20px; }
+    .list-body { padding: 10px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
+    
+    .target-item {
+        background: rgba(0,0,0,0.4); border: 1px solid rgba(255,51,51,0.1);
+        padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        display: flex; flex-direction: column; gap: 4px;
+    }
+    .target-item:hover { border-color: var(--accent); background: rgba(255,51,51,0.05); }
+    .target-item-header { display: flex; justify-content: space-between; align-items: center; }
+    .target-item-type { font-family: 'Orbitron'; font-size: 11px; font-weight: bold; color: #fff; }
+    .target-item-id { font-size: 9px; opacity: 0.5; font-family: 'Orbitron'; }
+    .target-item-meta { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.7); }
+    .target-item-eta { color: var(--warning); font-family: 'Orbitron'; font-size: 9px; }
+
     .radar-panel { position: absolute; bottom: 90px; left: 20px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--neon-border); border-radius: 12px; padding: 15px; width: 240px; display: none; box-shadow: var(--panel-shadow); animation: radarFade 0.3s ease; }
     .radar-panel.active { display: block; }
     @keyframes radarFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -177,7 +192,9 @@
         .top-header-line { flex-direction: column; gap: 8px; align-items: flex-start; }
         .ticker-container { max-width: 100%; }
         .side-panel { width: calc(100% - 40px); top: auto; bottom: 100px; }
-        .side-panel.active { right: 20px; left: 20px; }
+        .side-panel.active { right: 20px; left: 20px; z-index: 2200; }
+        .list-panel { width: calc(100% - 40px); top: 180px; bottom: auto; max-height: 200px; }
+        .list-panel.active { left: 20px; }
         .radar-panel { left: 20px; right: 20px; width: auto; bottom: 90px; }
         #mapNotify { top: 190px; }
     }
@@ -249,12 +266,21 @@
             <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
             <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
         </div>
-        <div class="box"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
+        <div class="box" style="pointer-events: auto; cursor: pointer;" onclick="toggleListPanel()"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
     </div>
     
     <div class="ticker-container">
         <div class="ticker-text">УСИК ВІТАЄМО З ПЕРЕМОГОЮ! • СЛАВА УКРАЇНІ! • SKY DEFENSE RADAR SYSTEM</div>
     </div>
+</div>
+
+<div id="listPanel" class="list-panel">
+    <div class="panel-header">
+        <span><i class="fa-solid fa-list-radar"></i> TARGET LIST</span>
+        <i class="fas fa-times" onclick="toggleListPanel()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
+    </div>
+    <div class="list-body" id="listBody">
+        </div>
 </div>
 
 <div id="radarPanel" class="radar-panel">
@@ -283,6 +309,7 @@
     <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримати проєкт">
         <i class="fa-solid fa-heart"></i>
     </a>
+    <button class="c-btn" id="listBtn" onclick="toggleListPanel()" title="Список цілей"><i class="fa-solid fa-list"></i></button>
     <button class="c-btn" onclick="nextTheme()" title="Змінити карту"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" id="radarBtn" onclick="toggleRadar()" title="Тактичний радар"><i class="fa-solid fa-circle-dot"></i></button>
     <button class="c-btn" onclick="locateMe()" title="Центрувати на мені"><i class="fa-solid fa-location-crosshairs"></i></button>
@@ -396,6 +423,8 @@
     function fullStartup() {
         document.getElementById('ui-nav').style.display = 'flex';
         locateMe();
+        document.getElementById('listPanel').classList.add('active'); // Автоматично відкриваємо список при старті
+        document.getElementById('listBtn').classList.add('active');
         showNotify("SYSTEM READY");
     }
 
@@ -431,6 +460,7 @@
     let selectedId = null;
     let isRadarOn = false;
     let radarInterval = null;
+    let listActive = true;
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
@@ -443,6 +473,7 @@
         document.getElementById('gpsStatus').style.color = "var(--success)";
         if (userMarker) map.removeLayer(userMarker);
         userMarker = L.circleMarker(userPos, { radius: 6, color: '#fff', weight: 2, fillColor: '#ff9d00', fillOpacity: 0.8 }).addTo(map);
+        updateListUI();
     });
 
     let obs = {};
@@ -456,9 +487,81 @@
         return `${min} хв ${sec} сек`;
     }
 
+    function toggleListPanel() {
+        listActive = !listActive;
+        const panel = document.getElementById('listPanel');
+        const btn = document.getElementById('listBtn');
+        if (listActive) {
+            panel.classList.add('active');
+            btn.classList.add('active');
+        } else {
+            panel.classList.remove('active');
+            btn.classList.remove('active');
+        }
+    }
+
+    function focusOnTarget(id) {
+        if(obs[id]) {
+            const d = obs[id].data;
+            map.setView([d.lat, d.lng], 9);
+            selectedId = id;
+            updateUI(id, d);
+        }
+    }
+
+    function updateListUI() {
+        const body = document.getElementById('listBody');
+        body.innerHTML = '';
+        
+        const keys = Object.keys(obs);
+        if(keys.length === 0) {
+            body.innerHTML = '<div style="text-align:center; font-size:11px; opacity:0.4; padding:20px;">НЕМАЄ АКТИВНИХ ЦІЛЕЙ</div>';
+            return;
+        }
+
+        keys.forEach(id => {
+            const d = obs[id].data;
+            const typeText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
+            const lifetimeText = getLifetime(d.timestamp);
+            
+            let distanceText = '-- КМ';
+            let etaText = '';
+            
+            if (userPos) {
+                const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
+                const speed = (SPEED_MAP[d.type] || 200);
+                const timeMinutes = Math.round(distance / speed * 60);
+                distanceText = `${distance.toFixed(1)} KM`;
+                etaText = `ETA: ~${timeMinutes} MIN`;
+            }
+
+            const item = document.createElement('div');
+            item.className = `target-item ${selectedId === id ? 'active-target-item' : ''}`;
+            if(selectedId === id) item.style.borderColor = 'var(--accent)';
+            
+            item.onclick = () => focusOnTarget(id);
+            item.innerHTML = `
+                <div class="target-item-header">
+                    <span class="target-item-type"><i class="fa-solid fa-plane-triangle-dashed"></i> ${typeText}</span>
+                    <span class="target-item-id">#${id.substring(0,4).toUpperCase()}</span>
+                </div>
+                <div class="target-item-meta">
+                    <span>Курс: ${Math.round(d.angle || 0)}°</span>
+                    <span>${distanceText}</span>
+                </div>
+                <div class="target-item-header" style="margin-top:2px;">
+                    <span style="font-size:9px; opacity:0.6;"><i class="fa-solid fa-stopwatch"></i> ${lifetimeText}</span>
+                    <span class="target-item-eta">${etaText}</span>
+                </div>
+            `;
+            body.appendChild(item);
+        });
+    }
+
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
+        // Автоматичне видалення цілей, яким понад 45 хвилин
         if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
             removeObject(id);
             return;
@@ -510,11 +613,13 @@
                 L.DomEvent.stopPropagation(e);
                 selectedId = id;
                 updateUI(id, d);
+                updateListUI();
             });
 
             obs[id] = { marker, line, circle, data: d };
         }
         updateCounters();
+        updateListUI();
     }
 
     function removeObject(id) {
@@ -525,6 +630,7 @@
             if (selectedId === id) closeInfo();
             delete obs[id];
             updateCounters();
+            updateListUI();
         }
     }
 
@@ -549,6 +655,7 @@
     function closeInfo() { 
         document.getElementById('sidePanel').classList.remove('active'); 
         selectedId = null;
+        updateListUI();
     }
 
     map.on('click', () => { closeInfo(); });
@@ -578,8 +685,11 @@
         let sweepAngle = 0;
 
         radarInterval = setInterval(() => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Ефект невеликого розмиття (післясвітіння) замість повного очищення
+            ctx.fillStyle = 'rgba(5, 3, 3, 0.12)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Малювання тактичної сітки кілець
             ctx.strokeStyle = 'rgba(255, 51, 51, 0.15)';
             ctx.lineWidth = 1;
             for (let r = 25; r <= cx; r += 25) {
@@ -588,37 +698,44 @@
                 ctx.stroke();
             }
 
+            // Перехрестя радара
             ctx.beginPath();
             ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height);
             ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy);
             ctx.stroke();
 
-            ctx.strokeStyle = 'rgba(255, 51, 51, 0.6)';
-            ctx.lineWidth = 1.5;
+            // Динамічний промінь розгортки (Sweep Line)
+            ctx.strokeStyle = 'rgba(255, 51, 51, 0.7)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(cx + Math.cos(sweepAngle) * cx, cy + Math.sin(sweepAngle) * cy);
             ctx.stroke();
 
+            // Відмальовування виявлених цілей у радіусі 50 км
             if (userPos) {
                 Object.keys(obs).forEach(id => {
                     const d = obs[id].data;
-                    const distance = map.distance(userPos, [d.lat, d.lng]) / 1000; 
+                    const distanceMeters = map.distance(userPos, [d.lat, d.lng]);
+                    const distanceKm = distanceMeters / 1000; 
                     
-                    if (distance <= 50) {
+                    if (distanceKm <= 50) {
                         const dLat = d.lat - userPos.lat;
                         const dLng = d.lng - userPos.lng;
-                        const angle = Math.atan2(dLat, dLng);
+                        const targetAngle = Math.atan2(-dLat, dLng);
                         
                         const scaleFactor = cx / 50; 
-                        const tx = cx + Math.cos(angle) * (distance * scaleFactor);
-                        const ty = cy - Math.sin(angle) * (distance * scaleFactor); 
+                        const radarDist = distanceKm * scaleFactor;
 
+                        const tx = cx + Math.cos(targetAngle) * radarDist;
+                        const ty = cy + Math.sin(targetAngle) * radarDist; 
+
+                        // Візуальний маркер цілі на радарі
                         ctx.fillStyle = 'var(--accent)';
-                        ctx.shadowBlur = 8;
+                        ctx.shadowBlur = 10;
                         ctx.shadowColor = 'var(--accent)';
                         ctx.beginPath();
-                        ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+                        ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.shadowBlur = 0; 
                     }
@@ -629,11 +746,13 @@
         }, 30);
     }
 
+    // Головний глобальний таймер оновлення даних інтерфейсу
     setInterval(() => {
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
         if (selectedId && obs[selectedId]) {
             document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
         }
+        updateListUI(); // Оновлюємо таймери в лівому списку кожну секунду
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
