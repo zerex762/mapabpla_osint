@@ -83,12 +83,11 @@
 
     .uav-icon img {
         width: 48px; height: 48px;
-        filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px var(--accent));
     }
     .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
     @keyframes targetPulse {
-        0%, 100% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(80%) drop-shadow(0 0 3px var(--accent)); }
-        50% { filter: invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(120%) drop-shadow(0 0 15px var(--accent)); }
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
     }
 
     .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; z-index: 1500; pointer-events: none; opacity: 0.5; }
@@ -130,7 +129,6 @@
     
     .live-timer { color: var(--success); text-shadow: 0 0 5px var(--success); }
 
-    /* Панель списку цілей ліворуч */
     .list-panel { position: absolute; top: 140px; left: -350px; z-index: 2100; background: var(--glass); backdrop-filter: blur(15px); width: 290px; max-height: calc(100vh - 260px); border-radius: 12px; transition: 0.4s; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); display: flex; flex-direction: column; }
     .list-panel.active { left: 20px; }
     .list-body { padding: 10px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
@@ -236,6 +234,15 @@
             </select>
         </div>
         <div class="data-block">
+            <span class="data-label">Target Marker Color</span>
+            <select id="admColor" class="admin-select">
+                <option value="#ff3333" style="color:#ff3333;">CRIMSON (RED)</option>
+                <option value="#ff9900" style="color:#ff9900;">ORANGE</option>
+                <option value="#ffcc00" style="color:#ffcc00;">YELLOW</option>
+                <option value="#00ffff" style="color:#00ffff;">CYAN (BLUE)</option>
+            </select>
+        </div>
+        <div class="data-block">
             <span class="data-label">Angle (0-360°)</span>
             <input type="number" id="admAngle" class="admin-input" value="0">
         </div>
@@ -270,7 +277,7 @@
     </div>
     
     <div class="ticker-container">
-        <div class="ticker-text">УСИК ВІТАЄМО З ПЕРЕМОГОЮ! • СЛАВА УКРАЇНІ! • SKY DEFENSE RADAR SYSTEM</div>
+        <div class="ticker-text">УСИК ВІТАЕМ З ПЕРЕМОГОЮ! • СЛАВА УКРАЇНІ! • SKY DEFENSE RADAR SYSTEM</div>
     </div>
 </div>
 
@@ -377,9 +384,19 @@
     }
     window.addEventListener('hashchange', checkAdmin);
 
+    // Функція генерації CSS-фільтру для фарбування іконки на базі шістнадцяткового кольору
+    function getColorFilter(hex) {
+        if (hex === '#ff9900') return 'invert(59%) sepia(91%) saturate(1478%) hue-rotate(11deg) brightness(103%) contrast(101%) drop-shadow(0 0 8px #ff9900)';
+        if (hex === '#ffcc00') return 'invert(84%) sepia(85%) saturate(1487%) hue-rotate(354deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #ffcc00)';
+        if (hex === '#00ffff') return 'invert(89%) sepia(98%) saturate(3015%) hue-rotate(134deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #00ffff)';
+        // Default Red (#ff3333)
+        return 'invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px #ff3333)';
+    }
+
     function spawnDrone() {
         const center = map.getCenter();
         const type = document.getElementById('admType').value;
+        const color = document.getElementById('admColor').value;
         const angle = parseInt(document.getElementById('admAngle').value) || 0;
         const acc = parseInt(document.getElementById('admAcc').value) || 5000;
         
@@ -387,6 +404,7 @@
             lat: center.lat,
             lng: center.lng,
             type: type,
+            color: color,
             angle: angle,
             accuracy: acc,
             timestamp: Date.now()
@@ -423,7 +441,7 @@
     function fullStartup() {
         document.getElementById('ui-nav').style.display = 'flex';
         locateMe();
-        document.getElementById('listPanel').classList.add('active'); // Автоматично відкриваємо список при старті
+        document.getElementById('listPanel').classList.add('active');
         document.getElementById('listBtn').classList.add('active');
         showNotify("SYSTEM READY");
     }
@@ -523,6 +541,7 @@
             const d = obs[id].data;
             const typeText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
             const lifetimeText = getLifetime(d.timestamp);
+            const tgtColor = d.color || '#ff3333';
             
             let distanceText = '-- КМ';
             let etaText = '';
@@ -536,13 +555,15 @@
             }
 
             const item = document.createElement('div');
-            item.className = `target-item ${selectedId === id ? 'active-target-item' : ''}`;
-            if(selectedId === id) item.style.borderColor = 'var(--accent)';
+            item.className = 'target-item';
+            // Застосовуємо колір БПЛА до рамки елемента у списку
+            item.style.borderColor = selectedId === id ? tgtColor : `${tgtColor}33`;
+            if(selectedId === id) item.style.background = `${tgtColor}11`;
             
             item.onclick = () => focusOnTarget(id);
             item.innerHTML = `
                 <div class="target-item-header">
-                    <span class="target-item-type"><i class="fa-solid fa-plane-triangle-dashed"></i> ${typeText}</span>
+                    <span class="target-item-type" style="color: ${tgtColor};"><i class="fa-solid fa-plane-triangle-dashed"></i> ${typeText}</span>
                     <span class="target-item-id">#${id.substring(0,4).toUpperCase()}</span>
                 </div>
                 <div class="target-item-meta">
@@ -561,7 +582,6 @@
     function sync(id, d) {
         if (!d) return;
         const now = Date.now();
-        // Автоматичне видалення цілей, яким понад 45 хвилин
         if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
             removeObject(id);
             return;
@@ -571,23 +591,30 @@
         const vectorLen = 0.015; 
         const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
         const errorRadius = d.accuracy || 5000; 
+        const tgtColor = d.color || '#ff3333';
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
             obs[id].circle.setLatLng([d.lat, d.lng]);
             obs[id].circle.setRadius(errorRadius);
+            obs[id].circle.setStyle({ color: tgtColor, fillColor: tgtColor });
+            
             const img = obs[id].marker.getElement()?.querySelector('img');
-            if (img) img.style.transform = `rotate(${d.angle || 0}deg)`;
+            if (img) {
+                img.style.transform = `rotate(${d.angle || 0}deg)`;
+                img.style.filter = getColorFilter(tgtColor);
+            }
             obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
+            obs[id].line.setStyle({ color: tgtColor });
             obs[id].data = d;
 
             if (selectedId === id) updateUI(id, d);
         } else {
             const circle = L.circle([d.lat, d.lng], {
                 radius: errorRadius,
-                color: '#ff3333',
+                color: tgtColor,
                 weight: 1,
-                fillColor: '#ff3333',
+                fillColor: tgtColor,
                 fillOpacity: 0.1,
                 dashArray: '5, 10',
                 interactive: false
@@ -596,14 +623,14 @@
             const iconSize = 48;
             const icon = L.divIcon({ 
                 className: 'uav-icon active-uav', 
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg);">`, 
+                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg); filter: ${getColorFilter(tgtColor)};">`, 
                 iconSize: [iconSize, iconSize], 
                 iconAnchor: [iconSize/2, iconSize/2] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
             const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-                color: '#ff3333',
+                color: tgtColor,
                 weight: 1, 
                 opacity: 0.6, 
                 dashArray: '2, 5' 
@@ -635,9 +662,11 @@
     }
 
     function updateUI(id, d) {
+        const tgtColor = d.color || '#ff3333';
         document.getElementById('sidePanel').classList.add('active');
         document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
+        document.getElementById('objType').style.color = tgtColor;
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
@@ -646,13 +675,14 @@
             const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
             const speed = (SPEED_MAP[d.type] || 200);
             const timeMinutes = Math.round(distance / speed * 60);
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:var(--accent); font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
+            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:${tgtColor}; font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
         }
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     
     function closeInfo() { 
+        document.getElementById('sidePanel').classList.remove('remove');
         document.getElementById('sidePanel').classList.remove('active'); 
         selectedId = null;
         updateListUI();
@@ -685,11 +715,9 @@
         let sweepAngle = 0;
 
         radarInterval = setInterval(() => {
-            // Ефект невеликого розмиття (післясвітіння) замість повного очищення
             ctx.fillStyle = 'rgba(5, 3, 3, 0.12)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Малювання тактичної сітки кілець
             ctx.strokeStyle = 'rgba(255, 51, 51, 0.15)';
             ctx.lineWidth = 1;
             for (let r = 25; r <= cx; r += 25) {
@@ -698,13 +726,11 @@
                 ctx.stroke();
             }
 
-            // Перехрестя радара
             ctx.beginPath();
             ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height);
             ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy);
             ctx.stroke();
 
-            // Динамічний промінь розгортки (Sweep Line)
             ctx.strokeStyle = 'rgba(255, 51, 51, 0.7)';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -712,7 +738,6 @@
             ctx.lineTo(cx + Math.cos(sweepAngle) * cx, cy + Math.sin(sweepAngle) * cy);
             ctx.stroke();
 
-            // Відмальовування виявлених цілей у радіусі 50 км
             if (userPos) {
                 Object.keys(obs).forEach(id => {
                     const d = obs[id].data;
@@ -730,10 +755,10 @@
                         const tx = cx + Math.cos(targetAngle) * radarDist;
                         const ty = cy + Math.sin(targetAngle) * radarDist; 
 
-                        // Візуальний маркер цілі на радарі
-                        ctx.fillStyle = 'var(--accent)';
+                        // Відображення цілі на радарі у її власному динамічному кольорі
+                        ctx.fillStyle = d.color || '#ff3333';
                         ctx.shadowBlur = 10;
-                        ctx.shadowColor = 'var(--accent)';
+                        ctx.shadowColor = d.color || '#ff3333';
                         ctx.beginPath();
                         ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
                         ctx.fill();
@@ -746,13 +771,12 @@
         }, 30);
     }
 
-    // Головний глобальний таймер оновлення даних інтерфейсу
     setInterval(() => {
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
         if (selectedId && obs[selectedId]) {
             document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
         }
-        updateListUI(); // Оновлюємо таймери в лівому списку кожну секунду
+        updateListUI();
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
