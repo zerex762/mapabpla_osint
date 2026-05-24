@@ -83,6 +83,7 @@
 
     .uav-icon img {
         width: 48px; height: 48px;
+        will-change: transform;
     }
     .active-uav img { animation: targetPulse 2s infinite ease-in-out; }
     @keyframes targetPulse {
@@ -112,6 +113,7 @@
         font-family: 'Orbitron'; font-size: 11px; color: var(--accent);
         font-weight: bold; text-shadow: 0 0 6px rgba(255, 51, 51, 0.6);
         letter-spacing: 2px; animation: ticker 15s linear infinite;
+        will-change: transform;
     }
     @keyframes ticker {
         0% { transform: translate3d(0, 0, 0); }
@@ -162,7 +164,6 @@
     .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
     .privacy-link:hover { opacity: 1; color: var(--accent); }
 
-    /* Стилі для клієнтської панелі зміни кольорів */
     .user-color-panel {
         position: absolute; top: 75px; right: 20px; z-index: 2200;
         background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--neon-border);
@@ -372,9 +373,11 @@
     }).setView([48.4, 32.5], 6);
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
-
-    // Зберігаємо вибір користувача у LocalStorage (за замовчуванням "database" - брати колір адміна з бази)
     let globalUserOverrideColor = localStorage.getItem('userMarkerColor') || 'database';
+
+    // Попереднє завантаження іконки літака для радара (Canvas), щоб уникнути мережевих мерехтінь
+    const radarUavImage = new Image();
+    radarUavImage.src = 'shahed-vp-standart.png';
 
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
@@ -394,7 +397,6 @@
         const splash = document.getElementById('splash-screen');
         const bootStatus = document.getElementById('bootStatus');
         
-        // Ініціалізуємо стан активної точки в палітрі кольорів
         if (globalUserOverrideColor !== 'database') {
             document.querySelectorAll('.color-dot').forEach(dot => {
                 dot.classList.remove('selected');
@@ -404,8 +406,8 @@
             });
         }
 
-        setTimeout(() => bootStatus.innerText = "Loading OSINT Modules...", 1000);
-        setTimeout(() => bootStatus.innerText = "Establishing Satellite Link...", 2000);
+        setTimeout(() => bootStatus.innerText = "Loading OSINT Modules...", 500);
+        setTimeout(() => bootStatus.innerText = "Establishing Satellite Link...", 1200);
         setTimeout(() => {
             splash.style.opacity = '0';
             setTimeout(() => {
@@ -417,15 +419,11 @@
                 }
                 checkAdmin();
             }, 800);
-        }, 2600);
+        }, 1800);
     });
 
     function checkAdmin() {
-        if (window.location.hash === '#admin') {
-            document.getElementById('adminPanel').style.display = 'block';
-        } else {
-            document.getElementById('adminPanel').style.display = 'none';
-        }
+        document.getElementById('adminPanel').style.display = window.location.hash === '#admin' ? 'block' : 'none';
     }
     window.addEventListener('hashchange', checkAdmin);
 
@@ -437,11 +435,9 @@
         document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
         
         if (globalUserOverrideColor === color) {
-            // Повторне натискання повертає стандартний колір з бази даних
             globalUserOverrideColor = 'database';
             localStorage.removeItem('userMarkerColor');
             showNotify("COLOR: DEFAULT (DATABASE)");
-            // Виділяємо червону крапку як дефолтну
             document.querySelector('.color-dot').classList.add('selected');
         } else {
             globalUserOverrideColor = color;
@@ -450,39 +446,30 @@
             showNotify("COLOR OVERRIDE ACTIVE");
         }
         
-        // Повністю перемальовуємо всі об'єкти на карті під новий колір
-        Object.keys(obs).forEach(id => {
-            sync(id, obs[id].data);
-        });
+        Object.keys(obs).forEach(id => sync(id, obs[id].data));
     }
 
-    function getColorFilter(hex) {
-        if (hex === '#ff9900') return 'invert(59%) sepia(91%) saturate(1478%) hue-rotate(11deg) brightness(103%) contrast(101%) drop-shadow(0 0 8px #ff9900)';
-        if (hex === '#ffcc00') return 'invert(84%) sepia(85%) saturate(1487%) hue-rotate(354deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #ffcc00)';
-        if (hex === '#00ffff') return 'invert(89%) sepia(98%) saturate(3015%) hue-rotate(134deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #00ffff)';
-        return 'invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px #ff3333)';
-    }
+    // Оптимізовані матриці CSS-фільтрів для перефарбовування базової png іконки
+    const FILTER_CACHE = {
+        '#ff9900': 'invert(59%) sepia(91%) saturate(1478%) hue-rotate(11deg) brightness(103%) contrast(101%) drop-shadow(0 0 8px #ff9900)',
+        '#ffcc00': 'invert(84%) sepia(85%) saturate(1487%) hue-rotate(354deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #ffcc00)',
+        '#00ffff': 'invert(89%) sepia(98%) saturate(3015%) hue-rotate(134deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #00ffff)',
+        'default': 'invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px #ff3333)'
+    };
+    function getColorFilter(hex) { return FILTER_CACHE[hex] || FILTER_CACHE['default']; }
 
     function spawnDrone() {
         const center = map.getCenter();
-        const type = document.getElementById('admType').value;
-        const color = document.getElementById('admColor').value;
-        const angle = parseInt(document.getElementById('admAngle').value) || 0;
-        const acc = parseInt(document.getElementById('admAcc').value) || 5000;
-        
         const data = {
             lat: center.lat,
             lng: center.lng,
-            type: type,
-            color: color,
-            angle: angle,
-            accuracy: acc,
+            type: document.getElementById('admType').value,
+            color: document.getElementById('admColor').value,
+            angle: parseInt(document.getElementById('admAngle').value) || 0,
+            accuracy: parseInt(document.getElementById('admAcc').value) || 5000,
             timestamp: Date.now()
         };
-        
-        db.push().set(data).then(() => {
-            showNotify("TARGET DEPLOYED");
-        });
+        db.push().set(data).then(() => showNotify("TARGET DEPLOYED"));
     }
 
     function clearDrones() {
@@ -530,17 +517,9 @@
             con.onDisconnect().remove();
         }
     });
+    presenceRef.on('value', (snap) => onlineDisplay.innerText = snap.numChildren() || 0);
 
-    presenceRef.on('value', (snap) => {
-        onlineDisplay.innerText = snap.numChildren() || 0;
-    });
-
-    const SPEED_MAP = {
-        'shahed-vp-standart': 185, 
-        'shahed-238-jet': 550, 
-        'kalibr-cruise': 880, 
-        'tu-95ms-strat': 750
-    };
+    const SPEED_MAP = { 'shahed-vp-standart': 185, 'shahed-238-jet': 550, 'kalibr-cruise': 880, 'tu-95ms-strat': 750 };
     const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 
     let userPos = null;
@@ -549,6 +528,7 @@
     let isRadarOn = false;
     let radarInterval = null;
     let listActive = true;
+    let obs = {};
 
     function locateMe() { 
         if (!localStorage.getItem('policyAccepted')) return;
@@ -564,40 +544,30 @@
         updateListUI();
     });
 
-    let obs = {};
-
     function getLifetime(timestamp) {
         if (!timestamp) return "0 хв 0 сек";
-        const diff = Date.now() - timestamp;
-        const totalSec = Math.floor(diff / 1000);
-        const min = Math.floor(totalSec / 60);
-        const sec = totalSec % 60;
-        return `${min} хв ${sec} сек`;
+        const totalSec = Math.floor((Date.now() - timestamp) / 1000);
+        return `${Math.floor(totalSec / 60)} хв ${totalSec % 60} сек`;
     }
 
     function toggleListPanel() {
         listActive = !listActive;
-        const panel = document.getElementById('listPanel');
-        const btn = document.getElementById('listBtn');
-        if (listActive) {
-            panel.classList.add('active');
-            btn.classList.add('active');
-        } else {
-            panel.classList.remove('active');
-            btn.classList.remove('active');
-        }
+        document.getElementById('listPanel').classList.toggle('active', listActive);
+        document.getElementById('listBtn').classList.toggle('active', listActive);
+        if(listActive) updateListUI();
     }
 
     function focusOnTarget(id) {
         if(obs[id]) {
-            const d = obs[id].data;
-            map.setView([d.lat, d.lng], 9);
+            map.setView([obs[id].data.lat, obs[id].data.lng], 9);
             selectedId = id;
-            updateUI(id, d);
+            updateUI(id, obs[id].data);
         }
     }
 
+    // Оптимізація: перемальовуємо список тільки якщо він відкритий користувачем
     function updateListUI() {
+        if (!listActive) return;
         const body = document.getElementById('listBody');
         body.innerHTML = '';
         
@@ -610,22 +580,8 @@
         keys.forEach(id => {
             const d = obs[id].data;
             const typeText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-            const lifetimeText = getLifetime(d.timestamp);
-            
-            // Якщо активовано локальний оверрайд, беремо колір користувача, інакше з БД
             const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
             
-            let distanceText = '-- КМ';
-            let etaText = '';
-            
-            if (userPos) {
-                const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-                const speed = (SPEED_MAP[d.type] || 200);
-                const timeMinutes = Math.round(distance / speed * 60);
-                distanceText = `${distance.toFixed(1)} KM`;
-                etaText = `ETA: ~${timeMinutes} MIN`;
-            }
-
             const item = document.createElement('div');
             item.className = 'target-item';
             item.style.borderColor = selectedId === id ? tgtColor : `${tgtColor}33`;
@@ -639,11 +595,11 @@
                 </div>
                 <div class="target-item-meta">
                     <span>Курс: ${Math.round(d.angle || 0)}°</span>
-                    <span>${distanceText}</span>
+                    <span>${d.cachedDistance || '-- КМ'}</span>
                 </div>
                 <div class="target-item-header" style="margin-top:2px;">
-                    <span style="font-size:9px; opacity:0.6;"><i class="fa-solid fa-stopwatch"></i> ${lifetimeText}</span>
-                    <span class="target-item-eta">${etaText}</span>
+                    <span style="font-size:9px; opacity:0.6;"><i class="fa-solid fa-stopwatch"></i> ${getLifetime(d.timestamp)}</span>
+                    <span class="target-item-eta">${d.cachedEta || ''}</span>
                 </div>
             `;
             body.appendChild(item);
@@ -658,18 +614,28 @@
             return;
         }
 
+        // Оптимізований розрахунок дистанції та лімітів часу раз при синхронізації
+        if (userPos) {
+            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
+            const speed = (SPEED_MAP[d.type] || 200);
+            d.cachedDistance = `${distance.toFixed(1)} KM`;
+            d.cachedEta = `ETA: ~${Math.round(distance / speed * 60)} MIN`;
+            d.rawEtaMinutes = Math.round(distance / speed * 60);
+            d.radarDistanceKm = distance;
+        } else {
+            d.cachedDistance = '-- КМ';
+            d.cachedEta = '';
+            d.rawEtaMinutes = null;
+            d.radarDistanceKm = null;
+        }
+
         const angleRad = (d.angle - 90) * Math.PI / 180;
-        const vectorLen = 0.015; 
-        const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
-        const errorRadius = d.accuracy || 5000; 
-        
-        // Обчислюємо актуальний колір з урахуванням вибору користувача
+        const tailEnd = [d.lat - Math.cos(angleRad) * 0.015, d.lng - Math.sin(angleRad) * 0.015];
         const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setLatLng([d.lat, d.lng]);
-            obs[id].circle.setRadius(errorRadius);
+            obs[id].circle.setLatLng([d.lat, d.lng]).setRadius(d.accuracy || 5000);
             obs[id].circle.setStyle({ color: tgtColor, fillColor: tgtColor });
             
             const img = obs[id].marker.getElement()?.querySelector('img');
@@ -677,37 +643,24 @@
                 img.style.transform = `rotate(${d.angle || 0}deg)`;
                 img.style.filter = getColorFilter(tgtColor);
             }
-            obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]);
-            obs[id].line.setStyle({ color: tgtColor });
+            obs[id].line.setLatLngs([[d.lat, d.lng], tailEnd]).setStyle({ color: tgtColor });
             obs[id].data = d;
 
             if (selectedId === id) updateUI(id, d);
         } else {
             const circle = L.circle([d.lat, d.lng], {
-                radius: errorRadius,
-                color: tgtColor,
-                weight: 1,
-                fillColor: tgtColor,
-                fillOpacity: 0.1,
-                dashArray: '5, 10',
-                interactive: false
+                radius: d.accuracy || 5000, color: tgtColor, weight: 1, fillColor: tgtColor, fillOpacity: 0.1, dashArray: '5, 10', interactive: false
             }).addTo(map);
 
             const iconSize = 48;
             const icon = L.divIcon({ 
                 className: 'uav-icon active-uav', 
                 html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg); filter: ${getColorFilter(tgtColor)};">`, 
-                iconSize: [iconSize, iconSize], 
-                iconAnchor: [iconSize/2, iconSize/2] 
+                iconSize: [iconSize, iconSize], iconAnchor: [iconSize/2, iconSize/2] 
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            const line = L.polyline([[d.lat, d.lng], tailEnd], { 
-                color: tgtColor,
-                weight: 1, 
-                opacity: 0.6, 
-                dashArray: '2, 5' 
-            }).addTo(map);
+            const line = L.polyline([[d.lat, d.lng], tailEnd], { color: tgtColor, weight: 1, opacity: 0.6, dashArray: '2, 5' }).addTo(map);
 
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
@@ -743,19 +696,12 @@
         document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
         document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
         document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
-
-        if (userPos) {
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const speed = (SPEED_MAP[d.type] || 200);
-            const timeMinutes = Math.round(distance / speed * 60);
-            document.getElementById('objRange').innerHTML = `${distance.toFixed(1)} KM<br><span style="color:${tgtColor}; font-size:10px;">ETA: ~${timeMinutes} MIN</span>`;
-        }
+        document.getElementById('objRange').innerHTML = d.cachedDistance + `<br><span style="color:${tgtColor}; font-size:10px;">${d.cachedEta}</span>`;
     }
 
     function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
     
     function closeInfo() { 
-        document.getElementById('sidePanel').classList.remove('remove');
         document.getElementById('sidePanel').classList.remove('active'); 
         selectedId = null;
         updateListUI();
@@ -768,21 +714,18 @@
 
     function toggleRadar() {
         isRadarOn = !isRadarOn;
-        const btn = document.getElementById('radarBtn');
-        const panel = document.getElementById('radarPanel');
+        document.getElementById('radarBtn').classList.toggle('active', isRadarOn);
+        document.getElementById('radarPanel').classList.toggle('active', isRadarOn);
         
         if (isRadarOn) {
-            btn.classList.add('active');
-            panel.classList.add('active');
             runRadarSweep();
             showNotify("RADAR ACTIVE");
         } else {
-            btn.classList.remove('active');
-            panel.classList.remove('active');
             clearInterval(radarInterval);
         }
     }
 
+    // Оптимізована функція рендерингу радара з іконками Шахедів та часом підліту (60мс)
     function runRadarSweep() {
         const canvas = document.getElementById('radarCanvas');
         const ctx = canvas.getContext('2d');
@@ -791,10 +734,12 @@
         let sweepAngle = 0;
 
         radarInterval = setInterval(() => {
-            ctx.fillStyle = 'rgba(5, 3, 3, 0.12)';
+            // Ефект фонового шлейфу радара
+            ctx.fillStyle = 'rgba(5, 3, 3, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = 'rgba(255, 51, 51, 0.15)';
+            // Малюємо кільця сітки координат
+            ctx.strokeStyle = 'rgba(255, 51, 51, 0.12)';
             ctx.lineWidth = 1;
             for (let r = 25; r <= cx; r += 25) {
                 ctx.beginPath();
@@ -802,13 +747,15 @@
                 ctx.stroke();
             }
 
+            // Перехрестя радара
             ctx.beginPath();
             ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height);
             ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy);
             ctx.stroke();
 
-            ctx.strokeStyle = 'rgba(255, 51, 51, 0.7)';
-            ctx.lineWidth = 2;
+            // Стріла радара, що сканує простір
+            ctx.strokeStyle = 'rgba(255, 51, 51, 0.6)';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(cx + Math.cos(sweepAngle) * cx, cy + Math.sin(sweepAngle) * cy);
@@ -817,42 +764,72 @@
             if (userPos) {
                 Object.keys(obs).forEach(id => {
                     const d = obs[id].data;
-                    const distanceMeters = map.distance(userPos, [d.lat, d.lng]);
-                    const distanceKm = distanceMeters / 1000; 
                     
-                    if (distanceKm <= 50) {
+                    if (d.radarDistanceKm && d.radarDistanceKm <= 50) {
                         const dLat = d.lat - userPos.lat;
                         const dLng = d.lng - userPos.lng;
                         const targetAngle = Math.atan2(-dLat, dLng);
                         
                         const scaleFactor = cx / 50; 
-                        const radarDist = distanceKm * scaleFactor;
+                        const radarDist = d.radarDistanceKm * scaleFactor;
 
                         const tx = cx + Math.cos(targetAngle) * radarDist;
                         const ty = cy + Math.sin(targetAngle) * radarDist; 
 
                         const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-                        ctx.fillStyle = tgtColor;
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = tgtColor;
-                        ctx.beginPath();
-                        ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.shadowBlur = 0; 
+                        
+                        ctx.save();
+                        ctx.translate(tx, ty);
+                        
+                        // Відмальовуємо кастомну іконку Шахеда замість крапки
+                        if (radarUavImage.complete && radarUavImage.naturalWidth !== 0) {
+                            // Обертаємо іконку за вектором курсу
+                            ctx.rotate((d.angle || 0) * Math.PI / 180);
+                            
+                            // Створюємо кольоровий малюнок через маску
+                            ctx.fillStyle = tgtColor;
+                            ctx.shadowBlur = 6;
+                            ctx.shadowColor = tgtColor;
+                            
+                            // Малюємо силует іконки
+                            ctx.drawImage(radarUavImage, -8, -8, 16, 16);
+                            
+                            // Накладаємо фільтр кольору поверх іконки в канвасі
+                            ctx.globalCompositeOperation = 'source-atop';
+                            ctx.fillRect(-8, -8, 16, 16);
+                            ctx.globalCompositeOperation = 'source-over';
+                        } else {
+                            // Резервний варіант (якщо раптом картинка не завантажилась)
+                            ctx.fillStyle = tgtColor;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
+
+                        // Рендеринг тексту часу підліту (ETA) безпосередньо біля крила
+                        if (d.rawEtaMinutes !== null) {
+                            ctx.fillStyle = '#ffcc00';
+                            ctx.font = 'bold 8px "Orbitron", sans-serif';
+                            ctx.shadowBlur = 0;
+                            // Зсуваємо текст трохи праворуч і вище відносно літака
+                            ctx.fillText(`${d.rawEtaMinutes}m`, tx + 9, ty - 4);
+                        }
                     }
                 });
             }
 
             sweepAngle += 0.04;
-        }, 30);
+        }, 60); // Частота знижена до 60мс для збереження процесорного ресурсу та батареї
     }
 
+    // Оптимізований таймер: оновлює секундомір раз на секунду і тільки для відкритих панелей
     setInterval(() => {
         document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
         if (selectedId && obs[selectedId]) {
             document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
         }
-        updateListUI();
+        if (listActive) updateListUI();
     }, 1000);
 
     db.on('child_added', s => sync(s.key, s.val()));
