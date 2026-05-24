@@ -162,6 +162,19 @@
     .privacy-link { position: absolute; bottom: 10px; right: 15px; z-index: 2001; font-size: 8px; opacity: 0.4; color: white; text-decoration: none; font-family: 'Orbitron'; letter-spacing: 1px; }
     .privacy-link:hover { opacity: 1; color: var(--accent); }
 
+    /* Стилі для клієнтської панелі зміни кольорів */
+    .user-color-panel {
+        position: absolute; top: 75px; right: 20px; z-index: 2200;
+        background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--neon-border);
+        border-radius: 10px; padding: 12px; width: 220px; box-shadow: var(--panel-shadow);
+        display: none; flex-direction: column; gap: 8px; animation: radarFade 0.2s ease;
+    }
+    .user-color-panel.active { display: flex; }
+    .color-picker-title { font-family: 'Orbitron'; font-size: 9px; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .color-options-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+    .color-dot { width: 100%; height: 30px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; position: relative; }
+    .color-dot.selected { border-color: #fff; box-shadow: 0 0 8px currentColor; }
+
     #adminPanel {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.95); z-index: 10000; display: none;
@@ -195,6 +208,7 @@
         .list-panel.active { left: 20px; }
         .radar-panel { left: 20px; right: 20px; width: auto; bottom: 90px; }
         #mapNotify { top: 190px; }
+        .user-color-panel { top: 125px; right: 20px; left: 20px; width: auto; }
     }
 </style>
 </head>
@@ -273,11 +287,28 @@
             <div class="box"><i class="fa-solid fa-users"></i> ONLINE: <span id="onlineCount" class="glow">1</span></div>
             <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger);">OFFLINE</span></div>
         </div>
-        <div class="box" style="pointer-events: auto; cursor: pointer;" onclick="toggleListPanel()"><i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span></div>
+        <div class="status-group">
+            <div class="box" style="pointer-events: auto; cursor: pointer; border-color: var(--warning);" onclick="toggleUserColorPanel()">
+                <i class="fa-solid fa-palette" style="color: var(--warning);"></i> COLOR
+            </div>
+            <div class="box" style="pointer-events: auto; cursor: pointer;" onclick="toggleListPanel()">
+                <i class="fa-solid fa-crosshairs"></i> ACTIVE: <span id="uavCount" class="glow">0</span>
+            </div>
+        </div>
     </div>
     
     <div class="ticker-container">
         <div class="ticker-text">УСИК ВІТАЕМ З ПЕРЕМОГОЮ! • СЛАВА УКРАЇНІ! • SKY DEFENSE RADAR SYSTEM</div>
+    </div>
+</div>
+
+<div id="userColorPanel" class="user-color-panel">
+    <div class="color-picker-title">Колір маркерів (Для вас):</div>
+    <div class="color-options-grid">
+        <div class="color-dot selected" style="background: #ff3333; color: #ff3333;" onclick="setUserColor('#ff3333', this)" title="Червоний"></div>
+        <div class="color-dot" style="background: #ff9900; color: #ff9900;" onclick="setUserColor('#ff9900', this)" title="Помаранчевий"></div>
+        <div class="color-dot" style="background: #ffcc00; color: #ffcc00;" onclick="setUserColor('#ffcc00', this)" title="Жовтий"></div>
+        <div class="color-dot" style="background: #00ffff; color: #00ffff;" onclick="setUserColor('#00ffff', this)" title="Блакитний"></div>
     </div>
 </div>
 
@@ -287,7 +318,7 @@
         <i class="fas fa-times" onclick="toggleListPanel()" style="cursor:pointer; font-size: 14px; opacity: 0.5;"></i>
     </div>
     <div class="list-body" id="listBody">
-        </div>
+    </div>
 </div>
 
 <div id="radarPanel" class="radar-panel">
@@ -342,6 +373,9 @@
     
     let layer = L.tileLayer(themes[0].url).addTo(map);
 
+    // Зберігаємо вибір користувача у LocalStorage (за замовчуванням "database" - брати колір адміна з бази)
+    let globalUserOverrideColor = localStorage.getItem('userMarkerColor') || 'database';
+
     function nextTheme() {
         tIdx = (tIdx + 1) % themes.length;
         map.removeLayer(layer);
@@ -359,6 +393,17 @@
     window.addEventListener('load', () => {
         const splash = document.getElementById('splash-screen');
         const bootStatus = document.getElementById('bootStatus');
+        
+        // Ініціалізуємо стан активної точки в палітрі кольорів
+        if (globalUserOverrideColor !== 'database') {
+            document.querySelectorAll('.color-dot').forEach(dot => {
+                dot.classList.remove('selected');
+                if (dot.getAttribute('onclick').includes(globalUserOverrideColor)) {
+                    dot.classList.add('selected');
+                }
+            });
+        }
+
         setTimeout(() => bootStatus.innerText = "Loading OSINT Modules...", 1000);
         setTimeout(() => bootStatus.innerText = "Establishing Satellite Link...", 2000);
         setTimeout(() => {
@@ -384,12 +429,37 @@
     }
     window.addEventListener('hashchange', checkAdmin);
 
-    // Функція генерації CSS-фільтру для фарбування іконки на базі шістнадцяткового кольору
+    function toggleUserColorPanel() {
+        document.getElementById('userColorPanel').classList.toggle('active');
+    }
+
+    function setUserColor(color, element) {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+        
+        if (globalUserOverrideColor === color) {
+            // Повторне натискання повертає стандартний колір з бази даних
+            globalUserOverrideColor = 'database';
+            localStorage.removeItem('userMarkerColor');
+            showNotify("COLOR: DEFAULT (DATABASE)");
+            // Виділяємо червону крапку як дефолтну
+            document.querySelector('.color-dot').classList.add('selected');
+        } else {
+            globalUserOverrideColor = color;
+            localStorage.setItem('userMarkerColor', color);
+            element.classList.add('selected');
+            showNotify("COLOR OVERRIDE ACTIVE");
+        }
+        
+        // Повністю перемальовуємо всі об'єкти на карті під новий колір
+        Object.keys(obs).forEach(id => {
+            sync(id, obs[id].data);
+        });
+    }
+
     function getColorFilter(hex) {
         if (hex === '#ff9900') return 'invert(59%) sepia(91%) saturate(1478%) hue-rotate(11deg) brightness(103%) contrast(101%) drop-shadow(0 0 8px #ff9900)';
         if (hex === '#ffcc00') return 'invert(84%) sepia(85%) saturate(1487%) hue-rotate(354deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #ffcc00)';
         if (hex === '#00ffff') return 'invert(89%) sepia(98%) saturate(3015%) hue-rotate(134deg) brightness(102%) contrast(102%) drop-shadow(0 0 8px #00ffff)';
-        // Default Red (#ff3333)
         return 'invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%) drop-shadow(0 0 8px #ff3333)';
     }
 
@@ -541,7 +611,9 @@
             const d = obs[id].data;
             const typeText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
             const lifetimeText = getLifetime(d.timestamp);
-            const tgtColor = d.color || '#ff3333';
+            
+            // Якщо активовано локальний оверрайд, беремо колір користувача, інакше з БД
+            const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
             
             let distanceText = '-- КМ';
             let etaText = '';
@@ -556,7 +628,6 @@
 
             const item = document.createElement('div');
             item.className = 'target-item';
-            // Застосовуємо колір БПЛА до рамки елемента у списку
             item.style.borderColor = selectedId === id ? tgtColor : `${tgtColor}33`;
             if(selectedId === id) item.style.background = `${tgtColor}11`;
             
@@ -591,7 +662,9 @@
         const vectorLen = 0.015; 
         const tailEnd = [d.lat - Math.cos(angleRad) * vectorLen, d.lng - Math.sin(angleRad) * vectorLen];
         const errorRadius = d.accuracy || 5000; 
-        const tgtColor = d.color || '#ff3333';
+        
+        // Обчислюємо актуальний колір з урахуванням вибору користувача
+        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
 
         if (obs[id]) {
             obs[id].marker.setLatLng([d.lat, d.lng]);
@@ -662,7 +735,7 @@
     }
 
     function updateUI(id, d) {
-        const tgtColor = d.color || '#ff3333';
+        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
         document.getElementById('sidePanel').classList.add('active');
         document.getElementById('objId').innerText = "REF_" + id.substring(0,6).toUpperCase();
         document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
@@ -688,7 +761,10 @@
         updateListUI();
     }
 
-    map.on('click', () => { closeInfo(); });
+    map.on('click', () => { 
+        closeInfo(); 
+        document.getElementById('userColorPanel').classList.remove('active');
+    });
 
     function toggleRadar() {
         isRadarOn = !isRadarOn;
@@ -755,10 +831,10 @@
                         const tx = cx + Math.cos(targetAngle) * radarDist;
                         const ty = cy + Math.sin(targetAngle) * radarDist; 
 
-                        // Відображення цілі на радарі у її власному динамічному кольорі
-                        ctx.fillStyle = d.color || '#ff3333';
+                        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
+                        ctx.fillStyle = tgtColor;
                         ctx.shadowBlur = 10;
-                        ctx.shadowColor = d.color || '#ff3333';
+                        ctx.shadowColor = tgtColor;
                         ctx.beginPath();
                         ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
                         ctx.fill();
