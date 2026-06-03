@@ -7,7 +7,7 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -24,6 +24,8 @@
         --neon-border: rgba(255, 255, 255, 0.08);
         --panel-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
         --mono-gold: #ffcc00;
+        --radar-green: #00ff88;
+        --radar-bg: rgba(0, 8, 4, 0.95);
     }
 
     * { 
@@ -31,7 +33,7 @@
         box-sizing: border-box; 
         outline: none; -webkit-tap-highlight-color: transparent;
     }
-    body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Inter', sans-serif; overflow: hidden; color: white; }
+    body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Share Tech Mono', monospace; overflow: hidden; color: white; }
     
     #splash-screen {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -96,7 +98,6 @@
     }
     @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-    /* Панели управления для ПК (дефолт) */
     .side-panel { position: absolute; top: 80px; right: -360px; z-index: 2100; background: var(--glass); backdrop-filter: blur(20px); width: 290px; border-radius: 10px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s ease; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
     .side-panel.active { right: 16px; }
     
@@ -129,10 +130,77 @@
     .target-item-meta { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.5); }
     .target-item-eta { color: var(--warning); font-family: 'Orbitron'; font-size: 10px; font-weight: 600; }
 
-    .radar-panel { position: absolute; bottom: 85px; left: 16px; z-index: 2100; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--neon-border); border-radius: 10px; padding: 14px; width: 208px; display: none; box-shadow: var(--panel-shadow); }
+    /* ========== НОВИЙ ПОКРАЩЕНИЙ РАДАР ========== */
+    .radar-panel {
+        position: absolute; bottom: 85px; left: 16px; z-index: 2100;
+        background: var(--radar-bg);
+        backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px; padding: 0; width: 300px;
+        display: none; box-shadow: 0 0 30px rgba(0,255,136,0.08), var(--panel-shadow);
+        overflow: hidden;
+    }
     .radar-panel.active { display: block; }
-    .radar-title { font-family: 'Orbitron'; font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 1px; margin-bottom: 10px; text-align: center; font-weight: 700; }
-    #radarCanvas { display: block; margin: 0 auto; background: rgba(0,0,0,0.3); border-radius: 50%; border: 1px solid var(--neon-border); }
+
+    .radar-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; border-bottom: 1px solid rgba(0,255,136,0.1);
+        background: rgba(0,255,136,0.03);
+    }
+    .radar-title { 
+        font-family: 'Orbitron'; font-size: 9px; color: var(--radar-green);
+        letter-spacing: 2px; font-weight: 700;
+    }
+    .radar-range-controls {
+        display: flex; gap: 4px; align-items: center;
+    }
+    .range-btn {
+        background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2);
+        color: rgba(0,255,136,0.7); font-family: 'Orbitron'; font-size: 8px;
+        padding: 3px 7px; border-radius: 4px; cursor: pointer; transition: 0.2s;
+    }
+    .range-btn:hover, .range-btn.active { 
+        background: rgba(0,255,136,0.2); color: var(--radar-green);
+        border-color: rgba(0,255,136,0.5);
+    }
+    .radar-close-btn {
+        cursor: pointer; color: rgba(255,255,255,0.3); font-size: 13px; padding: 2px 4px;
+        transition: 0.2s; margin-left: 6px;
+    }
+    .radar-close-btn:hover { color: #fff; }
+
+    .radar-canvas-wrapper {
+        padding: 12px; display: flex; justify-content: center;
+    }
+    #radarCanvas { 
+        display: block; background: transparent;
+        border-radius: 50%;
+    }
+
+    .radar-footer {
+        padding: 8px 14px; border-top: 1px solid rgba(0,255,136,0.08);
+        display: flex; justify-content: space-between; align-items: center;
+        background: rgba(0,0,0,0.3);
+    }
+    .radar-stat { font-size: 9px; color: rgba(0,255,136,0.5); font-family: 'Orbitron'; }
+    .radar-stat span { color: var(--radar-green); }
+    .radar-target-count { 
+        font-family: 'Orbitron'; font-size: 11px; font-weight: 700;
+        color: var(--accent);
+    }
+
+    /* Легенда радару */
+    .radar-legend {
+        display: flex; gap: 10px; padding: 6px 14px;
+        border-top: 1px solid rgba(0,255,136,0.06);
+        background: rgba(0,0,0,0.2);
+    }
+    .legend-item {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 8px; color: rgba(255,255,255,0.35); font-family: 'Orbitron';
+    }
+    .legend-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+    }
 
     .user-color-panel {
         position: absolute; top: 75px; right: 16px; z-index: 2200;
@@ -177,13 +245,26 @@
     .btn-add { background: #fff; color: #000; }
     .btn-clear { background: var(--accent); color: #fff; opacity: 0.8; }
 
-    /* ОПТИМИЗАЦИЯ И АДАПТИВ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ */
+    /* Вибір теми карти */
+    .map-theme-pill {
+        position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%);
+        z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
+        border: 1px solid var(--neon-border); border-radius: 20px; padding: 4px;
+        display: none; gap: 4px; box-shadow: var(--panel-shadow);
+        font-family: 'Orbitron'; font-size: 9px;
+    }
+    .map-theme-pill.active { display: flex; }
+    .theme-opt {
+        padding: 5px 12px; border-radius: 14px; cursor: pointer; color: rgba(255,255,255,0.5);
+        transition: 0.2s; white-space: nowrap;
+    }
+    .theme-opt.sel { background: rgba(255,255,255,0.1); color: #fff; }
+
     @media (max-width: 768px) {
         .top-ui { top: 12px; left: 12px; right: 12px; gap: 8px; }
         .top-header-line { flex-direction: column; gap: 8px; align-items: flex-start; }
         .ticker-container { max-width: 100%; padding: 5px 0; }
         
-        /* Списки и панели превращаются в удобные мобильные оверлеи */
         .side-panel {
             width: calc(100% - 24px); left: 12px; right: 12px;
             top: auto; bottom: -400px; border-radius: 14px 14px 10px 10px;
@@ -209,10 +290,10 @@
         }
         
         .panel-header { padding: 16px; }
-        .panel-close-btn { font-size: 20px; padding: 6px; } /* Крупнее для пальцев */
+        .panel-close-btn { font-size: 20px; padding: 6px; }
         
         .bottom-nav { bottom: 16px; width: calc(100% - 24px); justify-content: space-between; padding: 6px 10px; border-radius: 16px; }
-        .c-btn { width: 44px; height: 44px; font-size: 16px; } /* Увеличенные тач-зоны */
+        .c-btn { width: 44px; height: 44px; font-size: 16px; }
         
         #mapNotify { top: 130px; }
     }
@@ -320,9 +401,32 @@
     <div class="list-body" id="listBody"></div>
 </div>
 
+<!-- ПОКРАЩЕНИЙ РАДАР -->
 <div id="radarPanel" class="radar-panel">
-    <div class="radar-title">RADAR SCOPE (50 KM)</div>
-    <canvas id="radarCanvas" width="180" height="180"></canvas>
+    <div class="radar-header">
+        <div class="radar-title">◉ RADAR SCOPE</div>
+        <div class="radar-range-controls">
+            <div class="range-btn active" id="range50" onclick="setRadarRange(50, this)">50</div>
+            <div class="range-btn" id="range100" onclick="setRadarRange(100, this)">100</div>
+            <div class="range-btn" id="range200" onclick="setRadarRange(200, this)">200</div>
+            <span style="font-family:'Orbitron';font-size:7px;color:rgba(0,255,136,0.3);margin-left:2px;">КМ</span>
+        </div>
+        <div class="radar-close-btn" onclick="toggleRadar()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="radar-canvas-wrapper">
+        <canvas id="radarCanvas" width="260" height="260"></canvas>
+    </div>
+    <div class="radar-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ff3333;box-shadow:0 0 4px #ff3333"></div>SHAHED</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff9900;box-shadow:0 0 4px #ff9900"></div>РАКЕТА</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffcc00;box-shadow:0 0 4px #ffcc00"></div>СТРАТЕГ</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00ffff;box-shadow:0 0 4px #00ffff"></div>ІНШИЙ</div>
+    </div>
+    <div class="radar-footer">
+        <div class="radar-stat">ЦІЛЕЙ: <span id="radarCount">0</span></div>
+        <div class="radar-stat">В ЗОНІ: <span id="radarInRange">0</span></div>
+        <div class="radar-stat" id="radarClosest">НАЙБЛИЖЧА: <span>—</span></div>
+    </div>
 </div>
 
 <div id="sidePanel" class="side-panel">
@@ -342,12 +446,20 @@
     </div>
 </div>
 
+<!-- Вибір теми карти -->
+<div id="mapThemePill" class="map-theme-pill">
+    <div class="theme-opt sel" onclick="selectTheme(0,this)">DARK</div>
+    <div class="theme-opt" onclick="selectTheme(1,this)">SAT</div>
+    <div class="theme-opt" onclick="selectTheme(2,this)">TOPO</div>
+    <div class="theme-opt" onclick="selectTheme(3,this)">OSM</div>
+</div>
+
 <div class="bottom-nav" id="ui-nav" style="display: none;">
     <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримка">
         <i class="fa-solid fa-heart"></i>
     </a>
     <button class="c-btn" id="listBtn" onclick="toggleListPanel()"><i class="fa-solid fa-list"></i></button>
-    <button class="c-btn" onclick="nextTheme()"><i class="fa-solid fa-layer-group"></i></button>
+    <button class="c-btn" id="themeBtn" onclick="toggleThemePill()"><i class="fa-solid fa-layer-group"></i></button>
     <button class="c-btn" id="radarBtn" onclick="toggleRadar()"><i class="fa-solid fa-circle-dot"></i></button>
     <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
     <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
@@ -358,7 +470,9 @@
 <script>
     const themes = [
         { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
+        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
+        { name: "TOPO", url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
+        { name: "OSM", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
     ];
 
     let tIdx = 0;
@@ -372,14 +486,26 @@
     let layer = L.tileLayer(themes[0].url).addTo(map);
     let globalUserOverrideColor = localStorage.getItem('userMarkerColor') || 'database';
 
-    const radarUavImage = new Image();
-    radarUavImage.src = 'shahed-vp-standart.png';
+    let radarRange = 50; // km
 
-    function nextTheme() {
-        tIdx = (tIdx + 1) % themes.length;
+    function setRadarRange(km, el) {
+        radarRange = km;
+        document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function toggleThemePill() {
+        const pill = document.getElementById('mapThemePill');
+        pill.classList.toggle('active');
+    }
+
+    function selectTheme(idx, el) {
+        tIdx = idx;
         map.removeLayer(layer);
-        layer = L.tileLayer(themes[tIdx].url).addTo(map);
-        showNotify(themes[tIdx].name);
+        layer = L.tileLayer(themes[idx].url, {maxZoom: 19}).addTo(map);
+        document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+        showNotify(themes[idx].name);
     }
 
     function showNotify(text) {
@@ -625,14 +751,12 @@
             });
 
             const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
                 selectedId = id;
                 updateUI(id, d);
                 updateListUI();
             });
-
             obs[id] = { marker, data: d };
         }
         updateCounters();
@@ -673,76 +797,275 @@
     map.on('click', () => { 
         closeInfo(); 
         document.getElementById('userColorPanel').classList.remove('active');
+        document.getElementById('mapThemePill').classList.remove('active');
     });
 
     function toggleRadar() {
         isRadarOn = !isRadarOn;
         document.getElementById('radarBtn').classList.toggle('active', isRadarOn);
         document.getElementById('radarPanel').classList.toggle('active', isRadarOn);
-        if (isRadarOn) runRadarSweep(); else clearInterval(radarInterval);
+        if (isRadarOn) {
+            if (radarInterval) clearInterval(radarInterval);
+            runRadarSweep();
+        } else {
+            clearInterval(radarInterval);
+        }
     }
 
     function runRadarSweep() {
         const canvas = document.getElementById('radarCanvas');
         const ctx = canvas.getContext('2d');
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        let sweepAngle = 0;
+        const W = canvas.width;
+        const H = canvas.height;
+        const cx = W / 2;
+        const cy = H / 2;
+        const R = cx - 4; // радіус кола
+        let sweepAngle = -Math.PI / 2; // починаємо зверху
+        let trailAngles = []; // траєкторія засвічення
+
+        // Кольори
+        const GREEN = '#00ff88';
+        const GREEN_DIM = 'rgba(0,255,136,';
 
         radarInterval = setInterval(() => {
-            ctx.fillStyle = 'rgba(6, 6, 6, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // --- Фон ---
+            ctx.clearRect(0, 0, W, H);
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-            ctx.lineWidth = 1;
-            for (let r = 30; r <= cx; r += 30) {
-                ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+            // Зовнішнє коло - обрізаємо canvas до кола
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Темний фон всередині
+            ctx.fillStyle = 'rgba(0, 5, 2, 0.97)';
+            ctx.fillRect(0, 0, W, H);
+
+            // --- Сітка ---
+            const rings = 4;
+            const ringLabels = [radarRange/4, radarRange/2, radarRange*3/4, radarRange];
+            for (let i = 1; i <= rings; i++) {
+                const rr = (R / rings) * i;
+                ctx.beginPath();
+                ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+                ctx.strokeStyle = i === rings 
+                    ? 'rgba(0,255,136,0.25)' 
+                    : 'rgba(0,255,136,0.08)';
+                ctx.lineWidth = i === rings ? 1.5 : 0.8;
+                ctx.stroke();
+
+                // Підпис дистанції
+                const labelKm = ringLabels[i-1];
+                ctx.fillStyle = 'rgba(0,255,136,0.4)';
+                ctx.font = `bold 8px "Orbitron", monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${labelKm} КМ`, cx, cy - rr + 11);
             }
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath(); ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(sweepAngle) * cx, cy + Math.sin(sweepAngle) * cy);
+            // Перехресні лінії
+            ctx.strokeStyle = 'rgba(0,255,136,0.06)';
+            ctx.lineWidth = 0.6;
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(angle) * R, cy + Math.sin(angle) * R);
+                ctx.stroke();
+            }
+
+            // --- Траса засвічення (зелений хвіст) ---
+            const trailLength = Math.PI * 1.1;
+            const grad = ctx.createConicalGradient 
+                ? null 
+                : null;
+            
+            // Малюємо дуги з градієнтним fade
+            const steps = 40;
+            for (let s = 0; s < steps; s++) {
+                const startA = sweepAngle - trailLength + (trailLength / steps) * s;
+                const endA = sweepAngle - trailLength + (trailLength / steps) * (s + 1);
+                const alpha = (s / steps) * 0.35;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, R, startA, endA);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(0,255,136,${alpha})`;
+                ctx.fill();
+            }
+
+            // --- Лінія засвічення ---
+            const gradient = ctx.createLinearGradient(
+                cx, cy,
+                cx + Math.cos(sweepAngle) * R,
+                cy + Math.sin(sweepAngle) * R
+            );
+            gradient.addColorStop(0, 'rgba(0,255,136,0)');
+            gradient.addColorStop(0.6, 'rgba(0,255,136,0.4)');
+            gradient.addColorStop(1, 'rgba(0,255,136,0.95)');
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(sweepAngle) * R, cy + Math.sin(sweepAngle) * R);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 2;
             ctx.stroke();
 
-            if (userPos) {
-                Object.keys(obs).forEach(id => {
-                    const d = obs[id].data;
-                    if (d.radarDistanceKm && d.radarDistanceKm <= 50) {
-                        const dLat = d.lat - userPos.lat;
-                        const dLng = d.lng - userPos.lng;
-                        const targetAngle = Math.atan2(-dLat, dLng);
-                        const scaleFactor = cx / 50; 
-                        const radarDist = d.radarDistanceKm * scaleFactor;
-                        const tx = cx + Math.cos(targetAngle) * radarDist;
-                        const ty = cy + Math.sin(targetAngle) * radarDist; 
-                        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-                        
-                        ctx.save();
-                        ctx.translate(tx, ty);
-                        if (radarUavImage.complete && radarUavImage.naturalWidth !== 0) {
-                            ctx.rotate((d.angle || 0) * Math.PI / 180);
-                            ctx.fillStyle = tgtColor;
-                            ctx.drawImage(radarUavImage, -6, -6, 12, 12);
-                            ctx.globalCompositeOperation = 'source-atop';
-                            ctx.fillRect(-6, -6, 12, 12);
-                            ctx.globalCompositeOperation = 'source-over';
-                        } else {
-                            ctx.fillStyle = tgtColor;
-                            ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
-                        }
-                        ctx.restore();
+            // --- Цілі ---
+            let inRange = 0;
+            let closestKm = Infinity;
+            let closestEta = null;
+            const keys = Object.keys(obs);
 
-                        if (d.rawEtaMinutes !== null) {
-                            ctx.fillStyle = '#ffcc00';
-                            ctx.font = 'bold 8px "Orbitron", sans-serif';
-                            ctx.fillText(`${d.rawEtaMinutes}m`, tx + 9, ty - 4);
-                        }
-                    }
-                });
+            document.getElementById('radarCount').innerText = keys.length;
+
+            keys.forEach(id => {
+                const d = obs[id].data;
+                if (!d.radarDistanceKm) return;
+                if (d.radarDistanceKm > radarRange) return;
+
+                inRange++;
+                if (d.radarDistanceKm < closestKm) {
+                    closestKm = d.radarDistanceKm;
+                    closestEta = d.rawEtaMinutes;
+                }
+
+                const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
+
+                if (!userPos) return;
+                const dLat = d.lat - userPos.lat;
+                const dLng = d.lng - userPos.lng;
+                const targetAngle = Math.atan2(-dLat, dLng);
+                const scaleFactor = R / radarRange;
+                const radarDist = d.radarDistanceKm * scaleFactor;
+                const tx = cx + Math.cos(targetAngle) * radarDist;
+                const ty = cy + Math.sin(targetAngle) * radarDist;
+
+                ctx.save();
+
+                // Гало навколо цілі
+                const halo = ctx.createRadialGradient(tx, ty, 0, tx, ty, 14);
+                halo.addColorStop(0, tgtColor.replace(')', ', 0.25)').replace('rgb', 'rgba').replace('#ff3333','rgba(255,51,51,0.25)').replace('#ff9900','rgba(255,153,0,0.25)').replace('#ffcc00','rgba(255,204,0,0.25)').replace('#00ffff','rgba(0,255,255,0.25)'));
+                halo.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.beginPath();
+                ctx.arc(tx, ty, 14, 0, Math.PI * 2);
+                ctx.fillStyle = halo;
+                ctx.fill();
+
+                // Точка цілі
+                ctx.beginPath();
+                ctx.arc(tx, ty, 4, 0, Math.PI * 2);
+                ctx.fillStyle = tgtColor;
+                ctx.shadowColor = tgtColor;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Напрямок руху
+                const angleDeg = (d.angle || 0);
+                const angleRad = angleDeg * Math.PI / 180;
+                ctx.beginPath();
+                ctx.moveTo(tx, ty);
+                ctx.lineTo(tx + Math.sin(angleRad) * 14, ty - Math.cos(angleRad) * 14);
+                ctx.strokeStyle = tgtColor;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // ETA label
+                if (d.rawEtaMinutes !== null && d.rawEtaMinutes !== undefined) {
+                    ctx.font = 'bold 9px "Orbitron", monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+                    ctx.shadowBlur = 4;
+
+                    // Тип
+                    const shortType = getShortType(d.type);
+                    ctx.fillText(shortType, tx + 8, ty - 5);
+
+                    // ETA в іншому кольорі
+                    ctx.fillStyle = '#ffcc00';
+                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+                    ctx.font = 'bold 8px "Orbitron", monospace';
+                    ctx.fillText(`${d.rawEtaMinutes}хв`, tx + 8, ty + 5);
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.restore();
+            });
+
+            document.getElementById('radarInRange').innerText = inRange;
+            if (closestEta !== null) {
+                document.getElementById('radarClosest').innerHTML = `НАЙБЛИЖЧА: <span style="color:#ffcc00">${closestEta}хв</span>`;
+            } else {
+                document.getElementById('radarClosest').innerHTML = `НАЙБЛИЖЧА: <span>—</span>`;
             }
-            sweepAngle += 0.04;
-        }, 60);
+
+            // --- Центральна точка (ми) ---
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffcc00';
+            ctx.shadowColor = '#ffcc00';
+            ctx.shadowBlur = 12;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Хрестик центру
+            ctx.strokeStyle = 'rgba(255,204,0,0.6)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8); ctx.stroke();
+
+            ctx.restore(); // restore clip
+
+            // Зовнішнє обрамлення
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0,255,136,0.35)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Кути - декоративні
+            drawCornerBrackets(ctx, cx, cy, R);
+
+            sweepAngle += 0.035;
+            if (sweepAngle > Math.PI * 2 - Math.PI / 2) sweepAngle -= Math.PI * 2;
+
+        }, 40); // ~25fps
+    }
+
+    function getShortType(type) {
+        const m = {
+            'shahed-vp-standart': 'SH-136',
+            'shahed-238-jet': 'SH-238',
+            'kalibr-cruise': 'KALIBR',
+            'tu-95ms-strat': 'TU-95'
+        };
+        return m[type] || 'UAV';
+    }
+
+    function drawCornerBrackets(ctx, cx, cy, R) {
+        const bracketSize = 12;
+        const gap = 5;
+        const positions = [
+            { x: cx - R - gap, y: cy - R - gap, a1: 0, a2: Math.PI/2 },
+        ];
+        // Просто 4 кутові дужки по краях кола
+        const offsets = [
+            { dx: -1, dy: -1 },
+            { dx:  1, dy: -1 },
+            { dx:  1, dy:  1 },
+            { dx: -1, dy:  1 },
+        ];
+        offsets.forEach(({dx, dy}) => {
+            const bx = cx + dx * (R * 0.72);
+            const by = cy + dy * (R * 0.72);
+            ctx.strokeStyle = 'rgba(0,255,136,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(bx, by - 5 * dy);
+            ctx.lineTo(bx, by);
+            ctx.lineTo(bx + 5 * dx, by);
+            ctx.stroke();
+        });
     }
 
     setInterval(() => {
