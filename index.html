@@ -104,6 +104,36 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .bn-support{color:rgba(255,200,0,.5);}
 .bn-support i{color:#ffd700;}
 .bn-support.on,.bn-support:hover{background:rgba(255,215,0,.08);color:#ffd700;}
+.bn-social{color:rgba(100,200,255,.5);}
+.bn-social i{color:rgba(100,200,255,.8);}
+.bn-social:hover{background:rgba(100,200,255,.08);color:rgba(100,200,255,.9);}
+
+/* ═══════ OFFLINE BANNER ═══════ */
+#offlineBanner{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;backdrop-filter:blur(10px);}
+#offlineBanner.on{display:flex;}
+.off-icon{font-size:48px;opacity:.6;}
+.off-title{font-family:'Orbitron';font-size:15px;color:#fff;letter-spacing:.15em;font-weight:700;}
+.off-sub{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.08em;}
+.off-retry{margin-top:8px;padding:10px 24px;background:rgba(232,255,0,.1);border:1px solid rgba(232,255,0,.25);color:var(--a);font-family:'Orbitron';font-size:9px;letter-spacing:.15em;border-radius:10px;cursor:pointer;transition:.2s;}
+.off-retry:hover{background:rgba(232,255,0,.2);}
+.off-dots{display:flex;gap:6px;margin-top:4px;}
+.off-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);animation:offpulse 1.4s infinite;}
+.off-dot:nth-child(2){animation-delay:.2s;}
+.off-dot:nth-child(3){animation-delay:.4s;}
+@keyframes offpulse{0%,80%,100%{transform:scale(.8);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* ═══════ MOBILE FIXES ═══════ */
+@media(max-width:480px){
+  #bnav{min-width:0;width:calc(100% - 16px);left:8px;transform:none;border-radius:18px;padding:4px 4px;gap:0;overflow-x:auto;scrollbar-width:none;}
+  #bnav::-webkit-scrollbar{display:none;}
+  .bn-item{min-width:44px;padding:7px 4px;font-size:7.5px;flex-shrink:0;}
+  .bn-item i{font-size:14px;}
+  #radarPnl{left:8px;right:8px;width:auto;bottom:calc(var(--sb)+80px);}
+  #trackPnl{left:8px;right:8px;max-width:none;bottom:calc(var(--sb)+80px);}
+  #listPnl{left:8px;right:8px;max-width:none;bottom:calc(var(--sb)+80px);}
+  #histBar{left:8px;right:8px;}
+  #topBar{left:8px;right:8px;}
+}
 
 /* ═══════ WEATHER PANEL ═══════ */
 #wxPnl{position:absolute;top:calc(var(--st)+72px);left:12px;z-index:2100;background:var(--glass2);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:14px;padding:14px 16px;min-width:185px;display:none;box-shadow:var(--sh);animation:fadeUp .2s ease;}
@@ -423,8 +453,20 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   </div>
 </div>
 
-<!-- MAP -->
-<div id="map"></div>
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner">
+  <div class="off-icon">📡</div>
+  <div class="off-title">НЕМАЄ З'ЄДНАННЯ</div>
+  <div class="off-sub">ПЕРЕВІРТЕ ІНТЕРНЕТ</div>
+  <div class="off-dots">
+    <div class="off-dot"></div>
+    <div class="off-dot"></div>
+    <div class="off-dot"></div>
+  </div>
+  <button class="off-retry" onclick="checkConn()">↻ СПРОБУВАТИ ЗНОВУ</button>
+</div>
+
+</div>
 
 <!-- TACTICAL RETICLE -->
 <div id="reticle">
@@ -500,7 +542,10 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 <!-- RADAR -->
 <div id="radarPnl">
-  <div class="rd-title">◉ RADAR · 40 KM</div>
+  <div class="rd-title" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>◉ RADAR · 40 KM</span>
+    <button onclick="toggleRadar()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1;padding:0 0 0 8px;">×</button>
+  </div>
   <canvas id="rdCv" width="180" height="180"></canvas>
   <div class="rd-list" id="rdList">
     <div id="rdEmp" style="font-size:9px;color:rgba(255,255,255,.25);text-align:center;padding:8px;font-family:'Orbitron'">Немає цілей</div>
@@ -523,9 +568,17 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 <!-- BOTTOM NAV -->
 <div id="bnav">
-  <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="bn-item bn-support">
+  <a href="https://donatello.to/odessaosint26" target="_blank" class="bn-item bn-support">
     <i class="fa-solid fa-heart"></i>
-    <span>DONATE</span>
+    <span>ДОНАТ</span>
+  </a>
+  <a href="https://www.tiktok.com/@odessa_osint26" target="_blank" class="bn-item bn-social">
+    <i class="fa-brands fa-tiktok"></i>
+    <span>ТІКТОК</span>
+  </a>
+  <a href="https://t.me/odessa_osint26" target="_blank" class="bn-item bn-social">
+    <i class="fa-brands fa-telegram"></i>
+    <span>ТГ</span>
   </a>
   <div class="bn-sep"></div>
   <button class="bn-item" onclick="opn('themeSh')" title="Теми">
@@ -1073,6 +1126,24 @@ function spawnDrone(){
   }).then(()=>toast('TARGET DEPLOYED'));
 }
 function clearDrones(){if(confirm('Purge?'))db.remove().then(()=>toast('PURGED'));}
+
+// ═══════════════════════════
+// OFFLINE DETECTION
+// ═══════════════════════════
+function checkConn(){
+  const banner=document.getElementById('offlineBanner');
+  if(!navigator.onLine){banner.classList.add('on');}
+  else{banner.classList.remove('on');}
+}
+window.addEventListener('online', ()=>{
+  document.getElementById('offlineBanner').classList.remove('on');
+  toast('З\'ЄДНАННЯ ВІДНОВЛЕНО');
+});
+window.addEventListener('offline', ()=>{
+  document.getElementById('offlineBanner').classList.add('on');
+});
+// Check on load
+setTimeout(checkConn, 500);
 </script>
 </body>
 </html>
