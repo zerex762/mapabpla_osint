@@ -821,18 +821,45 @@ function closeAlert(){document.getElementById('alertBanner').style.display='none
 // ═══════════════════════════
 // BOOT
 // ═══════════════════════════
-window.addEventListener('load',()=>{
-  initTypeSwatches();
-  const sp=document.getElementById('splash'),tx=document.getElementById('spTxt');
-  const msgs=['Loading OSINT feeds...','Calibrating satellite...','Loading oblast borders...','System nominal'];
-  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},700);
-  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},700);},3000);
+function hideSplash(){
+  const sp=document.getElementById('splash');
+  if(!sp||sp._done)return;
+  sp._done=true;
+  sp.style.transition='opacity .4s';
+  sp.style.opacity='0';
+  setTimeout(()=>{
+    sp.style.display='none';
+    try{initTypeSwatches();}catch(e){}
+    checkAdm();
+    if(!localStorage.getItem('sdOK'))showPriv();
+    else launch();
+  },420);
+}
+// Запускаємо одразу як тільки DOM готовий — не чекаємо зовнішні скрипти
+document.addEventListener('DOMContentLoaded',()=>{
+  const tx=document.getElementById('spTxt');
+  const msgs=['Завантаження OSINT...','Калібровка...','Завантаження областей...','Система готова'];
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i<msgs.length){if(tx)tx.textContent=msgs[i++];}
+    else{clearInterval(iv);}
+  },550);
+  // Жорсткий таймаут 2.5с — сплеш зникне ЗАВЖДИ
+  setTimeout(hideSplash, 2500);
 });
+// Запасний варіант якщо DOMContentLoaded вже пройшов
+if(document.readyState!=='loading') setTimeout(hideSplash, 100);
 function checkAdm(){document.getElementById('adm').style.display=location.hash==='#admin'?'flex':'none';}
 window.addEventListener('hashchange',checkAdm);
 function showPriv(){document.getElementById('priv').style.display='flex';document.getElementById('map').style.filter='blur(18px) grayscale(1)';}
 function acceptP(){localStorage.setItem('sdOK','1');const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);}
-function launch(){document.getElementById('bnav').style.display='flex';locateMe();loadOblast();toast('SYSTEM READY');}
+function launch(){
+  document.getElementById('bnav').style.display='flex';
+  // GPS
+  try{map.locate({setView:true,maxZoom:10});}catch(e){}
+  loadOblast();
+  toast('SYSTEM READY');
+}
 
 // ═══════════════════════════
 // FIREBASE
