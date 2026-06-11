@@ -837,7 +837,7 @@ function mkIcon(d){
   const showCrs=document.getElementById('togCrs')?.checked!==false;
   const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
   const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
-    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;transform:rotate(${90 - ang}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
+    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
     ${cLbl}
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+11],iconAnchor:[sz/2,sz/2]});
