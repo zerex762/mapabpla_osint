@@ -2,1083 +2,1077 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<title>SKY DEFENSE - Modern Monitor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+<title>SKY DEFENSE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-
 <style>
-    :root { 
-        --accent: #ff3333;
-        --danger: #ff3333;
-        --warning: #ffcc00;
-        --success: #00ff88;
-        --bg-dark: #060606;
-        --glass: rgba(10, 10, 10, 0.88);
-        --neon-border: rgba(255, 255, 255, 0.08);
-        --panel-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
-        --mono-gold: #ffcc00;
-        --radar-green: #00ff88;
-        --radar-bg: rgba(0, 8, 4, 0.95);
-    }
+/* ═══════ BASE ═══════ */
+:root{
+  --a:#e8ff00; --ar:rgba(232,255,0,.15); --a2:rgba(232,255,0,.06);
+  --ok:#39ff8c; --red:#ff4444; --blue:#4fc3f7;
+  --glass:rgba(8,10,8,.82); --glass2:rgba(12,14,12,.92);
+  --brd:rgba(255,255,255,.07); --brd2:rgba(255,255,255,.04);
+  --sh:0 12px 40px rgba(0,0,0,.7);
+  --isz:22px;
+  --sb:env(safe-area-inset-bottom,0px);
+  --st:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
+#map{position:absolute;inset:0;z-index:1;background:#000;}
+.leaflet-tile-pane{will-change:transform;}
+.leaflet-control-attribution{display:none!important;}
 
-    * { 
-        -webkit-user-select: none; -moz-user-select: none; user-select: none; 
-        box-sizing: border-box; 
-        outline: none; -webkit-tap-highlight-color: transparent;
-    }
-    body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); font-family: 'Share Tech Mono', monospace; overflow: hidden; color: white; }
-    
-    #splash-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #000; z-index: 9999; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; transition: opacity 0.6s ease;
-    }
-    .boot-loader { width: 220px; text-align: left; font-family: 'Orbitron'; }
-    .boot-text { font-size: 11px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
-    .progress-bar { width: 100%; height: 2px; background: rgba(255, 255, 255, 0.05); position: relative; overflow: hidden; }
-    .progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: load 2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-    @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
-    .logo-anim { font-size: 26px; font-family: 'Orbitron'; font-weight: 700; margin-bottom: 15px; letter-spacing: 2px; }
+/* ═══════ SPLASH ═══════ */
+#splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;}
+.sp-logo{font-family:'Orbitron';font-size:clamp(24px,6vw,36px);color:#fff;letter-spacing:.2em;margin-bottom:4px;font-weight:700;}
+.sp-sub{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:.3em;margin-bottom:40px;text-transform:uppercase;}
+.sp-bar{width:180px;height:1px;background:rgba(255,255,255,.06);overflow:hidden;}
+.sp-fill{height:100%;background:var(--a);width:0;animation:spload 2.2s cubic-bezier(.4,0,.2,1) forwards;box-shadow:0 0 12px var(--a);}
+@keyframes spload{to{width:100%}}
+.sp-txt{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.15em;margin-top:10px;text-transform:uppercase;}
 
-    #privacy-modal {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); z-index: 9000; display: none;
-        align-items: center; justify-content: center; backdrop-filter: blur(8px);
-    }
-    .policy-box {
-        background: var(--glass); border: 1px solid var(--neon-border);
-        padding: 30px; border-radius: 12px; max-width: 460px; width: 92%;
-        text-align: center; box-shadow: var(--panel-shadow);
-    }
-    .policy-box h2 { font-family: 'Orbitron'; color: #fff; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 1.5px; }
-    .policy-content {
-        text-align: left; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.65);
-        max-height: 220px; overflow-y: auto; margin-bottom: 25px; padding: 12px;
-        background: rgba(0,0,0,0.4); border: 1px solid var(--neon-border); border-radius: 6px;
-    }
-    .policy-content strong { color: #fff; }
-    .accept-btn {
-        background: #fff; border: none; color: #000;
-        padding: 12px 35px; font-family: 'Orbitron'; cursor: pointer; transition: 0.2s;
-        font-weight: 700; letter-spacing: 1px; border-radius: 6px; width: 100%;
-    }
-    .accept-btn:hover { opacity: 0.9; }
+/* ═══════ PRIVACY ═══════ */
+#priv{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(16px);padding:16px;}
+.pv-box{background:var(--glass2);border:1px solid var(--brd);padding:24px;border-radius:16px;max-width:420px;width:100%;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.pv-box h2{font-family:'Orbitron';color:#fff;font-size:13px;margin-bottom:12px;letter-spacing:.1em;font-weight:600;}
+.pv-body{font-size:11px;line-height:1.7;color:rgba(255,255,255,.5);max-height:140px;overflow-y:auto;margin-bottom:16px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px;}
+.pv-body strong{color:rgba(255,255,255,.8);}
+.pv-ok{width:100%;padding:12px;background:var(--a);border:none;color:#000;font-family:'Orbitron';font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:10px;font-weight:700;transition:.2s;}
+.pv-ok:hover{opacity:.9;}
 
-    #map { width: 100%; height: 100%; z-index: 1; background: #050505; }
+/* ═══════ TOP STATUS ═══════ */
+#topBar{position:absolute;top:calc(var(--st)+12px);left:12px;right:12px;z-index:2000;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
+.tb-l{display:flex;flex-direction:column;gap:5px;pointer-events:auto;}
+.tb-r{pointer-events:auto;}
+.pill{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:20px;padding:5px 11px;font-size:10px;font-weight:500;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--sh);white-space:nowrap;}
+.pill-v{color:#fff;font-family:'Orbitron';font-size:10px;}
+.pill-y{color:var(--a);font-family:'Orbitron';font-size:10px;}
+.pill-g{color:var(--ok);}
+#actPill{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:20px;padding:5px 13px;display:flex;align-items:center;gap:7px;font-size:10px;box-shadow:var(--sh);}
+.act-n{font-family:'Orbitron';color:var(--a);font-size:16px;line-height:1;text-shadow:0 0 10px var(--a);}
+.wx-pill{cursor:pointer;}
 
-    .uav-icon img { width: 44px; height: 44px; will-change: transform; }
+/* ═══════ RETICLE ═══════ */
+#reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:40px;height:40px;opacity:.35;}
+#reticle svg{width:100%;height:100%;}
 
-    .main-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; z-index: 1500; pointer-events: none; opacity: 0.25; }
-    .main-crosshair span { position: absolute; width: 7px; height: 7px; border-color: #fff; border-style: solid; }
-    .tl { top: 0; left: 0; border-width: 1px 0 0 1px; } .tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
-    .bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; } .br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+/* ═══════════════════════════════════════════════
+   BOTTOM NAV — головне меню DiMap-стиль
+════════════════════════════════════════════════ */
+#bnav{
+  position:absolute;
+  bottom:calc(var(--sb)+16px);
+  left:50%;transform:translateX(-50%);
+  z-index:2000;
+  background:var(--glass2);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--brd);
+  border-radius:22px;
+  padding:6px 8px;
+  display:none;
+  align-items:center;
+  gap:2px;
+  box-shadow:var(--sh),0 0 0 1px rgba(255,255,255,.03);
+  min-width:340px;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:8px 6px;border-radius:14px;cursor:pointer;
+  transition:background .18s,color .18s;
+  color:rgba(255,255,255,.35);font-size:8.5px;
+  font-family:'Orbitron';letter-spacing:.04em;
+  border:none;background:transparent;
+  text-decoration:none;
+  min-width:52px;
+}
+.bn-item i{font-size:16px;transition:color .18s;}
+.bn-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);}
+.bn-item.on{background:var(--ar);color:var(--a);}
+.bn-item.on i{color:var(--a);}
+.bn-sep{width:1px;height:28px;background:var(--brd);flex-shrink:0;margin:0 2px;}
+.bn-support{color:rgba(255,200,0,.5);}
+.bn-support i{color:#ffd700;}
+.bn-support.on,.bn-support:hover{background:rgba(255,215,0,.08);color:#ffd700;}
 
-    .top-ui { position: absolute; top: 16px; left: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-    .top-header-line { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-    .status-group { display: flex; gap: 8px; pointer-events: auto; }
-    .box { background: var(--glass); backdrop-filter: blur(15px); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--neon-border); font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: var(--panel-shadow); }
-    .glow { color: #fff; font-family: 'Orbitron'; }
+/* ═══════ WEATHER PANEL ═══════ */
+#wxPnl{position:absolute;top:calc(var(--st)+72px);left:12px;z-index:2100;background:var(--glass2);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:14px;padding:14px 16px;min-width:185px;display:none;box-shadow:var(--sh);animation:fadeUp .2s ease;}
+.wx-ico{font-size:28px;text-align:center;margin-bottom:6px;}
+.wx-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.45);margin-bottom:3px;}
+.wx-row b{color:rgba(255,255,255,.85);font-family:'Orbitron';font-size:10px;}
 
-    .ticker-container {
-        width: 100%; max-width: 400px; background: var(--glass); backdrop-filter: blur(15px);
-        border: 1px solid var(--neon-border); border-radius: 8px; overflow: hidden;
-        padding: 6px 0; box-shadow: var(--panel-shadow); pointer-events: auto;
-    }
-    .ticker-text {
-        display: inline-block; white-space: nowrap; padding-left: 100%;
-        font-family: 'Orbitron'; font-size: 10px; color: rgba(255,255,255,0.7);
-        font-weight: 600; letter-spacing: 1.5px; animation: ticker 20s linear infinite;
-    }
-    @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+/* ═══════ TOAST ═══════ */
+#toast{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3000;background:var(--a);color:#000;padding:5px 16px;border-radius:20px;font-size:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;font-family:'Orbitron';letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 20px rgba(232,255,0,.4);}
 
-    .side-panel { position: absolute; top: 80px; right: -360px; z-index: 2100; background: var(--glass); backdrop-filter: blur(20px); width: 290px; border-radius: 10px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s ease; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); }
-    .side-panel.active { right: 16px; }
-    
-    .list-panel { position: absolute; top: 140px; left: -360px; z-index: 2100; background: var(--glass); backdrop-filter: blur(20px); width: 290px; max-height: calc(100vh - 250px); border-radius: 10px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s ease; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); display: flex; flex-direction: column; }
-    .list-panel.active { left: 16px; }
-    
-    .panel-header { padding: 14px 16px; border-bottom: 1px solid var(--neon-border); display: flex; justify-content: space-between; align-items: center; }
-    .panel-header span { font-family: 'Orbitron'; font-weight: 600; color: #fff; font-size: 12px; letter-spacing: 0.5px; }
-    .panel-close-btn { cursor: pointer; font-size: 16px; opacity: 0.4; padding: 4px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-    .panel-close-btn:hover { opacity: 1; }
-    
-    .panel-body { padding: 16px; }
-    .list-body { padding: 8px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 6px; }
-    
-    .data-block { margin-bottom: 14px; }
-    .data-block:last-child { margin-bottom: 0; }
-    .data-label { color: rgba(255,255,255,0.35); font-size: 9px; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; display: block; letter-spacing: 0.5px; }
-    .data-value { font-family: 'Orbitron'; color: #fff; font-size: 13px; }
-    .live-timer { color: var(--success); }
+/* ═══════ ALERT BANNER ═══════ */
+#alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(8,8,6,.95);border:1px solid rgba(255,60,60,.35);border-radius:12px;padding:9px 14px;box-shadow:0 0 24px rgba(255,50,50,.2);min-width:220px;max-width:92vw;animation:fadeUp .28s ease;}
+.ab-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);flex-shrink:0;animation:abpulse 1.2s infinite;}
+@keyframes abpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ab-body{flex:1;}
+.ab-title{font-family:'Orbitron';font-size:9px;color:var(--red);letter-spacing:.12em;margin-bottom:2px;}
+.ab-sub{font-size:10px;color:rgba(255,255,255,.55);}
+.ab-close{background:none;border:none;color:rgba(255,255,255,.25);font-size:15px;cursor:pointer;padding:0;line-height:1;}
 
-    .target-item {
-        background: rgba(255,255,255,0.02); border: 1px solid var(--neon-border);
-        padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s ease;
-        display: flex; flex-direction: column; gap: 4px;
-    }
-    .target-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); }
-    .target-item-header { display: flex; justify-content: space-between; align-items: center; }
-    .target-item-type { font-family: 'Orbitron'; font-size: 11px; font-weight: 700; }
-    .target-item-id { font-size: 9px; opacity: 0.35; font-family: 'Orbitron'; }
-    .target-item-meta { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.5); }
-    .target-item-eta { color: var(--warning); font-family: 'Orbitron'; font-size: 10px; font-weight: 600; }
+/* ═══════ TRACK PANEL ═══════ */
+#trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:60px;max-width:380px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;}
+#trackPnl.on{display:block;}
+.tp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;font-weight:600;}
+.tp-x{background:none;border:none;color:rgba(255,255,255,.25);font-size:17px;cursor:pointer;}
+.tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;}
+.tp-cell .lb{font-size:8px;color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;}
+.tp-cell .vl{font-family:'Orbitron';font-size:11px;color:#fff;}
+.tp-cell .vl.y{color:var(--a);}
+.tp-cell .vl.g{color:var(--ok);}
+.tp-info{border-top:1px solid var(--brd2);padding-top:8px;margin-top:4px;}
+.tp-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;}
+.tp-ico{font-size:13px;flex-shrink:0;margin-top:1px;}
+.tp-txt{font-size:10px;color:rgba(255,255,255,.5);line-height:1.5;}
+.tp-txt b{color:rgba(255,255,255,.82);}
+.tp-vec{margin-top:7px;padding:6px 9px;background:rgba(255,255,255,.03);border:1px solid var(--brd2);border-radius:7px;font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);line-height:1.6;}
 
-    /* ========== НОВИЙ ПОКРАЩЕНИЙ РАДАР ========== */
-    .radar-panel {
-        position: absolute; bottom: 85px; left: 16px; z-index: 2100;
-        background: var(--radar-bg);
-        backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 136, 0.2);
-        border-radius: 12px; padding: 0; width: 300px;
-        display: none; box-shadow: 0 0 30px rgba(0,255,136,0.08), var(--panel-shadow);
-        overflow: hidden;
-    }
-    .radar-panel.active { display: block; }
+/* ═══════ RADAR ═══════ */
+#radarPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid rgba(0,255,136,.15);border-radius:16px;padding:12px 14px;width:240px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;}
+#radarPnl.on{display:block;}
+.rd-title{font-family:'Orbitron';font-size:9px;color:var(--ok);letter-spacing:.18em;margin-bottom:10px;font-weight:600;}
+#rdCv{display:block;margin:0 auto 9px;border-radius:50%;background:#010504;}
+.rd-list{max-height:100px;overflow-y:auto;}
+.rd-item{font-size:9px;color:rgba(255,255,255,.55);padding:4px 0;border-bottom:1px solid var(--brd2);display:flex;justify-content:space-between;font-family:'Orbitron';}
+.rd-eta{color:var(--a);}
 
-    .radar-header {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 14px; border-bottom: 1px solid rgba(0,255,136,0.1);
-        background: rgba(0,255,136,0.03);
-    }
-    .radar-title { 
-        font-family: 'Orbitron'; font-size: 9px; color: var(--radar-green);
-        letter-spacing: 2px; font-weight: 700;
-    }
-    .radar-range-controls {
-        display: flex; gap: 4px; align-items: center;
-    }
-    .range-btn {
-        background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2);
-        color: rgba(0,255,136,0.7); font-family: 'Orbitron'; font-size: 8px;
-        padding: 3px 7px; border-radius: 4px; cursor: pointer; transition: 0.2s;
-    }
-    .range-btn:hover, .range-btn.active { 
-        background: rgba(0,255,136,0.2); color: var(--radar-green);
-        border-color: rgba(0,255,136,0.5);
-    }
-    .radar-close-btn {
-        cursor: pointer; color: rgba(255,255,255,0.3); font-size: 13px; padding: 2px 4px;
-        transition: 0.2s; margin-left: 6px;
-    }
-    .radar-close-btn:hover { color: #fff; }
+/* ═══════ HISTORY BAR ═══════ */
+#histBar{position:absolute;bottom:calc(var(--sb)+84px);left:12px;right:60px;z-index:2000;background:var(--glass2);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:12px;padding:7px 12px;display:none;align-items:center;gap:8px;}
+#histBar.on{display:flex;}
+#histBar label{font-family:'Orbitron';font-size:8px;color:var(--a);white-space:nowrap;letter-spacing:.1em;}
+#hSlid{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+#hSlid::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--a);}
+#hLbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);white-space:nowrap;min-width:50px;text-align:right;}
+#hPlayBtn{width:24px;height:24px;border-radius:6px;border:1px solid var(--brd);background:rgba(232,255,0,.08);color:var(--a);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 
-    .radar-canvas-wrapper {
-        padding: 12px; display: flex; justify-content: center;
-    }
-    #radarCanvas { 
-        display: block; background: transparent;
-        border-radius: 50%;
-    }
+/* ═══════ TARGET LIST PANEL ═══════ */
+#listPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:360px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:0;display:none;box-shadow:var(--sh);max-height:55vh;overflow:hidden;flex-direction:column;animation:fadeUp .25s ease;}
+#listPnl.on{display:flex;}
+.lp-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--brd2);}
+.lp-title{font-family:'Orbitron';font-size:10px;color:#fff;letter-spacing:.1em;font-weight:600;}
+.lp-x{background:none;border:none;color:rgba(255,255,255,.25);font-size:16px;cursor:pointer;}
+.lp-body{overflow-y:auto;padding:8px;}
+.lt-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
+.lt-item:hover{background:rgba(255,255,255,.04);}
+.lt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lt-body{flex:1;}
+.lt-type{font-family:'Orbitron';font-size:10px;color:#fff;font-weight:600;margin-bottom:1px;}
+.lt-meta{font-size:9px;color:rgba(255,255,255,.35);}
+.lt-eta{font-family:'Orbitron';font-size:10px;color:var(--a);white-space:nowrap;}
 
-    .radar-footer {
-        padding: 8px 14px; border-top: 1px solid rgba(0,255,136,0.08);
-        display: flex; justify-content: space-between; align-items: center;
-        background: rgba(0,0,0,0.3);
-    }
-    .radar-stat { font-size: 9px; color: rgba(0,255,136,0.5); font-family: 'Orbitron'; }
-    .radar-stat span { color: var(--radar-green); }
-    .radar-target-count { 
-        font-family: 'Orbitron'; font-size: 11px; font-weight: 700;
-        color: var(--accent);
-    }
+/* ═══════ THEME MODAL ═══════ */
+#themeSh{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);}
+#themeSh.on{display:flex;}
+.th-sheet{background:var(--glass2);border:1px solid var(--brd);border-bottom:none;border-radius:20px 20px 0 0;width:min(580px,100%);padding:18px 14px calc(var(--sb)+26px);max-height:90vh;overflow-y:auto;animation:shUp .3s cubic-bezier(.19,1,.22,1);}
+@keyframes shUp{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.th-drag{width:32px;height:3px;background:rgba(255,255,255,.1);border-radius:99px;margin:0 auto 16px;}
+.th-title{font-family:'Orbitron';font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.2em;text-align:center;margin-bottom:14px;}
+.th-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.th-card{border:1px solid var(--brd2);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.th-card:active{transform:scale(.96);}
+.th-card.sel{border-color:var(--a);box-shadow:0 0 14px rgba(232,255,0,.2);}
+.th-card.sel::after{content:'✓';position:absolute;top:5px;right:7px;color:var(--a);font-size:11px;font-weight:900;text-shadow:0 0 8px var(--a);}
+.th-prev{height:56px;overflow:hidden;position:relative;}
+.th-name{padding:4px 6px;font-size:7px;font-family:'Orbitron';color:rgba(255,255,255,.45);letter-spacing:.06em;text-align:center;background:#050505;}
+/* Preview gradients */
+.pv0{background:linear-gradient(135deg,#0d0d0d,#181818,#0a0a0a);}
+.pv1{background:linear-gradient(135deg,#162716,#1e4020,#234825);}
+.pv2{background:linear-gradient(135deg,#060914,#0a1028,#0d1535);}
+.pv3{background:linear-gradient(135deg,#c8d8a0,#b0c080,#8aa060);}
+.pv4{background:linear-gradient(135deg,#0f1a2e,#152240,#1a2a50);display:flex;align-items:center;justify-content:center;}
+.pv5{background:linear-gradient(135deg,#f0e8e0,#e0d4c4,#d0c0b0);}
+.pv6{background:linear-gradient(135deg,#150808,#200a0a,#2a0c0c);}
+.pv7{background:linear-gradient(135deg,#040808,#060f0f,#051212);display:flex;align-items:center;justify-content:center;}
+.pv8{background:linear-gradient(135deg,#141008,#20180a,#2a1e0c);}
+.pv9{background:linear-gradient(135deg,#0a0a14,#10101e,#141428);display:flex;align-items:center;justify-content:center;}
+.pv10{background:linear-gradient(135deg,#141410,#1e1e18,#24241e);}
+.pv11{background:linear-gradient(135deg,#0a0a0a,#141414,#1a1a1a);}
+.th-badge{font-family:'Orbitron';font-size:11px;font-weight:700;}
+/* Brightness row */
+.br-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.br-row label{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.28);white-space:nowrap;letter-spacing:.1em;}
+.rng{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--a);}
+.br-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:28px;text-align:right;}
+.th-close{display:block;width:100%;margin-top:4px;background:rgba(255,255,255,.03);border:1px solid var(--brd2);color:rgba(255,255,255,.25);font-family:'Orbitron';font-size:8px;letter-spacing:.2em;padding:10px;cursor:pointer;border-radius:8px;}
 
-    /* Легенда радару */
-    .radar-legend {
-        display: flex; gap: 10px; padding: 6px 14px;
-        border-top: 1px solid rgba(0,255,136,0.06);
-        background: rgba(0,0,0,0.2);
-    }
-    .legend-item {
-        display: flex; align-items: center; gap: 4px;
-        font-size: 8px; color: rgba(255,255,255,0.35); font-family: 'Orbitron';
-    }
-    .legend-dot {
-        width: 6px; height: 6px; border-radius: 50%;
-    }
+/* ═══════ SETTINGS SHEET ═══════ */
+#setSh{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);}
+#setSh.on{display:flex;}
+.set-sheet{background:var(--glass2);border:1px solid var(--brd);border-bottom:none;border-radius:20px 20px 0 0;width:min(580px,100%);padding:18px 14px calc(var(--sb)+26px);max-height:92vh;overflow-y:auto;animation:shUp .3s cubic-bezier(.19,1,.22,1);}
+.ss-sec{margin-bottom:16px;}
+.ss-lbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.25);letter-spacing:.15em;text-transform:uppercase;margin-bottom:9px;display:block;border-bottom:1px solid var(--brd2);padding-bottom:4px;}
+.ss-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.ss-row>span{font-size:11px;color:rgba(255,255,255,.6);}
+.tog{position:relative;width:36px;height:19px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:19px;cursor:pointer;transition:.22s;}
+.tog-sl:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:#444;border-radius:50%;transition:.22s;}
+.tog input:checked+.tog-sl{background:var(--a);}
+.tog input:checked+.tog-sl:before{transform:translateX(17px);background:#000;}
+.swg{display:flex;gap:5px;}
+.sw{width:21px;height:21px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.14s;}
+.sw.on{border-color:#fff;transform:scale(1.2);}
+.sl-row{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.sl-row>span{font-size:11px;color:rgba(255,255,255,.6);flex-shrink:0;min-width:100px;}
+.sl-val{font-family:'Orbitron';font-size:9px;color:var(--a);width:28px;text-align:right;}
+.snd-g{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.snd-b{background:rgba(255,255,255,.04);border:1px solid var(--brd2);color:rgba(255,255,255,.45);font-size:10px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.14s;text-align:left;}
+.snd-b:hover,.snd-b.on{border-color:var(--a);color:var(--a);}
+.cmodes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:9px;}
+.cm-btn{background:rgba(255,255,255,.03);border:1px solid var(--brd2);color:rgba(255,255,255,.4);font-size:9px;padding:6px;border-radius:6px;cursor:pointer;transition:.14s;text-align:center;font-family:'Orbitron';letter-spacing:.04em;}
+.cm-btn.on,.cm-btn:hover{border-color:var(--a);color:var(--a);}
+/* per-type color */
+.ptc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 8px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--brd2);}
+.ptc-lbl{font-size:10px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:6px;}
+.msw{width:18px;height:18px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:.12s;}
+.msw.on{border-color:#fff;transform:scale(1.18);}
 
-    .user-color-panel {
-        position: absolute; top: 75px; right: 16px; z-index: 2200;
-        background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--neon-border);
-        border-radius: 10px; padding: 12px; width: 210px; box-shadow: var(--panel-shadow);
-        display: none; flex-direction: column; gap: 8px;
-    }
-    .user-color-panel.active { display: flex; }
-    .color-picker-title { font-family: 'Orbitron'; font-size: 9px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .color-options-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 2px; }
-    .color-dot { width: 100%; height: 28px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-    .color-dot.selected { border-color: #fff; box-shadow: 0 0 8px currentColor; }
+/* ═══════ ADMIN ═══════ */
+#adm{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;display:none;align-items:center;justify-content:center;padding:14px;}
+.adm-box{max-width:360px;width:100%;border:1px solid var(--brd);padding:18px;border-radius:14px;background:#050505;}
+.adm-f{font-family:'Orbitron';font-size:7px;color:rgba(255,255,255,.25);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:3px;}
+.adm-i,.adm-s{width:100%;background:#0e0e0e;color:#fff;border:1px solid var(--brd);padding:9px;font-family:'Orbitron';font-size:10px;outline:none;margin-bottom:9px;border-radius:7px;}
+.adm-b{width:100%;padding:10px;border:none;cursor:pointer;font-family:'Orbitron';font-weight:700;transition:.18s;border-radius:8px;margin-top:4px;}
+.adm-ok{background:var(--a);color:#000;}
+.adm-cl{background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);}
+.adm-x{background:#111;color:#444;margin-top:5px;}
+.plink{position:absolute;bottom:calc(var(--sb)+3px);left:50%;transform:translateX(-50%);z-index:2001;font-size:7px;opacity:.2;color:#fff;text-decoration:none;font-family:'Orbitron';}
 
-    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--glass); backdrop-filter: blur(20px); padding: 6px; border-radius: 14px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--neon-border); box-shadow: var(--panel-shadow); pointer-events: auto; }
-    .c-btn { width: 42px; height: 42px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: rgba(255,255,255,0.55); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; text-decoration: none; }
-    .c-btn:hover, .c-btn.active { background: rgba(255,255,255,0.06); color: #fff; border-color: var(--neon-border); }
-    .support-btn { color: var(--mono-gold); }
-    .support-btn:hover { color: #fff; background: rgba(255, 204, 0, 0.1); }
-    
-    #mapNotify { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 3000; background: #fff; color: #000; padding: 5px 16px; border-radius: 4px; font-size: 9px; font-weight: 700; opacity: 0; transition: 0.2s; pointer-events: none; font-family: 'Orbitron'; letter-spacing: 0.5px; }
-    .privacy-link { position: absolute; bottom: 10px; right: 16px; z-index: 2001; font-size: 8px; opacity: 0.3; color: white; text-decoration: none; font-family: 'Orbitron'; }
-    .privacy-link:hover { opacity: 0.7; }
-
-    #adminPanel {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.92); z-index: 10000; display: none;
-        padding: 20px; backdrop-filter: blur(8px); overflow-y: auto;
-    }
-    .admin-box {
-        max-width: 400px; margin: 40px auto; border: 1px solid var(--neon-border);
-        padding: 24px; border-radius: 12px; background: var(--glass);
-        box-shadow: var(--panel-shadow);
-    }
-    .admin-input, .admin-select {
-        width: 100%; background: #111; color: #fff; border: 1px solid var(--neon-border);
-        padding: 11px; margin-top: 6px; font-family: 'Orbitron'; font-size: 11px; border-radius: 6px;
-    }
-    .admin-btn {
-        width: 100%; padding: 11px; margin-top: 14px; border: none;
-        cursor: pointer; font-family: 'Orbitron'; font-weight: 700; font-size: 11px; border-radius: 6px; transition: 0.2s;
-    }
-    .btn-add { background: #fff; color: #000; }
-    .btn-clear { background: var(--accent); color: #fff; opacity: 0.8; }
-
-    /* Вибір теми карти */
-    .map-theme-pill {
-        position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%);
-        z-index: 2000; background: var(--glass); backdrop-filter: blur(15px);
-        border: 1px solid var(--neon-border); border-radius: 20px; padding: 4px;
-        display: none; gap: 4px; box-shadow: var(--panel-shadow);
-        font-family: 'Orbitron'; font-size: 9px;
-    }
-    .map-theme-pill.active { display: flex; }
-    .theme-opt {
-        padding: 5px 12px; border-radius: 14px; cursor: pointer; color: rgba(255,255,255,0.5);
-        transition: 0.2s; white-space: nowrap;
-    }
-    .theme-opt.sel { background: rgba(255,255,255,0.1); color: #fff; }
-
-    @media (max-width: 768px) {
-        .top-ui { top: 12px; left: 12px; right: 12px; gap: 8px; }
-        .top-header-line { flex-direction: column; gap: 8px; align-items: flex-start; }
-        .ticker-container { max-width: 100%; padding: 5px 0; }
-        
-        .side-panel {
-            width: calc(100% - 24px); left: 12px; right: 12px;
-            top: auto; bottom: -400px; border-radius: 14px 14px 10px 10px;
-            transition: bottom 0.3s ease;
-        }
-        .side-panel.active { bottom: 80px; right: 12px; }
-
-        .list-panel {
-            width: calc(100% - 24px); left: 12px; right: 12px;
-            top: auto; bottom: -500px; max-height: 240px;
-            border-radius: 14px 14px 10px 10px; transition: bottom 0.3s ease;
-        }
-        .list-panel.active { bottom: 80px; left: 12px; }
-
-        .user-color-panel {
-            top: auto; bottom: 80px; left: 12px; right: 12px; width: auto;
-            border-radius: 12px;
-        }
-
-        .radar-panel {
-            left: 12px; right: 12px; width: auto; bottom: 80px;
-            border-radius: 14px;
-        }
-        
-        .panel-header { padding: 16px; }
-        .panel-close-btn { font-size: 20px; padding: 6px; }
-        
-        .bottom-nav { bottom: 16px; width: calc(100% - 24px); justify-content: space-between; padding: 6px 10px; border-radius: 16px; }
-        .c-btn { width: 44px; height: 44px; font-size: 16px; }
-        
-        #mapNotify { top: 130px; }
-    }
+/* ═══════ RESPONSIVE ═══════ */
+@media(min-width:600px){
+  #bnav{bottom:calc(var(--sb)+24px);}
+  #trackPnl,#histBar{right:70px;}
+}
+@media(min-width:1024px){
+  #bnav{min-width:420px;}
+  .bn-item{min-width:60px;}
+}
+/* LEAFLET TOOLTIP */
+.leaflet-tooltip.ob-tt{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-family:'Orbitron';font-size:8px;padding:3px 6px;}
 </style>
 </head>
 <body oncontextmenu="return false;">
 
-<div id="splash-screen">
-    <div class="logo-anim" style="color:#fff">SKY DEFENSE</div>
-    <div class="boot-loader">
-        <div class="boot-text" id="bootStatus">Завантаження модулів...</div>
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-    </div>
+<!-- SPLASH -->
+<div id="splash">
+  <div class="sp-logo">SKY DEFENSE</div>
+  <div class="sp-sub">Strategic Monitor · Ukraine</div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
+  <div class="sp-txt" id="spTxt">Initializing...</div>
 </div>
 
-<div id="privacy-modal">
-    <div class="policy-box">
-        <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
-        <div class="policy-content">
-            <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Доступ потрібен для розрахунку вашої позиції відносно цілей та обчислення ETA.</p>
-            <p><strong>2. ПРИВАТНІСТЬ:</strong> Дані обробляються локально. Ми не зберігаємо ваше місцезнаходження на серверах.</p>
-            <p><strong>3. ДЖЕРЕЛА:</strong> Дані базуються на локальному OSINT-моніторингу повітряного простору.</p>
-        </div>
-        <button class="accept-btn" onclick="acceptPolicy()">ПРИЙНЯТИ</button>
+<!-- PRIVACY -->
+<div id="priv">
+  <div class="pv-box">
+    <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
+    <div class="pv-body">
+      <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Для ETA та радару. Зберігається локально.</p>
+      <p><strong>2. ПРИВАТНІСТЬ:</strong> Без передачі на сервери.</p>
+      <p><strong>3. ДЖЕРЕЛА:</strong> OSINT — можлива похибка.</p>
+      <p><strong>4. УВАГА:</strong> Не офіційна тривога. Слухайте ПС ЗСУ.</p>
     </div>
+    <button class="pv-ok" onclick="acceptP()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+  </div>
 </div>
 
-<div id="adminPanel">
-    <div class="admin-box">
-        <h2 style="font-family: 'Orbitron'; font-size: 14px; margin-bottom: 15px; text-align: center; letter-spacing: 1px;">COMMAND CENTER</h2>
-        <div class="data-block">
-            <span class="data-label">Тип Цили</span>
-            <select id="admType" class="admin-select">
-                <option value="shahed-vp-standart">Shahed-136 (V-Tail)</option>
-                <option value="shahed-238-jet">Shahed-238 (Jet)</option>
-                <option value="kalibr-cruise">Kalibr / Cruise Missile</option>
-                <option value="tu-95ms-strat">Tu-95MS Strategy</option>
-            </select>
-        </div>
-        <div class="data-block">
-            <span class="data-label">Колір маркеру</span>
-            <select id="admColor" class="admin-select">
-                <option value="#ff3333">Червоний</option>
-                <option value="#ff9900">Помаранчевий</option>
-                <option value="#ffcc00">Жовтий</option>
-                <option value="#00ffff">Блакитний</option>
-            </select>
-        </div>
-        <div class="data-block">
-            <span class="data-label">Курс (0-360°)</span>
-            <input type="number" id="admAngle" class="admin-input" value="0">
-        </div>
-        <button class="admin-btn btn-add" onclick="spawnDrone()">DEPLOY TARGET</button>
-        <button class="admin-btn btn-clear" onclick="clearDrones()">PURGE ALL DATA</button>
-        <button class="admin-btn" style="background: #222; color: #fff;" onclick="location.hash=''">CLOSE</button>
-    </div>
+<!-- ADMIN -->
+<div id="adm">
+  <div class="adm-box">
+    <div style="font-family:'Orbitron';font-size:12px;margin-bottom:12px;text-align:center;color:var(--a);">COMMAND CENTER</div>
+    <span class="adm-f">Target Type</span>
+    <select id="aTyp" class="adm-s">
+      <option value="shahed-vp-standart">Shahed-136</option>
+      <option value="shahed-238-jet">Shahed-238 Jet</option>
+      <option value="kalibr-cruise">Kalibr Cruise</option>
+      <option value="tu-95ms-strat">Tu-95MS Strategic</option>
+    </select>
+    <span class="adm-f">Angle 0–360°</span>
+    <input type="number" id="aAng" class="adm-i" value="180">
+    <span class="adm-f">Accuracy Radius (m)</span>
+    <input type="number" id="aAcc" class="adm-i" value="5000">
+    <button class="adm-b adm-ok" onclick="spawnDrone()">DEPLOY</button>
+    <button class="adm-b adm-cl" onclick="clearDrones()">PURGE ALL</button>
+    <button class="adm-b adm-x" onclick="location.hash=''">CLOSE</button>
+  </div>
 </div>
 
+<!-- THEME SHEET -->
+<div id="themeSh" onclick="bgcl(event,'themeSh')">
+  <div class="th-sheet">
+    <div class="th-drag"></div>
+    <div class="th-title">MAP LAYER</div>
+    <div class="th-grid">
+      <div class="th-card sel" id="tc0" onclick="selTh(0)"><div class="th-prev pv0"></div><div class="th-name">ULTRA DARK</div></div>
+      <div class="th-card" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
+      <div class="th-card" id="tc2" onclick="selTh(2)"><div class="th-prev pv2"></div><div class="th-name">NIGHT BLUE</div></div>
+      <div class="th-card" id="tc3" onclick="selTh(3)"><div class="th-prev pv3"></div><div class="th-name">TOPO</div></div>
+      <div class="th-card" id="tc4" onclick="selTh(4)"><div class="th-prev pv4"><span class="th-badge" style="color:#4fc3f7;text-shadow:0 0 8px #4fc3f7">3D</span></div><div class="th-name">3D RELIEF</div></div>
+      <div class="th-card" id="tc5" onclick="selTh(5)"><div class="th-prev pv5"></div><div class="th-name">LIGHT</div></div>
+      <div class="th-card" id="tc6" onclick="selTh(6)"><div class="th-prev pv6"></div><div class="th-name">RED OPS</div></div>
+      <div class="th-card" id="tc7" onclick="selTh(7)"><div class="th-prev pv7"><span class="th-badge" style="color:rgba(0,255,136,.8)">NV</span></div><div class="th-name">NIGHT VISION</div></div>
+      <div class="th-card" id="tc8" onclick="selTh(8)"><div class="th-prev pv8"></div><div class="th-name">TERRAIN</div></div>
+      <div class="th-card" id="tc9" onclick="selTh(9)"><div class="th-prev pv9"><span class="th-badge" style="color:#9c88ff;font-size:9px">NAVY</span></div><div class="th-name">NAVY BLUE</div></div>
+      <div class="th-card" id="tc10" onclick="selTh(10)"><div class="th-prev pv10"></div><div class="th-name">MILITARY</div></div>
+      <div class="th-card" id="tc11" onclick="selTh(11)"><div class="th-prev pv11"></div><div class="th-name">MINIMAL</div></div>
+    </div>
+    <div class="br-row">
+      <label>BRIGHTNESS</label>
+      <input type="range" id="brR" class="rng" min="10" max="140" value="65" oninput="setBr(this.value)" style="background:linear-gradient(to right,var(--a) 42%,rgba(255,255,255,.08) 42%)">
+      <span class="br-val" id="brV">65%</span>
+    </div>
+    <button class="th-close" onclick="cls('themeSh')">CLOSE</button>
+  </div>
+</div>
+
+<!-- SETTINGS SHEET -->
+<div id="setSh" onclick="bgcl(event,'setSh')">
+  <div class="set-sheet">
+    <div class="th-drag"></div>
+    <div class="th-title">SETTINGS</div>
+
+    <!-- Вигляд цілей -->
+    <div class="ss-sec">
+      <span class="ss-lbl">Вигляд цілей</span>
+      <div class="sl-row"><span>Розмір іконки</span>
+        <input type="range" class="rng" id="iszR" min="12" max="60" value="22" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 20%,rgba(255,255,255,.08) 20%)">
+        <span class="sl-val" id="iszV">22px</span>
+      </div>
+      <div class="ss-row"><span>Режим кольору</span></div>
+      <div class="cmodes">
+        <button class="cm-btn on" id="cm0" onclick="setCM('single',this)">🎨 SINGLE</button>
+        <button class="cm-btn" id="cm1" onclick="setCM('type',this)">🏷 BY TYPE</button>
+        <button class="cm-btn" id="cm2" onclick="setCM('heat',this)">🔥 HEAT</button>
+      </div>
+      <!-- Single color -->
+      <div id="singleRow" class="ss-row"><span>Колір цілей</span>
+        <div class="swg" id="tcSw">
+          <div class="sw on" style="background:#e8ff00" onclick="setGC('#e8ff00',this)"></div>
+          <div class="sw" style="background:#ff4444" onclick="setGC('#ff4444',this)"></div>
+          <div class="sw" style="background:#ff9900" onclick="setGC('#ff9900',this)"></div>
+          <div class="sw" style="background:#4fc3f7" onclick="setGC('#4fc3f7',this)"></div>
+          <div class="sw" style="background:#39ff8c" onclick="setGC('#39ff8c',this)"></div>
+          <div class="sw" style="background:#cc44ff" onclick="setGC('#cc44ff',this)"></div>
+          <div class="sw" style="background:#fff" onclick="setGC('#ffffff',this)"></div>
+        </div>
+      </div>
+      <!-- Per-type colors -->
+      <div id="typeBlock" style="display:none">
+        <div class="ptc-row"><div class="ptc-lbl"><span>🚁</span> Shahed-136</div><div class="swg" id="ptc0"></div></div>
+        <div class="ptc-row"><div class="ptc-lbl"><span>✈️</span> Shahed-238</div><div class="swg" id="ptc1"></div></div>
+        <div class="ptc-row"><div class="ptc-lbl"><span>🚀</span> Kalibr</div><div class="swg" id="ptc2"></div></div>
+        <div class="ptc-row"><div class="ptc-lbl"><span>✈️</span> Tu-95MS</div><div class="swg" id="ptc3"></div></div>
+      </div>
+    </div>
+
+    <!-- Шари -->
+    <div class="ss-sec">
+      <span class="ss-lbl">Шари карти</span>
+      <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
+    </div>
+
+    <!-- Звуки -->
+    <div class="ss-sec">
+      <span class="ss-lbl">Сповіщення</span>
+      <div class="ss-row"><span>Push-сповіщення</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>Звуки</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="tog-sl"></span></label></div>
+      <div class="sl-row"><span>Гучність</span>
+        <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.08) 60%)">
+        <span class="sl-val" id="volV">60%</span>
+      </div>
+      <div class="snd-g">
+        <button class="snd-b on" onclick="testSnd('new')">🔔 Нова ціль</button>
+        <button class="snd-b on" onclick="testSnd('del')">✅ Знищена</button>
+        <button class="snd-b on" onclick="testSnd('alm')">🚨 Тривога</button>
+        <button class="snd-b" onclick="testSnd('tick')">⏱ Тік</button>
+      </div>
+    </div>
+
+    <!-- UI -->
+    <div class="ss-sec">
+      <span class="ss-lbl">Акцент UI</span>
+      <div class="swg" id="uiSw" style="flex-wrap:wrap;gap:6px;">
+        <div class="sw on" style="background:#e8ff00" onclick="setUI('#e8ff00',this)"></div>
+        <div class="sw" style="background:#ff4444" onclick="setUI('#ff4444',this)"></div>
+        <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
+        <div class="sw" style="background:#4fc3f7" onclick="setUI('#4fc3f7',this)"></div>
+        <div class="sw" style="background:#39ff8c" onclick="setUI('#39ff8c',this)"></div>
+        <div class="sw" style="background:#cc44ff" onclick="setUI('#cc44ff',this)"></div>
+      </div>
+    </div>
+
+    <button class="th-close" onclick="cls('setSh')">CLOSE</button>
+  </div>
+</div>
+
+<!-- MAP -->
 <div id="map"></div>
 
-<div class="main-crosshair">
-    <span class="tl"></span><span class="tr"></span>
-    <span class="bl"></span><span class="br"></span>
+<!-- TACTICAL RETICLE -->
+<div id="reticle">
+  <svg viewBox="0 0 40 40" fill="none">
+    <circle cx="20" cy="20" r="17" stroke="rgba(255,255,255,.3)" stroke-width=".7"/>
+    <line x1="20" y1="3" x2="20" y2="8" stroke="rgba(255,255,255,.5)" stroke-width="1.1"/>
+    <line x1="20" y1="32" x2="20" y2="37" stroke="rgba(255,255,255,.5)" stroke-width="1.1"/>
+    <line x1="3" y1="20" x2="8" y2="20" stroke="rgba(255,255,255,.5)" stroke-width="1.1"/>
+    <line x1="32" y1="20" x2="37" y2="20" stroke="rgba(255,255,255,.5)" stroke-width="1.1"/>
+    <circle cx="20" cy="20" r="2" fill="rgba(255,255,255,.6)"/>
+    <circle cx="20" cy="20" r="6" stroke="rgba(255,255,255,.18)" stroke-width=".6" stroke-dasharray="2 3"/>
+  </svg>
 </div>
 
-<div id="mapNotify">SYNC COMPLETED</div>
+<div id="toast"></div>
 
-<div class="top-ui">
-    <div class="top-header-line">
-        <div class="status-group">
-            <div class="box"><i class="fa-solid fa-clock"></i> <span id="sysTime" class="glow">00:00:00</span></div>
-            <div class="box"><i class="fa-solid fa-users"></i> <span id="onlineCount" class="glow">1</span></div>
-            <div class="box"><i class="fa-solid fa-satellite-dish"></i> <span id="gpsStatus" style="color: var(--danger); font-family: 'Orbitron';">GPS OFF</span></div>
-        </div>
-        <div class="status-group">
-            <div class="box" style="cursor: pointer; border-color: rgba(255,204,0,0.2);" onclick="toggleUserColorPanel()">
-                <i class="fa-solid fa-palette" style="color: var(--warning);"></i> КОЛІР
-            </div>
-            <div class="box" style="cursor: pointer;" onclick="toggleListPanel()">
-                <i class="fa-solid fa-crosshairs"></i> ЦІЛІ: <span id="uavCount" class="glow" style="color:var(--accent);">0</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="ticker-container">
-        <div class="ticker-text">СЛАВА УКРАЇНІ! • SKY DEFENSE RADAR SYSTEM • OSINT MONITORING</div>
-    </div>
+<!-- ALERT BANNER -->
+<div id="alertBanner">
+  <div class="ab-dot"></div>
+  <div class="ab-body">
+    <div class="ab-title" id="abTitle">НОВА ЦІЛЬ</div>
+    <div class="ab-sub" id="abSub">--</div>
+  </div>
+  <button class="ab-close" onclick="closeAlert()">×</button>
 </div>
 
-<div id="userColorPanel" class="user-color-panel">
-    <div class="color-picker-title">Колір маркерів (персонально):</div>
-    <div class="color-options-grid">
-        <div class="color-dot selected" style="background: #ff3333; color: #ff3333;" onclick="setUserColor('#ff3333', this)"></div>
-        <div class="color-dot" style="background: #ff9900; color: #ff9900;" onclick="setUserColor('#ff9900', this)"></div>
-        <div class="color-dot" style="background: #ffcc00; color: #ffcc00;" onclick="setUserColor('#ffcc00', this)"></div>
-        <div class="color-dot" style="background: #00ffff; color: #00ffff;" onclick="setUserColor('#00ffff', this)"></div>
+<!-- TOP BAR -->
+<div id="topBar">
+  <div class="tb-l">
+    <div class="pill"><i class="fa-solid fa-clock" style="font-size:8px;opacity:.4"></i><span class="pill-v" id="sysTm">00:00:00</span></div>
+    <div class="pill">
+      <i class="fa-solid fa-users" style="font-size:8px;opacity:.4"></i><span class="pill-y" id="onlC">1</span>
+      <span style="opacity:.15">·</span>
+      <i class="fa-solid fa-satellite-dish" style="font-size:8px;opacity:.4"></i>
+      <span class="pill-v" id="gpsV" style="color:rgba(255,255,255,.3)">GPS</span>
     </div>
+    <div class="pill wx-pill" onclick="toggleWX()">
+      <i class="fa-solid fa-cloud-sun" style="font-size:8px;opacity:.4"></i>
+      <span class="pill-v" id="wxT" style="color:rgba(255,255,255,.3)">--</span>
+    </div>
+  </div>
+  <div class="tb-r">
+    <div id="actPill">
+      <i class="fa-solid fa-crosshairs" style="font-size:8px;opacity:.4"></i>
+      <span class="act-n" id="uavC">0</span>
+    </div>
+  </div>
 </div>
 
-<div id="listPanel" class="list-panel">
-    <div class="panel-header">
-        <span>TARGET LIST</span>
-        <div class="panel-close-btn" onclick="toggleListPanel()"><i class="fas fa-times"></i></div>
-    </div>
-    <div class="list-body" id="listBody"></div>
+<!-- WEATHER PANEL -->
+<div id="wxPnl">
+  <div class="wx-ico" id="wxIco">--</div>
+  <div class="wx-row"><span>Температура</span><b id="wx1">--</b></div>
+  <div class="wx-row"><span>Відчувається</span><b id="wx2">--</b></div>
+  <div class="wx-row"><span>Вологість</span><b id="wx3">--</b></div>
+  <div class="wx-row"><span>Вітер</span><b id="wx4">--</b></div>
+  <div class="wx-row"><span>Видимість</span><b id="wx5">--</b></div>
+  <div class="wx-row"><span>Умови</span><b id="wx6">--</b></div>
 </div>
 
-<!-- ПОКРАЩЕНИЙ РАДАР -->
-<div id="radarPanel" class="radar-panel">
-    <div class="radar-header">
-        <div class="radar-title">◉ RADAR SCOPE</div>
-        <div class="radar-range-controls">
-            <div class="range-btn active" id="range50" onclick="setRadarRange(50, this)">50</div>
-            <div class="range-btn" id="range100" onclick="setRadarRange(100, this)">100</div>
-            <div class="range-btn" id="range200" onclick="setRadarRange(200, this)">200</div>
-            <span style="font-family:'Orbitron';font-size:7px;color:rgba(0,255,136,0.3);margin-left:2px;">КМ</span>
-        </div>
-        <div class="radar-close-btn" onclick="toggleRadar()"><i class="fas fa-times"></i></div>
-    </div>
-    <div class="radar-canvas-wrapper">
-        <canvas id="radarCanvas" width="260" height="260"></canvas>
-    </div>
-    <div class="radar-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#ff3333;box-shadow:0 0 4px #ff3333"></div>SHAHED</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ff9900;box-shadow:0 0 4px #ff9900"></div>РАКЕТА</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ffcc00;box-shadow:0 0 4px #ffcc00"></div>СТРАТЕГ</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#00ffff;box-shadow:0 0 4px #00ffff"></div>ІНШИЙ</div>
-    </div>
-    <div class="radar-footer">
-        <div class="radar-stat">ЦІЛЕЙ: <span id="radarCount">0</span></div>
-        <div class="radar-stat">В ЗОНІ: <span id="radarInRange">0</span></div>
-        <div class="radar-stat" id="radarClosest">НАЙБЛИЖЧА: <span>—</span></div>
-    </div>
+<!-- TRACK PANEL -->
+<div id="trackPnl">
+  <div class="tp-head"><div class="tp-type" id="tpType">--</div><button class="tp-x" onclick="closeTrack()">×</button></div>
+  <div class="tp-grid">
+    <div class="tp-cell"><div class="lb">Позиція</div><div class="vl y" id="tpPos">--</div></div>
+    <div class="tp-cell"><div class="lb">Курс</div><div class="vl" id="tpAng">--</div></div>
+    <div class="tp-cell"><div class="lb">Час виявл.</div><div class="vl g" id="tpAge">--</div></div>
+    <div class="tp-cell"><div class="lb">ETA до вас</div><div class="vl y" id="tpETA">--</div></div>
+  </div>
+  <div class="tp-info" id="tpInfo"></div>
+  <div class="tp-vec" id="tpVec">--</div>
 </div>
 
-<div id="sidePanel" class="side-panel">
-    <div class="panel-header">
-        <span>TRACKING INFO</span>
-        <div class="panel-close-btn" onclick="closeInfo()"><i class="fas fa-times"></i></div>
-    </div>
-    <div class="panel-body">
-        <div class="data-block"><span class="data-label">Клас</span><div class="data-value" id="objType">--</div></div>
-        <div class="data-block"><span class="data-label">Час у повітрі</span><div class="data-value live-timer" id="objLifetime">0 хв 0 сек</div></div>
-        <div class="data-block"><span class="data-label">Координати</span><div class="data-value" id="objCoords" style="color: rgba(255,255,255,0.55);">--</div></div>
-        <div class="data-block" style="display: flex; justify-content: space-between;">
-            <div style="width: 50%;"><span class="data-label">Дистанція / ETA</span><div class="data-value" id="objRange">--</div></div>
-            <div style="width: 50%;"><span class="data-label">Курс</span><div class="data-value" id="objAngle">--</div></div>
-        </div>
-        <div class="data-block"><span class="data-label">Індекс</span><div class="data-value" id="objId" style="font-size: 10px; opacity: 0.4;">--</div></div>
-    </div>
+<!-- RADAR -->
+<div id="radarPnl">
+  <div class="rd-title">◉ RADAR · 40 KM</div>
+  <canvas id="rdCv" width="180" height="180"></canvas>
+  <div class="rd-list" id="rdList">
+    <div id="rdEmp" style="font-size:9px;color:rgba(255,255,255,.25);text-align:center;padding:8px;font-family:'Orbitron'">Немає цілей</div>
+  </div>
 </div>
 
-<!-- Вибір теми карти -->
-<div id="mapThemePill" class="map-theme-pill">
-    <div class="theme-opt sel" onclick="selectTheme(0,this)">DARK</div>
-    <div class="theme-opt" onclick="selectTheme(1,this)">SAT</div>
-    <div class="theme-opt" onclick="selectTheme(2,this)">TOPO</div>
-    <div class="theme-opt" onclick="selectTheme(3,this)">OSM</div>
+<!-- TARGET LIST -->
+<div id="listPnl">
+  <div class="lp-head"><span class="lp-title">ACTIVE TARGETS</span><button class="lp-x" onclick="cls('listPnl');document.getElementById('bnList').classList.remove('on')">×</button></div>
+  <div class="lp-body" id="listBody"></div>
 </div>
 
-<div class="bottom-nav" id="ui-nav" style="display: none;">
-    <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="c-btn support-btn" title="Підтримка">
-        <i class="fa-solid fa-heart"></i>
-    </a>
-    <button class="c-btn" id="listBtn" onclick="toggleListPanel()"><i class="fa-solid fa-list"></i></button>
-    <button class="c-btn" id="themeBtn" onclick="toggleThemePill()"><i class="fa-solid fa-layer-group"></i></button>
-    <button class="c-btn" id="radarBtn" onclick="toggleRadar()"><i class="fa-solid fa-circle-dot"></i></button>
-    <button class="c-btn" onclick="locateMe()"><i class="fa-solid fa-location-crosshairs"></i></button>
-    <button class="c-btn" onclick="location.reload()"><i class="fas fa-sync"></i></button>
+<!-- HISTORY BAR -->
+<div id="histBar">
+  <label>HIST</label>
+  <button id="hPlayBtn" onclick="toggleHPlay()"><i class="fa-solid fa-play" id="hPlayI"></i></button>
+  <input type="range" id="hSlid" min="0" max="100" value="100" oninput="onHSlide(this.value)" style="background:linear-gradient(to right,var(--a) 100%,rgba(255,255,255,.08) 100%)">
+  <span id="hLbl">LIVE</span>
 </div>
 
-<a href="javascript:void(0)" class="privacy-link" onclick="showPrivacy()">SECURITY PROTOCOL</a>
+<!-- BOTTOM NAV -->
+<div id="bnav">
+  <a href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank" class="bn-item bn-support">
+    <i class="fa-solid fa-heart"></i>
+    <span>DONATE</span>
+  </a>
+  <div class="bn-sep"></div>
+  <button class="bn-item" onclick="opn('themeSh')" title="Теми">
+    <i class="fa-solid fa-layer-group"></i><span>КАРТА</span>
+  </button>
+  <button class="bn-item" id="bnList" onclick="toggleList()">
+    <i class="fa-solid fa-list"></i><span>СТРІЧКА</span>
+  </button>
+  <button class="bn-item" id="bnRadar" onclick="toggleRadar()">
+    <i class="fa-solid fa-circle-dot"></i><span>РАДАР</span>
+  </button>
+  <button class="bn-item" onclick="opn('setSh')">
+    <i class="fa-solid fa-sliders"></i><span>НАЛАШ.</span>
+  </button>
+  <button class="bn-item" id="bnHist" onclick="toggleHist()">
+    <i class="fa-solid fa-clock-rotate-left"></i><span>HIST</span>
+  </button>
+  <div class="bn-sep"></div>
+  <button class="bn-item" onclick="locateMe()">
+    <i class="fa-solid fa-location-crosshairs"></i><span>GPS</span>
+  </button>
+  <button class="bn-item" onclick="location.reload()">
+    <i class="fa-solid fa-rotate"></i><span>ОНОВИТИ</span>
+  </button>
+</div>
+
+<a href="javascript:void(0)" class="plink" onclick="showPriv()">PRIVACY</a>
 
 <script>
-    const themes = [
-        { name: "ULTRA DARK", url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-        { name: "SATELLITE", url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-        { name: "TOPO", url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
-        { name: "OSM", url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' }
-    ];
+// ═══════════════════════════
+// CONFIG
+// ═══════════════════════════
+const FB   = "https://shmap-8c0fa-default-rtdb.firebaseio.com";
+const FB2  = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+const SPD  = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
+const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
+const SWATCHES = ['#e8ff00','#ff4444','#ff9900','#4fc3f7','#39ff8c','#cc44ff','#ffffff'];
 
-    let tIdx = 0;
-    const map = L.map('map', { 
-        zoomControl: false, 
-        attributionControl: false,
-        maxBounds: [[43, 21], [53, 41]], 
-        minZoom: 5
-    }).setView([48.4, 32.5], 6);
-    
-    let layer = L.tileLayer(themes[0].url).addTo(map);
-    let globalUserOverrideColor = localStorage.getItem('userMarkerColor') || 'database';
+const TINFO = {
+  'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE',desc:'Барражуючий боєприпас. GPS+INS. Малі висоти.',threat:'СЕРЕДНЯ'},
+  'shahed-238-jet':{name:'Shahed-238 Jet',emoji:'✈️',speed:'550 км/г',range:'1800 км',warhead:'50 кг HE',desc:'Реактивна версія Shahed. Складніший перехват.',threat:'ВИСОКА'},
+  'kalibr-cruise':{name:'Kalibr 3M-14',emoji:'🚀',speed:'880 км/г',range:'2000+ км',warhead:'450 кг HE / ядерна',desc:'Крилата ракета. Надзвукова фаза при підльоті.',threat:'КРИТИЧНА'},
+  'tu-95ms-strat':{name:'Tu-95MS',emoji:'✈️',speed:'830 км/г',range:'15000 км',warhead:'До 16 ракет Х-101',desc:'Стратегічний бомбардувальник. Пуск з безпечної відстані.',threat:'КРИТИЧНА'}
+};
 
-    let radarRange = 50; // km
+const TURLS = [
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',         // 0
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // 1
+  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', // 2
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                       // 3
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                       // 4 3D
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',         // 5
+  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',     // 6
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',          // 7 NV
+  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',                         // 8
+  'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png',   // 9
+  'https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png',         // 10
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', // 11
+];
 
-    function setRadarRange(km, el) {
-        radarRange = km;
-        document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
+// ═══════════════════════════
+// STATE
+// ═══════════════════════════
+let brightness=65, ISZ=22, colorMode='single', globalC='#e8ff00';
+let typeColors={'shahed-vp-standart':'#ff9900','shahed-238-jet':'#ff4444','kalibr-cruise':'#ff2222','tu-95ms-strat':'#cc0000'};
+let soundOn=true, vol=0.6, pushEnabled=false;
+let userPos=null, uMark=null, selId=null;
+let obs={}, hLog=[], hMode=false, hPlaying=false, hInt=null;
+let oblastLayer=null, rangeCircle=null, heatLayer=null;
+let radarOpen=false, radarAngle=0, radarRAF=null;
+let alertTimer=null;
+let pendingSync=new Map(), rafPending=false;
+let audioCtx=null;
 
-    function toggleThemePill() {
-        const pill = document.getElementById('mapThemePill');
-        pill.classList.toggle('active');
-    }
+// ═══════════════════════════
+// MAP
+// ═══════════════════════════
+const map=L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5,preferCanvas:true}).setView([48.4,32.5],6);
+const cvs=L.canvas({padding:.5});
+let tLayer=L.tileLayer(TURLS[0],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
+setTimeout(()=>applyBrt(65),600);
 
-    function selectTheme(idx, el) {
-        tIdx = idx;
-        map.removeLayer(layer);
-        layer = L.tileLayer(themes[idx].url, {maxZoom: 19}).addTo(map);
-        document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('sel'));
-        el.classList.add('sel');
-        showNotify(themes[idx].name);
-    }
+function applyBrt(v){
+  document.querySelectorAll('.leaflet-tile-pane').forEach(el=>{
+    el.style.filter=`brightness(${v}%)`;
+  });
+}
+function selTh(i){
+  const mapEl=document.getElementById('map');
+  // reset 3D
+  mapEl.style.perspective='';mapEl.style.transform='';
+  map.removeLayer(tLayer);
+  tLayer=L.tileLayer(TURLS[i],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
+  setTimeout(()=>{
+    applyBrt(brightness);
+    if(i===7){const tp=document.querySelector('.leaflet-tile-pane');if(tp)tp.style.filter=`brightness(${brightness}%) sepia(1) hue-rotate(95deg) saturate(4)`;}
+    if(i===4){mapEl.style.perspective='700px';mapEl.style.transform='rotateX(7deg) scale(1.06)';}
+  },350);
+  document.querySelectorAll('.th-card').forEach((c,j)=>c.classList.toggle('sel',j===i));
+  toast(['ULTRA DARK','SATELLITE','NIGHT BLUE','TOPO','3D RELIEF','LIGHT','RED OPS','NIGHT VISION','TERRAIN','NAVY BLUE','MILITARY','MINIMAL'][i]);
+}
+function setBr(v){
+  brightness=+v;document.getElementById('brV').textContent=v+'%';
+  const p=((v-10)/130*100).toFixed(0);
+  document.getElementById('brR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.08) ${p}%)`;
+  applyBrt(v);
+}
 
-    function showNotify(text) {
-        const notify = document.getElementById('mapNotify');
-        notify.innerText = text;
-        notify.style.opacity = "1";
-        setTimeout(() => notify.style.opacity = "0", 1200);
-    }
-
-    window.addEventListener('load', () => {
-        const splash = document.getElementById('splash-screen');
-        if (globalUserOverrideColor !== 'database') {
-            document.querySelectorAll('.color-dot').forEach(dot => {
-                dot.classList.remove('selected');
-                if (dot.getAttribute('onclick').includes(globalUserOverrideColor)) {
-                    dot.classList.add('selected');
-                }
-            });
-        }
-        setTimeout(() => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                if (!localStorage.getItem('policyAccepted')) {
-                    showPrivacy();
-                } else {
-                    fullStartup();
-                }
-                checkAdmin();
-            }, 500);
-        }, 1200);
+// ═══════════════════════════
+// OBLAST
+// ═══════════════════════════
+async function loadOblast(){
+  try{
+    const r=await fetch('https://raw.githubusercontent.com/corvin-rose/ukraine-regions-geojson/main/ukraine.geojson');
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    oblastLayer=L.geoJSON(d,{
+      style:{color:'rgba(255,255,255,.18)',weight:.8,fill:false,dashArray:'3,7'},
+      interactive:false,
+      onEachFeature:(f,l)=>l.bindTooltip(f.properties?.name||'',{className:'ob-tt',sticky:true})
     });
+    if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
+  }catch{}
+}
+function toggleObl(){
+  if(!oblastLayer)return;
+  document.getElementById('togObl').checked?oblastLayer.addTo(map):map.removeLayer(oblastLayer);
+}
+function toggleRng(){
+  const on=document.getElementById('togRng')?.checked;
+  if(on&&userPos){
+    if(rangeCircle)map.removeLayer(rangeCircle);
+    rangeCircle=L.circle(userPos,{radius:40000,color:'rgba(232,255,0,.25)',weight:1,fill:false,dashArray:'5,8',interactive:false}).addTo(map);
+  }else if(rangeCircle){map.removeLayer(rangeCircle);rangeCircle=null;}
+}
 
-    function checkAdmin() {
-        document.getElementById('adminPanel').style.display = window.location.hash === '#admin' ? 'block' : 'none';
-    }
-    window.addEventListener('hashchange', checkAdmin);
-
-    function toggleUserColorPanel() {
-        document.getElementById('userColorPanel').classList.toggle('active');
-        closeInfo();
-    }
-
-    function setUserColor(color, element) {
-        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-        if (globalUserOverrideColor === color) {
-            globalUserOverrideColor = 'database';
-            localStorage.removeItem('userMarkerColor');
-            document.querySelector('.color-dot').classList.add('selected');
-        } else {
-            globalUserOverrideColor = color;
-            localStorage.setItem('userMarkerColor', color);
-            element.classList.add('selected');
-        }
-        Object.keys(obs).forEach(id => sync(id, obs[id].data));
-    }
-
-    const FILTER_CACHE = {
-        '#ff9900': 'invert(59%) sepia(91%) saturate(1478%) hue-rotate(11deg) brightness(103%) contrast(101%)',
-        '#ffcc00': 'invert(84%) sepia(85%) saturate(1487%) hue-rotate(354deg) brightness(102%) contrast(102%)',
-        '#00ffff': 'invert(89%) sepia(98%) saturate(3015%) hue-rotate(134deg) brightness(102%) contrast(102%)',
-        'default': 'invert(27%) sepia(91%) saturate(7454%) hue-rotate(354deg) brightness(94%) contrast(110%)'
-    };
-    function getColorFilter(hex) { return FILTER_CACHE[hex] || FILTER_CACHE['default']; }
-
-    function spawnDrone() {
-        const center = map.getCenter();
-        const data = {
-            lat: center.lat,
-            lng: center.lng,
-            type: document.getElementById('admType').value,
-            color: document.getElementById('admColor').value,
-            angle: parseInt(document.getElementById('admAngle').value) || 0,
-            timestamp: Date.now()
-        };
-        db.push().set(data).then(() => showNotify("TARGET DEPLOYED"));
-    }
-
-    function clearDrones() {
-        if(confirm("Видалити всі цілі?")) {
-            db.remove().then(() => showNotify("PURGED"));
-        }
-    }
-
-    function showPrivacy() {
-        document.getElementById('privacy-modal').style.display = 'flex';
-    }
-
-    function acceptPolicy() {
-        localStorage.setItem('policyAccepted', 'true');
-        document.getElementById('privacy-modal').style.display = 'none';
-        fullStartup();
-    }
-
-    function fullStartup() {
-        document.getElementById('ui-nav').style.display = 'flex';
-        locateMe();
-        document.getElementById('listPanel').classList.add('active');
-        document.getElementById('listBtn').classList.add('active');
-    }
-
-    const firebaseConfig = { databaseURL: "https://shmap-8c0fa-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('drones');
-
-    const onlineDisplay = document.getElementById('onlineCount');
-    const presenceRef = firebase.database().ref('presence');
-    const connectedRef = firebase.database().ref('.info/connected');
-
-    connectedRef.on('value', (snap) => {
-        if (snap.val() === true) {
-            const con = presenceRef.push(true);
-            con.onDisconnect().remove();
-        }
+// ═══════════════════════════
+// TYPE COLOR SWATCHES INIT
+// ═══════════════════════════
+const TYPE_KEYS=['shahed-vp-standart','shahed-238-jet','kalibr-cruise','tu-95ms-strat'];
+function initTypeSwatches(){
+  TYPE_KEYS.forEach((type,ti)=>{
+    const wrap=document.getElementById('ptc'+ti);
+    if(!wrap)return;
+    SWATCHES.forEach(c=>{
+      const el=document.createElement('div');
+      el.className='msw'+(typeColors[type]===c?' on':'');
+      el.style.background=c;
+      el.onclick=()=>{
+        typeColors[type]=c;
+        wrap.querySelectorAll('.msw').forEach(s=>s.classList.remove('on'));
+        el.classList.add('on');
+        redrawAll();
+      };
+      wrap.appendChild(el);
     });
-    presenceRef.on('value', (snap) => onlineDisplay.innerText = snap.numChildren() || 1);
+  });
+}
 
-    const SPEED_MAP = { 'shahed-vp-standart': 185, 'shahed-238-jet': 550, 'kalibr-cruise': 880, 'tu-95ms-strat': 750 };
-    const FALLBACK_ICON = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
+// ═══════════════════════════
+// SETTINGS
+// ═══════════════════════════
+function setISZ(v){
+  ISZ=+v;document.getElementById('iszV').textContent=v+'px';
+  const p=((v-12)/48*100).toFixed(0);
+  document.getElementById('iszR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.08) ${p}%)`;
+  Object.values(obs).forEach(o=>o.marker.setIcon(mkIcon(o.data)));
+}
+function setGC(c,el){
+  globalC=c;document.querySelectorAll('#tcSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');redrawAll();
+}
+function setUI(c,el){
+  document.documentElement.style.setProperty('--a',c);
+  document.documentElement.style.setProperty('--ar',c.replace('#','rgba(')+',0.15)');
+  document.querySelectorAll('#uiSw .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');
+}
+function setVol(v){vol=v/100;document.getElementById('volV').textContent=v+'%';const p=+v;document.getElementById('volR').style.background=`linear-gradient(to right,var(--a) ${p}%,rgba(255,255,255,.08) ${p}%)`;}
+function setCM(m,el){
+  colorMode=m;document.querySelectorAll('.cm-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+  document.getElementById('singleRow').style.display=m==='single'?'flex':'none';
+  document.getElementById('typeBlock').style.display=m==='type'?'block':'none';
+  if(m==='heat')enableHeat(); else disableHeat();
+  redrawAll();
+}
+function getC(type){return colorMode==='type'?typeColors[type]||globalC:globalC;}
+function redrawAll(){
+  Object.values(obs).forEach(o=>{
+    o.marker.setIcon(mkIcon(o.data));
+    const c=getC(o.data.type);
+    if(o.circle)o.circle.setStyle({color:c,fillColor:c});
+    if(o.line)o.line.setStyle({color:c});
+    if(o.trail)o.trail.setStyle({color:c});
+  });
+}
+function toggleCircles(){
+  const on=document.getElementById('togCir')?.checked;
+  Object.values(obs).forEach(o=>{if(!o.circle)return;on?o.circle.addTo(map):map.removeLayer(o.circle);});
+}
 
-    let userPos = null;
-    let userMarker = null;
-    let selectedId = null;
-    let isRadarOn = false;
-    let radarInterval = null;
-    let listActive = true;
-    let obs = {};
+// Heatmap
+function enableHeat(){
+  if(!heatLayer){const pts=Object.values(obs).map(o=>[o.data.lat,o.data.lng,.5]);heatLayer=L.heatLayer(pts,{radius:30,blur:22,maxZoom:8,gradient:{.3:'#ff9900',.6:'#ff4444',1:'#ff0000'}}).addTo(map);}
+}
+function disableHeat(){if(heatLayer){map.removeLayer(heatLayer);heatLayer=null;}}
+function refreshHeat(){if(colorMode==='heat'&&heatLayer)heatLayer.setLatLngs(Object.values(obs).map(o=>[o.data.lat,o.data.lng,.5]));}
 
-    function locateMe() { 
-        if (!localStorage.getItem('policyAccepted')) return;
-        map.locate({setView: true, maxZoom: 9}); 
-    }
+// ═══════════════════════════
+// SOUND
+// ═══════════════════════════
+function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function tone(f,d,t='sine',v=.3){if(!soundOn)return;try{const ctx=getAC();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v*vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d);}catch{}}
+function sndNew(){tone(900,.07,'square',.18);setTimeout(()=>tone(680,.12,'square',.14),80);}
+function sndDel(){tone(440,.05,'sine',.1);setTimeout(()=>tone(330,.09,'sine',.07),60);}
+function sndAlm(){[0,130,260].forEach(d=>setTimeout(()=>tone(1200,.08,'sawtooth',.15),d));}
+function testSnd(t){if(t==='new')sndNew();else if(t==='del')sndDel();else if(t==='alm')sndAlm();else tone(600,.05,'sine',.1);}
 
-    map.on('locationfound', (e) => {
-        userPos = e.latlng;
-        document.getElementById('gpsStatus').innerText = "GPS LIVE";
-        document.getElementById('gpsStatus').style.color = "var(--success)";
-        if (userMarker) map.removeLayer(userMarker);
-        userMarker = L.circleMarker(userPos, { radius: 5, color: '#fff', weight: 1.5, fillColor: '#ffcc00', fillOpacity: 1 }).addTo(map);
-        updateListUI();
+// PUSH
+async function togglePush(){
+  const cb=document.getElementById('togPush');
+  if(cb.checked&&'Notification' in window){const p=await Notification.requestPermission();pushEnabled=p==='granted';if(!pushEnabled){cb.checked=false;toast('Push відхилено');}else toast('Push увімкнено');}else pushEnabled=false;
+}
+function sendPush(title,body){if(pushEnabled&&document.hidden)try{new Notification(title,{body});}catch{}}
+
+// ═══════════════════════════
+// SHEETS / UI
+// ═══════════════════════════
+function opn(id){document.getElementById(id).classList.add('on');}
+function cls(id){document.getElementById(id).classList.remove('on');}
+function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
+function toast(t,d=1500){const el=document.getElementById('toast');el.textContent=t;el.style.opacity='1';clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity='0',d);}
+
+// Alert banner
+function showAlert(title,sub){
+  const el=document.getElementById('alertBanner');
+  document.getElementById('abTitle').textContent=title;document.getElementById('abSub').textContent=sub;
+  el.style.display='flex';clearTimeout(alertTimer);alertTimer=setTimeout(closeAlert,6000);
+}
+function closeAlert(){document.getElementById('alertBanner').style.display='none';}
+
+// ═══════════════════════════
+// BOOT
+// ═══════════════════════════
+window.addEventListener('load',()=>{
+  initTypeSwatches();
+  const sp=document.getElementById('splash'),tx=document.getElementById('spTxt');
+  const msgs=['Loading OSINT feeds...','Calibrating satellite...','Loading oblast borders...','System nominal'];
+  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},700);
+  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},700);},3000);
+});
+function checkAdm(){document.getElementById('adm').style.display=location.hash==='#admin'?'flex':'none';}
+window.addEventListener('hashchange',checkAdm);
+function showPriv(){document.getElementById('priv').style.display='flex';document.getElementById('map').style.filter='blur(18px) grayscale(1)';}
+function acceptP(){localStorage.setItem('sdOK','1');const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);}
+function launch(){document.getElementById('bnav').style.display='flex';locateMe();loadOblast();toast('SYSTEM READY');}
+
+// ═══════════════════════════
+// FIREBASE
+// ═══════════════════════════
+firebase.initializeApp({databaseURL:FB});
+const db=firebase.database().ref('drones');
+const presRef=firebase.database().ref('presence');
+firebase.database().ref('.info/connected').on('value',s=>{if(s.val()){const c=presRef.push(true);c.onDisconnect().remove();}});
+presRef.on('value',s=>document.getElementById('onlC').textContent=s.numChildren()||0);
+
+// ═══════════════════════════
+// GPS + WEATHER
+// ═══════════════════════════
+function locateMe(){if(!localStorage.getItem('sdOK'))return;map.locate({setView:true,maxZoom:10});}
+map.on('locationfound',e=>{
+  userPos=e.latlng;
+  document.getElementById('gpsV').textContent='ACTIVE';document.getElementById('gpsV').style.color='var(--ok)';
+  if(uMark)map.removeLayer(uMark);
+  uMark=L.circleMarker(userPos,{radius:5,color:'#fff',weight:1.5,fillColor:'#e8ff00',fillOpacity:.9}).addTo(map);
+  fetchWX(userPos.lat,userPos.lng);
+  if(document.getElementById('togRng')?.checked)toggleRng();
+  if(radarOpen)buildRdList();
+});
+async function fetchWX(lat,lng){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility&timezone=auto`);
+    const d=await r.json();const cw=d.current_weather;const h=d.hourly;
+    const wmo={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
+    const wmoD={0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
+    document.getElementById('wxT').textContent=`${Math.round(cw.temperature)}°`;
+    document.getElementById('wxIco').textContent=wmo[cw.weathercode]||'🌡';
+    document.getElementById('wx1').textContent=`${Math.round(cw.temperature)}°C`;
+    document.getElementById('wx2').textContent=h?.apparent_temperature?`${Math.round(h.apparent_temperature[0])}°C`:'--';
+    document.getElementById('wx3').textContent=h?.relativehumidity_2m?`${h.relativehumidity_2m[0]}%`:'--';
+    document.getElementById('wx4').textContent=`${Math.round(cw.windspeed)} км/г`;
+    document.getElementById('wx5').textContent=h?.visibility?`${(h.visibility[0]/1000).toFixed(1)} км`:'--';
+    document.getElementById('wx6').textContent=wmoD[cw.weathercode]||'--';
+  }catch{}
+}
+function toggleWX(){const p=document.getElementById('wxPnl');p.style.display=p.style.display==='block'?'none':'block';}
+
+// ═══════════════════════════
+// HELPERS
+// ═══════════════════════════
+function dir(d){return DIRS[Math.round((+d)/45)%8]||'--';}
+function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);return`${Math.floor(s/60)}хв ${s%60}с`;}
+function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;return{lat:lat+dist/R*Math.cos(ar)*180/Math.PI,lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*180/Math.PI,dist};}
+
+// ═══════════════════════════
+// ICON — compact, no circle, no separate arrow
+// Just drone image with tiny course dot
+// ═══════════════════════════
+function mkIcon(d){
+  const ang=+d.angle||0, sz=ISZ, c=getC(d.type);
+  const showCrs=document.getElementById('togCrs')?.checked!==false;
+  const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
+  const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
+    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
+    ${cLbl}
+  </div>`;
+  return L.divIcon({className:'',html,iconSize:[sz,sz+11],iconAnchor:[sz/2,sz/2]});
+}
+
+// ═══════════════════════════
+// TRAIL
+// ═══════════════════════════
+const trailPts={};const TMAX=16;
+function updateTrail(id,lat,lng){
+  if(document.getElementById('togTrl')?.checked===false)return;
+  if(!trailPts[id])trailPts[id]=[];
+  trailPts[id].push([lat,lng]);
+  if(trailPts[id].length>TMAX)trailPts[id].shift();
+  if(obs[id]?.trail)obs[id].trail.setLatLngs(trailPts[id]);
+}
+
+// ═══════════════════════════
+// SYNC — batched rAF
+// ═══════════════════════════
+function sync(id,d){
+  if(!d||!d.lat||!d.lng)return;
+  if((Date.now()-(d.timestamp||Date.now()))/60000>45){remove(id);return;}
+  pendingSync.set(id,d);
+  if(!rafPending){rafPending=true;requestAnimationFrame(flush);}
+}
+function flush(){
+  rafPending=false;pendingSync.forEach((d,id)=>doSync(id,d));pendingSync.clear();
+  updCounts();refreshHeat();buildListUI();
+}
+function doSync(id,d){
+  const ang=+d.angle||0;
+  const rad=(ang+180-90)*Math.PI/180;
+  const tail=[d.lat+Math.cos(rad)*.022,d.lng+Math.sin(rad)*.022];
+  const errR=d.accuracy||5000;
+  hLog.push({id,d,ts:Date.now()});if(hLog.length>900)hLog.splice(0,100);
+  updateTrail(id,d.lat,d.lng);
+  if(obs[id]){
+    obs[id].marker.setLatLng([d.lat,d.lng]);obs[id].marker.setIcon(mkIcon(d));
+    if(obs[id].circle&&document.getElementById('togCir')?.checked)obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
+    if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
+    obs[id].data=d;if(selId===id)showTrack(id,d);
+  } else {
+    sndNew();
+    const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
+    showAlert(`NEW TARGET · ${typName}`,`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)} · ${Math.round(ang)}° ${dir(ang)}`);
+    sendPush('SKY DEFENSE',`${typName} · ${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`);
+    const c=getC(d.type);
+    const cirOn=document.getElementById('togCir')?.checked;
+    const circle=cirOn?L.circle([d.lat,d.lng],{renderer:cvs,radius:errR,color:c,weight:1,fillColor:c,fillOpacity:.05,dashArray:'3,8',interactive:false}).addTo(map):null;
+    const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
+    const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
+    const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
+    marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
+    obs[id]={marker,circle,line,trail,data:d};
+  }
+}
+function remove(id){
+  if(!obs[id])return;sndDel();
+  map.removeLayer(obs[id].marker);
+  if(obs[id].circle)map.removeLayer(obs[id].circle);
+  if(obs[id].line)map.removeLayer(obs[id].line);
+  if(obs[id].trail)map.removeLayer(obs[id].trail);
+  delete trailPts[id];if(selId===id)closeTrack();delete obs[id];
+  updCounts();refreshHeat();buildListUI();
+}
+function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs).length;}
+
+// ═══════════════════════════
+// TRACK PANEL
+// ═══════════════════════════
+function showTrack(id,d){
+  document.getElementById('trackPnl').classList.add('on');
+  const spd=SPD[d.type]||200,ang=+d.angle||0,info=TINFO[d.type]||{};
+  document.getElementById('tpType').textContent=(info.name||d.type||'?').toUpperCase();
+  document.getElementById('tpPos').textContent=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+  document.getElementById('tpAng').textContent=`${Math.round(ang)}° ${dir(ang)}`;
+  document.getElementById('tpAge').textContent=age(d.timestamp);
+  const v=vect(d.lat,d.lng,ang,spd);
+  document.getElementById('tpVec').textContent=`→ ${dir(ang)} · ~${v.dist.toFixed(1)} км за 10 хв · [${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}]`;
+  if(userPos){const km=map.distance(userPos,[d.lat,d.lng])/1000;document.getElementById('tpETA').textContent=`${km.toFixed(1)} км · ~${Math.round(km/spd*60)} хв`;}
+  else document.getElementById('tpETA').textContent='GPS off';
+  const ibox=document.getElementById('tpInfo');
+  if(info.name){const tc=info.threat==='КРИТИЧНА'?'#ff2222':info.threat==='ВИСОКА'?'#ff4444':'#ff9900';
+    ibox.innerHTML=`<div class="tp-row"><span class="tp-ico">${info.emoji}</span><div class="tp-txt"><b>${info.name}</b> — ${info.desc}</div></div>
+    <div class="tp-row"><span class="tp-ico">⚡</span><div class="tp-txt"><b>${info.speed}</b> · ${info.range}</div></div>
+    <div class="tp-row"><span class="tp-ico">💥</span><div class="tp-txt"><b>${info.warhead}</b></div></div>
+    <div class="tp-row"><span class="tp-ico">⚠️</span><div class="tp-txt"><b style="color:${tc}">${info.threat}</b></div></div>`;}
+  else ibox.innerHTML='';
+}
+function closeTrack(){document.getElementById('trackPnl').classList.remove('on');selId=null;}
+map.on('click',closeTrack);
+
+// ═══════════════════════════
+// TARGET LIST
+// ═══════════════════════════
+function toggleList(){
+  const p=document.getElementById('listPnl'),btn=document.getElementById('bnList');
+  const on=p.classList.contains('on');
+  if(on){cls('listPnl');btn.classList.remove('on');}
+  else{opn('listPnl');btn.classList.add('on');buildListUI();}
+}
+function buildListUI(){
+  if(!document.getElementById('listPnl').classList.contains('on'))return;
+  const body=document.getElementById('listBody');body.innerHTML='';
+  const en=Object.entries(obs);
+  if(!en.length){body.innerHTML='<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.2);padding:12px;font-family:Orbitron">НЕМАЄ ЦІЛЕЙ</div>';return;}
+  en.forEach(([id,o])=>{
+    const d=o.data,spd=SPD[d.type]||200,info=TINFO[d.type]||{};
+    const c=getC(d.type);
+    const eta=userPos?`~${Math.round(map.distance(userPos,[d.lat,d.lng])/1000/spd*60)}хв`:'--';
+    const km=userPos?`${(map.distance(userPos,[d.lat,d.lng])/1000).toFixed(1)}км`:'--';
+    const el=document.createElement('div');el.className='lt-item';
+    el.innerHTML=`<div class="lt-dot" style="background:${c};box-shadow:0 0 5px ${c}"></div>
+    <div class="lt-body"><div class="lt-type">${(info.name||d.type||'?').split(' ').slice(0,2).join(' ')}</div>
+    <div class="lt-meta">${Math.round(d.angle||0)}° ${dir(d.angle||0)} · ${km}</div></div>
+    <div class="lt-eta">${eta}</div>`;
+    el.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    body.appendChild(el);
+  });
+}
+
+// ═══════════════════════════
+// RADAR
+// ═══════════════════════════
+function toggleRadar(){
+  radarOpen=!radarOpen;
+  document.getElementById('radarPnl').classList.toggle('on',radarOpen);
+  document.getElementById('bnRadar').classList.toggle('on',radarOpen);
+  if(radarOpen){if(!radarRAF)startRdAnim();}else stopRdAnim();
+}
+function startRdAnim(){
+  const cv=document.getElementById('rdCv'),ctx=cv.getContext('2d');
+  function fr(){radarAngle=(radarAngle+2)%360;drawRd(ctx,cv.width,cv.height);radarRAF=requestAnimationFrame(fr);}
+  radarRAF=requestAnimationFrame(fr);
+}
+function stopRdAnim(){if(radarRAF){cancelAnimationFrame(radarRAF);radarRAF=null;}}
+function drawRd(ctx,w,h){
+  const cx=w/2,cy=h/2,R=cx-3;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#010503';ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);ctx.fill();
+  [.25,.5,.75,1].forEach(f=>{
+    ctx.strokeStyle=f===1?'rgba(0,255,136,.3)':'rgba(0,255,136,.08)';ctx.lineWidth=f===1?1.2:.7;
+    ctx.beginPath();ctx.arc(cx,cy,R*f,0,Math.PI*2);ctx.stroke();
+  });
+  ctx.strokeStyle='rgba(0,255,136,.06)';ctx.lineWidth=.6;
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  const sr=(radarAngle-90)*Math.PI/180;
+  ctx.save();ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,sr-Math.PI/3,sr);ctx.closePath();
+  const gr=ctx.createRadialGradient(cx,cy,0,cx,cy,R);gr.addColorStop(0,'rgba(0,255,136,0)');gr.addColorStop(1,'rgba(0,255,136,.18)');
+  ctx.fillStyle=gr;ctx.fill();ctx.restore();
+  ctx.strokeStyle='rgba(0,255,136,.65)';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(sr),cy+R*Math.sin(sr));ctx.stroke();
+  if(userPos){
+    Object.values(obs).forEach(o=>{
+      const km=map.distance(userPos,[o.data.lat,o.data.lng])/1000;if(km>40)return;
+      const br=Math.atan2(o.data.lng-userPos.lng,o.data.lat-userPos.lat),dr=km/40*R;
+      const px=cx+dr*Math.sin(br),py=cy-dr*Math.cos(br);
+      const c=getC(o.data.type);
+      ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(px,py,2.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
     });
+  }
+  ctx.fillStyle='#e8ff00';ctx.shadowColor='#e8ff00';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(cx,cy,3.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+function buildRdList(){
+  const lst=document.getElementById('rdList'),emp=document.getElementById('rdEmp');
+  if(!userPos){emp.textContent='GPS недоступний';lst.innerHTML='';lst.appendChild(emp);return;}
+  const nr=Object.entries(obs).filter(([,o])=>map.distance(userPos,[o.data.lat,o.data.lng])/1000<=40)
+    .sort(([,a],[,b])=>map.distance(userPos,[a.data.lat,a.data.lng])-map.distance(userPos,[b.data.lat,b.data.lng]));
+  lst.innerHTML='';
+  if(!nr.length){emp.textContent='Немає цілей в радіусі 40 км';lst.appendChild(emp);return;}
+  nr.forEach(([id,o])=>{
+    const d=o.data,km=map.distance(userPos,[d.lat,d.lng])/1000,spd=SPD[d.type]||200,eta=Math.round(km/spd*60);
+    const row=document.createElement('div');row.className='rd-item';
+    row.innerHTML=`<span>${id.substring(0,5)} · ${(d.type||'?').split('-')[0].toUpperCase()}</span><span class="rd-eta">${km.toFixed(1)}км ~${eta}хв</span>`;
+    row.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    lst.appendChild(row);
+  });
+}
+setInterval(()=>{if(radarOpen)buildRdList();},5000);
 
-    function getLifetime(timestamp) {
-        if (!timestamp) return "0 хв";
-        const totalSec = Math.floor((Date.now() - timestamp) / 1000);
-        return `${Math.floor(totalSec / 60)} хв ${totalSec % 60} сек`;
-    }
+// ═══════════════════════════
+// HISTORY
+// ═══════════════════════════
+function toggleHist(){
+  hMode=!hMode;
+  document.getElementById('histBar').classList.toggle('on',hMode);
+  document.getElementById('bnHist').classList.toggle('on',hMode);
+  if(!hMode){stopHP();document.getElementById('hSlid').value=100;document.getElementById('hLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});}
+}
+function onHSlide(v){
+  const pct=+v/100;
+  document.getElementById('hSlid').style.background=`linear-gradient(to right,var(--a) ${v}%,rgba(255,255,255,.08) ${v}%)`;
+  if(pct>=.99){document.getElementById('hLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});return;}
+  if(!hLog.length)return;
+  const oldest=hLog[0].ts,newest=hLog[hLog.length-1].ts,t=oldest+(newest-oldest)*pct;
+  document.getElementById('hLbl').textContent=new Date(t).toLocaleTimeString('uk-UA',{hour12:false});
+  const active=new Set();hLog.filter(e=>e.ts<=t).forEach(e=>active.add(e.id));
+  Object.entries(obs).forEach(([id,o])=>{const el=o.marker.getElement();if(el)el.style.opacity=active.has(id)?'1':'.1';});
+}
+function toggleHPlay(){
+  hPlaying=!hPlaying;document.getElementById('hPlayI').className=hPlaying?'fa-solid fa-pause':'fa-solid fa-play';
+  if(hPlaying){let v=+document.getElementById('hSlid').value;hInt=setInterval(()=>{v=Math.min(100,v+.35);document.getElementById('hSlid').value=v;onHSlide(v);if(v>=100)stopHP();},75);}else stopHP();
+}
+function stopHP(){hPlaying=false;clearInterval(hInt);document.getElementById('hPlayI').className='fa-solid fa-play';}
 
-    function toggleListPanel() {
-        listActive = !listActive;
-        document.getElementById('listPanel').classList.toggle('active', listActive);
-        document.getElementById('listBtn').classList.toggle('active', listActive);
-        document.getElementById('userColorPanel').classList.remove('active');
-        if(listActive) updateListUI();
-    }
+// ═══════════════════════════
+// CLOCK
+// ═══════════════════════════
+setInterval(()=>{
+  document.getElementById('sysTm').textContent=new Date().toLocaleTimeString('uk-UA',{hour12:false});
+  if(selId&&obs[selId])document.getElementById('tpAge').textContent=age(obs[selId].data.timestamp);
+},1000);
 
-    function focusOnTarget(id) {
-        if(obs[id]) {
-            map.setView([obs[id].data.lat, obs[id].data.lng], 8);
-            selectedId = id;
-            updateUI(id, obs[id].data);
-        }
-    }
+// ═══════════════════════════
+// FIREBASE
+// ═══════════════════════════
+db.on('child_added',  s=>sync(s.key,s.val()));
+db.on('child_changed',s=>sync(s.key,s.val()));
+db.on('child_removed',s=>remove(s.key));
 
-    function updateListUI() {
-        if (!listActive) return;
-        const body = document.getElementById('listBody');
-        body.innerHTML = '';
-        
-        const keys = Object.keys(obs);
-        if(keys.length === 0) {
-            body.innerHTML = '<div style="text-align:center; font-size:10px; opacity:0.3; padding:15px;">НЕМАЄ ЦІЛЕЙ</div>';
-            return;
-        }
-
-        keys.forEach(id => {
-            const d = obs[id].data;
-            const typeText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-            const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-            
-            const item = document.createElement('div');
-            item.className = 'target-item';
-            if(selectedId === id) item.style.borderColor = tgtColor;
-            
-            item.onclick = () => focusOnTarget(id);
-            item.innerHTML = `
-                <div class="target-item-header">
-                    <span class="target-item-type" style="color: ${tgtColor};">${typeText}</span>
-                    <span class="target-item-id">#${id.substring(0,4).toUpperCase()}</span>
-                </div>
-                <div class="target-item-meta">
-                    <span>Курс: ${Math.round(d.angle || 0)}°</span>
-                    <span>${d.cachedDistance || '--'}</span>
-                </div>
-                <div class="target-item-header" style="margin-top:2px; font-size:9px;">
-                    <span style="opacity:0.5;">${getLifetime(d.timestamp).split(' ')[0]} хв в польоті</span>
-                    <span class="target-item-eta">${d.cachedEta || ''}</span>
-                </div>
-            `;
-            body.appendChild(item);
-        });
-    }
-
-    function sync(id, d) {
-        if (!d) return;
-        const now = Date.now();
-        if ((now - (d.timestamp || now)) / 1000 / 60 > 45) {
-            removeObject(id);
-            return;
-        }
-
-        if (userPos) {
-            const distance = (map.distance(userPos, [d.lat, d.lng]) / 1000);
-            const speed = (SPEED_MAP[d.type] || 200);
-            d.cachedDistance = `${distance.toFixed(1)} км`;
-            d.cachedEta = `~${Math.round(distance / speed * 60)} хв`;
-            d.rawEtaMinutes = Math.round(distance / speed * 60);
-            d.radarDistanceKm = distance;
-        } else {
-            d.cachedDistance = '--';
-            d.cachedEta = '';
-            d.rawEtaMinutes = null;
-            d.radarDistanceKm = null;
-        }
-
-        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-
-        if (obs[id]) {
-            obs[id].marker.setLatLng([d.lat, d.lng]);
-            const img = obs[id].marker.getElement()?.querySelector('img');
-            if (img) {
-                img.style.transform = `rotate(${d.angle || 0}deg)`;
-                img.style.filter = getColorFilter(tgtColor);
-            }
-            obs[id].data = d;
-            if (selectedId === id) updateUI(id, d);
-        } else {
-            const iconSize = 44;
-            const icon = L.divIcon({ 
-                className: 'uav-icon', 
-                html: `<img src="${d.type}.png" onerror="this.src='${FALLBACK_ICON}';" style="transform:rotate(${d.angle || 0}deg); filter: ${getColorFilter(tgtColor)};">`, 
-                iconSize: [iconSize, iconSize], iconAnchor: [iconSize/2, iconSize/2] 
-            });
-
-            const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(map);
-            marker.on('click', (e) => {
-                L.DomEvent.stopPropagation(e);
-                selectedId = id;
-                updateUI(id, d);
-                updateListUI();
-            });
-            obs[id] = { marker, data: d };
-        }
-        updateCounters();
-        updateListUI();
-    }
-
-    function removeObject(id) {
-        if(obs[id]) {
-            map.removeLayer(obs[id].marker);
-            if (selectedId === id) closeInfo();
-            delete obs[id];
-            updateCounters();
-            updateListUI();
-        }
-    }
-
-    function updateUI(id, d) {
-        const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-        document.getElementById('sidePanel').classList.add('active');
-        document.getElementById('userColorPanel').classList.remove('active');
-        document.getElementById('objId').innerText = "ID_" + id.substring(0,6).toUpperCase();
-        document.getElementById('objType').innerText = (d.type || 'UNKNOWN').replace(/-/g, ' ').toUpperCase();
-        document.getElementById('objType').style.color = tgtColor;
-        document.getElementById('objCoords').innerText = `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
-        document.getElementById('objAngle').innerText = `${Math.round(d.angle || 0)}°`;
-        document.getElementById('objLifetime').innerText = getLifetime(d.timestamp);
-        document.getElementById('objRange').innerHTML = d.cachedDistance + ` <span style="color:${tgtColor}; font-size:11px;">(${d.cachedEta})</span>`;
-    }
-
-    function updateCounters() { document.getElementById('uavCount').innerText = Object.keys(obs).length; }
-    
-    function closeInfo() { 
-        document.getElementById('sidePanel').classList.remove('active'); 
-        selectedId = null;
-        updateListUI();
-    }
-
-    map.on('click', () => { 
-        closeInfo(); 
-        document.getElementById('userColorPanel').classList.remove('active');
-        document.getElementById('mapThemePill').classList.remove('active');
-    });
-
-    function toggleRadar() {
-        isRadarOn = !isRadarOn;
-        document.getElementById('radarBtn').classList.toggle('active', isRadarOn);
-        document.getElementById('radarPanel').classList.toggle('active', isRadarOn);
-        if (isRadarOn) {
-            if (radarInterval) clearInterval(radarInterval);
-            runRadarSweep();
-        } else {
-            clearInterval(radarInterval);
-        }
-    }
-
-    function runRadarSweep() {
-        const canvas = document.getElementById('radarCanvas');
-        const ctx = canvas.getContext('2d');
-        const W = canvas.width;
-        const H = canvas.height;
-        const cx = W / 2;
-        const cy = H / 2;
-        const R = cx - 4; // радіус кола
-        let sweepAngle = -Math.PI / 2; // починаємо зверху
-        let trailAngles = []; // траєкторія засвічення
-
-        // Кольори
-        const GREEN = '#00ff88';
-        const GREEN_DIM = 'rgba(0,255,136,';
-
-        radarInterval = setInterval(() => {
-            // --- Фон ---
-            ctx.clearRect(0, 0, W, H);
-
-            // Зовнішнє коло - обрізаємо canvas до кола
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, cy, R, 0, Math.PI * 2);
-            ctx.clip();
-
-            // Темний фон всередині
-            ctx.fillStyle = 'rgba(0, 5, 2, 0.97)';
-            ctx.fillRect(0, 0, W, H);
-
-            // --- Сітка ---
-            const rings = 4;
-            const ringLabels = [radarRange/4, radarRange/2, radarRange*3/4, radarRange];
-            for (let i = 1; i <= rings; i++) {
-                const rr = (R / rings) * i;
-                ctx.beginPath();
-                ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-                ctx.strokeStyle = i === rings 
-                    ? 'rgba(0,255,136,0.25)' 
-                    : 'rgba(0,255,136,0.08)';
-                ctx.lineWidth = i === rings ? 1.5 : 0.8;
-                ctx.stroke();
-
-                // Підпис дистанції
-                const labelKm = ringLabels[i-1];
-                ctx.fillStyle = 'rgba(0,255,136,0.4)';
-                ctx.font = `bold 8px "Orbitron", monospace`;
-                ctx.textAlign = 'center';
-                ctx.fillText(`${labelKm} КМ`, cx, cy - rr + 11);
-            }
-
-            // Перехресні лінії
-            ctx.strokeStyle = 'rgba(0,255,136,0.06)';
-            ctx.lineWidth = 0.6;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(angle) * R, cy + Math.sin(angle) * R);
-                ctx.stroke();
-            }
-
-            // --- Траса засвічення (зелений хвіст) ---
-            const trailLength = Math.PI * 1.1;
-            const grad = ctx.createConicalGradient 
-                ? null 
-                : null;
-            
-            // Малюємо дуги з градієнтним fade
-            const steps = 40;
-            for (let s = 0; s < steps; s++) {
-                const startA = sweepAngle - trailLength + (trailLength / steps) * s;
-                const endA = sweepAngle - trailLength + (trailLength / steps) * (s + 1);
-                const alpha = (s / steps) * 0.35;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, R, startA, endA);
-                ctx.closePath();
-                ctx.fillStyle = `rgba(0,255,136,${alpha})`;
-                ctx.fill();
-            }
-
-            // --- Лінія засвічення ---
-            const gradient = ctx.createLinearGradient(
-                cx, cy,
-                cx + Math.cos(sweepAngle) * R,
-                cy + Math.sin(sweepAngle) * R
-            );
-            gradient.addColorStop(0, 'rgba(0,255,136,0)');
-            gradient.addColorStop(0.6, 'rgba(0,255,136,0.4)');
-            gradient.addColorStop(1, 'rgba(0,255,136,0.95)');
-
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(sweepAngle) * R, cy + Math.sin(sweepAngle) * R);
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // --- Цілі ---
-            let inRange = 0;
-            let closestKm = Infinity;
-            let closestEta = null;
-            const keys = Object.keys(obs);
-
-            document.getElementById('radarCount').innerText = keys.length;
-
-            keys.forEach(id => {
-                const d = obs[id].data;
-                if (!d.radarDistanceKm) return;
-                if (d.radarDistanceKm > radarRange) return;
-
-                inRange++;
-                if (d.radarDistanceKm < closestKm) {
-                    closestKm = d.radarDistanceKm;
-                    closestEta = d.rawEtaMinutes;
-                }
-
-                const tgtColor = globalUserOverrideColor === 'database' ? (d.color || '#ff3333') : globalUserOverrideColor;
-
-                if (!userPos) return;
-                const dLat = d.lat - userPos.lat;
-                const dLng = d.lng - userPos.lng;
-                const targetAngle = Math.atan2(-dLat, dLng);
-                const scaleFactor = R / radarRange;
-                const radarDist = d.radarDistanceKm * scaleFactor;
-                const tx = cx + Math.cos(targetAngle) * radarDist;
-                const ty = cy + Math.sin(targetAngle) * radarDist;
-
-                ctx.save();
-
-                // Гало навколо цілі
-                const halo = ctx.createRadialGradient(tx, ty, 0, tx, ty, 14);
-                halo.addColorStop(0, tgtColor.replace(')', ', 0.25)').replace('rgb', 'rgba').replace('#ff3333','rgba(255,51,51,0.25)').replace('#ff9900','rgba(255,153,0,0.25)').replace('#ffcc00','rgba(255,204,0,0.25)').replace('#00ffff','rgba(0,255,255,0.25)'));
-                halo.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.beginPath();
-                ctx.arc(tx, ty, 14, 0, Math.PI * 2);
-                ctx.fillStyle = halo;
-                ctx.fill();
-
-                // Точка цілі
-                ctx.beginPath();
-                ctx.arc(tx, ty, 4, 0, Math.PI * 2);
-                ctx.fillStyle = tgtColor;
-                ctx.shadowColor = tgtColor;
-                ctx.shadowBlur = 10;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-
-                // Напрямок руху
-                const angleDeg = (d.angle || 0);
-                const angleRad = angleDeg * Math.PI / 180;
-                ctx.beginPath();
-                ctx.moveTo(tx, ty);
-                ctx.lineTo(tx + Math.sin(angleRad) * 14, ty - Math.cos(angleRad) * 14);
-                ctx.strokeStyle = tgtColor;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-
-                // ETA label
-                if (d.rawEtaMinutes !== null && d.rawEtaMinutes !== undefined) {
-                    ctx.font = 'bold 9px "Orbitron", monospace';
-                    ctx.textAlign = 'left';
-                    ctx.fillStyle = '#ffffff';
-                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                    ctx.shadowBlur = 4;
-
-                    // Тип
-                    const shortType = getShortType(d.type);
-                    ctx.fillText(shortType, tx + 8, ty - 5);
-
-                    // ETA в іншому кольорі
-                    ctx.fillStyle = '#ffcc00';
-                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                    ctx.font = 'bold 8px "Orbitron", monospace';
-                    ctx.fillText(`${d.rawEtaMinutes}хв`, tx + 8, ty + 5);
-                    ctx.shadowBlur = 0;
-                }
-
-                ctx.restore();
-            });
-
-            document.getElementById('radarInRange').innerText = inRange;
-            if (closestEta !== null) {
-                document.getElementById('radarClosest').innerHTML = `НАЙБЛИЖЧА: <span style="color:#ffcc00">${closestEta}хв</span>`;
-            } else {
-                document.getElementById('radarClosest').innerHTML = `НАЙБЛИЖЧА: <span>—</span>`;
-            }
-
-            // --- Центральна точка (ми) ---
-            ctx.beginPath();
-            ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffcc00';
-            ctx.shadowColor = '#ffcc00';
-            ctx.shadowBlur = 12;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Хрестик центру
-            ctx.strokeStyle = 'rgba(255,204,0,0.6)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8); ctx.stroke();
-
-            ctx.restore(); // restore clip
-
-            // Зовнішнє обрамлення
-            ctx.beginPath();
-            ctx.arc(cx, cy, R, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,255,136,0.35)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Кути - декоративні
-            drawCornerBrackets(ctx, cx, cy, R);
-
-            sweepAngle += 0.035;
-            if (sweepAngle > Math.PI * 2 - Math.PI / 2) sweepAngle -= Math.PI * 2;
-
-        }, 40); // ~25fps
-    }
-
-    function getShortType(type) {
-        const m = {
-            'shahed-vp-standart': 'SH-136',
-            'shahed-238-jet': 'SH-238',
-            'kalibr-cruise': 'KALIBR',
-            'tu-95ms-strat': 'TU-95'
-        };
-        return m[type] || 'UAV';
-    }
-
-    function drawCornerBrackets(ctx, cx, cy, R) {
-        const bracketSize = 12;
-        const gap = 5;
-        const positions = [
-            { x: cx - R - gap, y: cy - R - gap, a1: 0, a2: Math.PI/2 },
-        ];
-        // Просто 4 кутові дужки по краях кола
-        const offsets = [
-            { dx: -1, dy: -1 },
-            { dx:  1, dy: -1 },
-            { dx:  1, dy:  1 },
-            { dx: -1, dy:  1 },
-        ];
-        offsets.forEach(({dx, dy}) => {
-            const bx = cx + dx * (R * 0.72);
-            const by = cy + dy * (R * 0.72);
-            ctx.strokeStyle = 'rgba(0,255,136,0.3)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(bx, by - 5 * dy);
-            ctx.lineTo(bx, by);
-            ctx.lineTo(bx + 5 * dx, by);
-            ctx.stroke();
-        });
-    }
-
-    setInterval(() => {
-        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('uk-UA', { hour12: false });
-        if (selectedId && obs[selectedId]) {
-            document.getElementById('objLifetime').innerText = getLifetime(obs[selectedId].data.timestamp);
-        }
-        if (listActive) updateListUI();
-    }, 1000);
-
-    db.on('child_added', s => sync(s.key, s.val()));
-    db.on('child_changed', s => sync(s.key, s.val()));
-    db.on('child_removed', s => removeObject(s.key));
+// ═══════════════════════════
+// ADMIN
+// ═══════════════════════════
+function spawnDrone(){
+  const c=map.getCenter();
+  db.push({lat:c.lat,lng:c.lng,type:document.getElementById('aTyp').value,
+    angle:parseInt(document.getElementById('aAng').value)||0,
+    accuracy:parseInt(document.getElementById('aAcc').value)||5000,
+    timestamp:Date.now()
+  }).then(()=>toast('TARGET DEPLOYED'));
+}
+function clearDrones(){if(confirm('Purge?'))db.remove().then(()=>toast('PURGED'));}
 </script>
 </body>
 </html>
