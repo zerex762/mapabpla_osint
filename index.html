@@ -811,25 +811,12 @@ function dir(d){return DIRS[Math.round((+d)/45)%8]||'--';}
 function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);return`${Math.floor(s/60)}хв ${s%60}с`;}
 function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;return{lat:lat+dist/R*Math.cos(ar)*180/Math.PI,lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*180/Math.PI,dist};}
 
-// ═══════ ICON (inline SVG, no external files) ═══════
-const SVG_SHAPES = {
-  'shahed-vp-standart': `<polygon points="12,2 14,10 22,10 22,14 14,14 13,22 11,22 10,14 2,14 2,10 10,10 8,2" fill="COLOR" opacity=".95"/><circle cx="12" cy="12" r="2.5" fill="#000" opacity=".5"/>`,
-  'shahed-238-jet': `<polygon points="12,1 15,8 23,10 15,13 13,23 11,13 1,10 9,8" fill="COLOR" opacity=".95"/><polygon points="12,7 13,11 12,15 11,11" fill="#000" opacity=".4"/>`,
-  'kalibr-cruise': `<ellipse cx="12" cy="12" rx="3" ry="10" fill="COLOR" opacity=".95"/><polygon points="6,16 12,22 18,16" fill="COLOR" opacity=".7"/><polygon points="4,8 8,6 8,10" fill="COLOR" opacity=".6"/><polygon points="20,8 16,6 16,10" fill="COLOR" opacity=".6"/>`,
-  'tu-95ms-strat': `<polygon points="12,3 20,9 22,13 16,13 14,21 10,21 8,13 2,13 4,9" fill="COLOR" opacity=".95"/><rect x="10" y="9" width="4" height="8" fill="#000" opacity=".3" rx="1"/>`,
-  'kab-standart': `<ellipse cx="12" cy="11" rx="4" ry="8" fill="COLOR" opacity=".95"/><polygon points="8,17 12,23 16,17" fill="COLOR" opacity=".7"/><rect x="9" y="3" width="6" height="3" fill="COLOR" opacity=".6" rx="1"/>`,
-};
-function getIconSVG(type,color){
-  const shape=SVG_SHAPES[type]||SVG_SHAPES['shahed-vp-standart'];
-  return shape.replace(/COLOR/g,color);
-}
+// ═══════ ICON ═══════
 function mkIcon(d){
   const ang=+d.angle||0,sz=ISZ,c=getC(d.type);
   const showCrs=document.getElementById('togCrs')?.checked!==false;
   const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
-  const svgBody=getIconSVG(d.type,c);
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}" viewBox="0 0 24 24" style="transform:rotate(${ang}deg);filter:drop-shadow(0 0 3px ${c});will-change:transform;overflow:visible;">${svgBody}</svg>`;
-  const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">${svg}${cLbl}</div>`;
+  const html=`<div style="position:relative;width:${sz}px;height:${sz}px;"><img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">${cLbl}</div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+11],iconAnchor:[sz/2,sz/2]});
 }
 
