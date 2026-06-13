@@ -664,10 +664,18 @@ let db=null,presRef=null;
 const map=L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5,preferCanvas:true}).setView([48.4,32.5],6);
 const cvs=L.canvas({padding:.5});
 let tLayer=L.tileLayer(TURLS[0],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
-clusterGroup=L.markerClusterGroup({maxClusterRadius:70,spiderfyOnMaxZoom:true,showCoverageOnHover:false,iconCreateFunction:function(cluster){
-  const n=cluster.getChildCount();
-  return L.divIcon({html:`<div style="width:${34+Math.min(n,20)}px;height:${34+Math.min(n,20)}px"><span>${n}</span></div>`,className:'marker-cluster',iconSize:null});
-}}).addTo(map);
+try{
+  clusterGroup=L.markerClusterGroup({maxClusterRadius:70,spiderfyOnMaxZoom:true,showCoverageOnHover:false,iconCreateFunction:function(cluster){
+    const n=cluster.getChildCount();
+    const sz=34+Math.min(n,20);
+    return L.divIcon({html:`<div style="width:${sz}px;height:${sz}px"><span>${n}</span></div>`,className:'marker-cluster',iconSize:[sz,sz]});
+  }}).addTo(map);
+}catch(e){
+  console.warn('markercluster unavailable, fallback to plain layer group',e);
+  clusterOn=false;
+  clusterGroup=L.layerGroup().addTo(map);
+  const cb=document.getElementById('togCluster');if(cb){cb.checked=false;cb.disabled=true;}
+}
 setTimeout(()=>applyBrt(65),800);
 
 function applyBrt(v){document.querySelectorAll('.leaflet-tile-pane').forEach(el=>el.style.filter=`brightness(${v}%)`);}
