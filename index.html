@@ -521,6 +521,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 <div id="listPnl">
   <div class="lp-head"><span class="lp-title">ACTIVE TARGETS</span><button class="lp-x" onclick="cls('listPnl');document.getElementById('bnList').classList.remove('on')">×</button></div>
+  <div id="top5Box" style="padding:10px 14px;border-bottom:1px solid var(--brd2);"></div>
   <div class="lp-body" id="listBody"></div>
 </div>
 
@@ -561,6 +562,22 @@ const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
 const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
 const SWATCHES = ['#e8ff00','#ff4444','#ff9900','#4fc3f7','#39ff8c','#cc44ff','#ffffff'];
+// base_city (з python-бекенду, нижній регістр) → область, для статистики ТОП-5
+const REGION_OF = {
+  'одеса':'Одеська','чорноморськ':'Одеська','білгород-дністровський':'Одеська','ізмаїл':'Одеська','подільськ':'Одеська','роздільна':'Одеська','арциз':'Одеська','болград':'Одеська','рені':'Одеська','татарбунари':'Одеська','кілія':'Одеська','овідіополь':'Одеська','біляївка':'Одеська','теплодар':'Одеська','южне':'Одеська','затока':'Одеська','кароліно-бугаз':'Одеська','грибівка':'Одеська','санжійка':'Одеська','фонтанка':'Одеська','крижанівка':'Одеська','чорноморка':'Одеська','нерубайське':'Одеська','усатове':'Одеська','авангард':'Одеська','великодолинське':'Одеська','малодолинське':'Одеська','сухий лиман':'Одеська','лиманське':'Одеська','доброслав':'Одеська','любашівка':'Одеська','балта':'Одеська','кодима':'Одеська','ананьїв':'Одеська','ширяєве':'Одеська','березівка':'Одеська','маяки':'Одеська','олексіївка':'Одеська','петродолинське':'Одеська',
+  'миколаїв':'Миколаївська','вознесенськ':'Миколаївська','первомайськ':'Миколаївська','очаків':'Миколаївська','южноукраїнськ':'Миколаївська','березанка':'Миколаївська','рибаківка':'Миколаївська','коблеве':'Миколаївська','олександрівка':'Миколаївська','новий буг':'Миколаївська','баштанка':'Миколаївська','снігурівка':'Миколаївська','нова одеса':'Миколаївська','врадіївка':'Миколаївська','криве озеро':'Миколаївська','куцуруб':'Миколаївська',
+  'херсон':'Херсонська','нова каховка':'Херсонська','каховка':'Херсонська','бериславка':'Херсонська','генічеськ':'Херсонська','скадовськ':'Херсонська','цюрупинськ':'Херсонська','голопристань':'Херсонська',
+  'запоріжжя':'Запорізька','мелітополь':'Запорізька','бердянськ':'Запорізька','енергодар':'Запорізька','пологи':'Запорізька',
+  'дніпро':'Дніпропетровська','кривий ріг':'Дніпропетровська',"нікополь":'Дніпропетровська',"кам'янське":'Дніпропетровська','павлоград':'Дніпропетровська',
+  'краматорськ':'Донецька',"слов'янськ":'Донецька','лиман':'Донецька','покровськ':'Донецька','сєвєродонецьк':'Донецька','маріуполь':'Донецька',
+  'харків':'Харківська','ізюм':'Харківська',"куп'янськ":'Харківська','чугуїв':'Харківська','лозова':'Харківська',
+  'чернігів':'Чернігівська','ніжин':'Чернігівська','прилуки':'Чернігівська',
+  'суми':'Сумська','конотоп':'Сумська','охтирка':'Сумська','шостка':'Сумська',
+  'полтава':'Полтавська','кременчук':'Полтавська','лубни':'Полтавська',
+  'черкаси':'Черкаська','умань':'Черкаська','золотоноша':'Черкаська',
+  'київ':'Київська','бровари':'Київська','бориспіль':'Київська','білоцерківка':'Київська','вишневе':'Київська','фастів':'Київська','ірпінь':'Київська','буча':'Київська',
+  'вінниця':'Вінницька','кропивницький':'Кіровоградська','луцьк':'Волинська','рівне':'Рівненська','житомир':'Житомирська','хмельницький':'Хмельницька','тернопіль':'Тернопільська','івано-франківськ':'Івано-Франківська','ужгород':'Закарпатська','чернівці':'Чернівецька','львів':'Львівська'
+};
 const TINFO = {
   'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE',desc:'Барражуючий боєприпас. GPS+INS. Малі висоти.',threat:'СЕРЕДНЯ'},
   'shahed-238-jet':{name:'Shahed-238 Jet',emoji:'✈️',speed:'550 км/г',range:'1800 км',warhead:'50 кг HE',desc:'Реактивна версія Shahed. Складніший перехват.',threat:'ВИСОКА'},
@@ -911,6 +928,7 @@ function toggleList(){
 }
 function buildListUI(){
   if(!document.getElementById('listPnl').classList.contains('on'))return;
+  buildTop5();
   const body=document.getElementById('listBody');body.innerHTML='';
   const en=Object.entries(obs);
   if(!en.length){body.innerHTML='<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.2);padding:12px;font-family:Orbitron">НЕМАЄ ЦІЛЕЙ</div>';return;}
@@ -927,6 +945,38 @@ function buildListUI(){
     el.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
     body.appendChild(el);
   });
+}
+
+// ═══════ TOP-5 РЕГІОНІВ ═══════
+function buildTop5(){
+  const box=document.getElementById('top5Box');if(!box)return;
+  const counts={};
+  // активні цілі
+  Object.values(obs).forEach(o=>{
+    const reg=REGION_OF[(o.data.base_city||'').toLowerCase()];
+    if(reg)counts[reg]=(counts[reg]||0)+1;
+  });
+  // історія (унікальні id за весь час спостереження)
+  const seen=new Set();
+  hLog.forEach(e=>{
+    const bc=(e.d.base_city||'').toLowerCase();const reg=REGION_OF[bc];
+    if(!reg)return;
+    const key=reg+'|'+e.id;
+    if(!seen.has(key)){seen.add(key);counts[reg]=(counts[reg]||0)+ (Object.values(obs).some(o=>o.data.base_city&&o.data.base_city.toLowerCase()===bc)?0:1);}
+  });
+  const arr=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!arr.length){box.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.2);font-family:Orbitron;text-align:center;padding:4px">НЕМАЄ ДАНИХ</div>';return;}
+  const max=arr[0][1]||1;
+  box.innerHTML=`<div style="font-family:Orbitron;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.15em;margin-bottom:8px">⚠ ТОП-5 НАЙБІЛЬШ АТАКОВАНИХ ОБЛАСТЕЙ</div>`+
+    arr.map(([reg,c],i)=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-family:Orbitron;font-size:9px;color:var(--a);width:14px;">${i+1}</span>
+        <span style="flex:1;font-size:10px;color:rgba(255,255,255,.75)">${reg}</span>
+        <div style="width:60px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${(c/max*100).toFixed(0)}%;background:var(--a);box-shadow:0 0 6px var(--a)"></div>
+        </div>
+        <span style="font-family:Orbitron;font-size:10px;color:#fff;min-width:18px;text-align:right">${c}</span>
+      </div>`).join('');
 }
 
 // ═══════ RADAR ═══════
