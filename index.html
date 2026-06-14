@@ -105,7 +105,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   .bn-item i{font-size:20px;}
   .bn-item span{font-size:7.5px;}
   #bnav{border-radius:18px;bottom:calc(var(--sb)+8px);}
-  #weekPnl,#trackPnl,#listPnl,#radarPnl,#histBar{bottom:calc(var(--sb)+82px);}
+  #weekPnl,#trackPnl,#listPnl,#radarPnl}
   .act-n{font-size:20px;}
   .pill{font-size:11px;padding:6px 13px;}
 }
@@ -187,10 +187,6 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .rd-item{font-size:9px;color:rgba(255,255,255,.55);padding:4px 0;border-bottom:1px solid var(--brd2);display:flex;justify-content:space-between;font-family:'Orbitron';}
 .rd-eta{color:var(--a);}
 
-/* ═══════ HISTORY BAR ═══════ */
-#histBar{position:absolute;bottom:calc(var(--sb)+84px);left:12px;right:60px;z-index:2000;background:var(--glass2);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:12px;padding:7px 12px;display:none;align-items:center;gap:8px;}
-#histBar.on{display:flex;}
-#histBar label{font-family:'Orbitron';font-size:8px;color:var(--a);white-space:nowrap;letter-spacing:.1em;}
 #hSlid{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;outline:none;cursor:pointer;}
 #hSlid::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--a);}
 #hLbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);white-space:nowrap;min-width:50px;text-align:right;}
@@ -293,7 +289,6 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 /* ═══════ RESPONSIVE ═══════ */
 @media(min-width:600px){
   #bnav{bottom:calc(var(--sb)+24px);}
-  #trackPnl,#histBar{right:70px;}
 }
 @media(min-width:1024px){
   #bnav{min-width:460px;}
@@ -301,9 +296,27 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 }
 /* LEAFLET TOOLTIP */
 .leaflet-tooltip.ob-tt{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-family:'Orbitron';font-size:8px;padding:3px 6px;}
+/* ═══════ NO CONNECTION BANNER ═══════ */
+#noConnBanner{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:rgba(220,30,30,.92);backdrop-filter:blur(8px);
+  color:#fff;font-family:'Orbitron',sans-serif;font-size:12px;
+  letter-spacing:.08em;text-align:center;padding:10px 16px;
+  display:none;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 2px 16px rgba(220,30,30,.4);
+  animation:blink 1.5s ease-in-out infinite;
+}
+#noConnBanner.show{display:flex;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.7;}}
 </style>
 </head>
 <body oncontextmenu="return false;">
+<!-- NO CONNECTION BANNER -->
+<div id="noConnBanner">
+  <i class="fa-solid fa-wifi" style="opacity:.8;font-size:14px"></i>
+  НЕМАЄ ЗВ'ЯЗКУ · ДАНІ МОЖУТЬ БУТИ ЗАСТАРІЛИМИ
+  <i class="fa-solid fa-wifi" style="opacity:.8;font-size:14px"></i>
+</div>
 
 <!-- SPLASH -->
 <div id="splash">
@@ -517,6 +530,10 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 <!-- WEATHER PANEL -->
 <div id="wxPnl">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-size:10px;opacity:.5;letter-spacing:.05em">ПОГОДА</span>
+    <button onclick="toggleWX()" style="background:none;border:none;color:var(--fg);opacity:.5;cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
+  </div>
   <div class="wx-ico" id="wxIco">--</div>
   <div class="wx-row"><span>Температура</span><b id="wx1">--</b></div>
   <div class="wx-row"><span>Відчувається</span><b id="wx2">--</b></div>
@@ -552,14 +569,6 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 <div id="listPnl">
   <div class="lp-head"><span class="lp-title">ACTIVE TARGETS</span><button class="lp-x" onclick="cls('listPnl');document.getElementById('bnList').classList.remove('on')">×</button></div>
   <div class="lp-body" id="listBody"></div>
-</div>
-
-<!-- HISTORY BAR -->
-<div id="histBar">
-  <label>HIST</label>
-  <button id="hPlayBtn" onclick="toggleHPlay()"><i class="fa-solid fa-play" id="hPlayI"></i></button>
-  <input type="range" id="hSlid" min="0" max="100" value="100" oninput="onHSlide(this.value)" style="background:linear-gradient(to right,var(--a) 100%,rgba(255,255,255,.08) 100%)">
-  <span id="hLbl">LIVE</span>
 </div>
 
 <!-- WEEKLY STATS PANEL -->
@@ -607,9 +616,6 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   </button>
   <button class="bn-item" onclick="opn('setSh')">
     <i class="fa-solid fa-sliders"></i><span>НАЛАШ.</span>
-  </button>
-  <button class="bn-item" id="bnHist" onclick="toggleHist()">
-    <i class="fa-solid fa-clock-rotate-left"></i><span>HIST</span>
   </button>
   <button class="bn-item" id="bnWeek" onclick="toggleWeek()">
     <i class="fa-solid fa-chart-bar"></i><span>7 ДНІВ</span>
@@ -665,7 +671,7 @@ let brightness=65, ISZ=22, colorMode='single', globalC='#e8ff00';
 let typeColors={'shahed-vp-standart':'#ff9900','shahed-238-jet':'#ff4444','kalibr-cruise':'#ff2222','tu-95ms-strat':'#cc0000'};
 let soundOn=true, vol=0.6, pushEnabled=false;
 let userPos=null, uMark=null, selId=null;
-let obs={}, hLog=[], hMode=false, hPlaying=false, hInt=null;
+let obs={};
 let oblastLayer=null, rayonLayer=null, rangeCircle=null, heatLayer=null;
 let radarOpen=false, radarAngle=0, radarRAF=null;
 let alertTimer=null;
@@ -838,12 +844,29 @@ async function fetchAlerts(retry=true){
     alerts.forEach(alert=>{
       if(alert.alert_type!=='air_raid') return;
       if(alert.location_type==='oblast' && alert.location_oblast){
-        oblasts.add(alert.location_oblast);
+        let obl=alert.location_oblast;
+        if(obl.toLowerCase().includes('севастополь')) obl='Севастополь';
+        if(obl.toLowerCase().includes('крим')) obl='Автономна Республіка Крим';
+        oblasts.add(obl);
       }
       if(alert.location_type==='raion' && alert.location_title){
         rayons.add(alert.location_title);
       }
     });
+
+    // Якщо Крим або Севастополь в тривозі — додаємо обох
+    if([...oblasts].some(o=>o.includes('Крим')||o.includes('Севастополь'))){
+      oblasts.add('Автономна Республіка Крим');
+      oblasts.add('Севастополь');
+    }
+    // Якщо всі райони Криму в тривозі — підсвічуємо як область, без районів
+    const crymRayons=['Бахчисарайський район','Білогірський район','Джанкойський район','Євпаторійський район','Керченський район','Перекопський район','Сімферопольський район','Феодосійський район','Ялтинський район'];
+    if(crymRayons.every(r=>rayons.has(r))||[...oblasts].some(o=>o.includes('Крим'))){
+      oblasts.add('Автономна Республіка Крим');
+      oblasts.add('Севастополь');
+      // Прибираємо кримські райони — область і так підсвічена
+      crymRayons.forEach(r=>rayons.delete(r));
+    }
 
     // Підраховуємо скільки районів кожної oblasti в тривозі
     const oblastRayonCount={};
@@ -1158,7 +1181,6 @@ function doSync(id,d){
   const rad=(ang+180-90)*Math.PI/180;
   const tail=[d.lat+Math.cos(rad)*.022,d.lng+Math.sin(rad)*.022];
   const errR=d.accuracy||5000;
-  hLog.push({id,d,ts:Date.now()});if(hLog.length>900)hLog.splice(0,100);
   updateTrail(id,d.lat,d.lng);
   if(obs[id]){
     obs[id].marker.setLatLng([d.lat,d.lng]);obs[id].marker.setIcon(mkIcon(d));
@@ -1189,6 +1211,15 @@ function remove(id){
   delete trailPts[id];if(selId===id)closeTrack();delete obs[id];
   updCounts();refreshHeat();buildListUI();
 }
+
+// Автоматично видаляємо застарілі цілі кожну хвилину (без перезавантаження сторінки)
+setInterval(()=>{
+  const now=Date.now();
+  Object.entries(obs).forEach(([id,o])=>{
+    const ts=o.data?.timestamp||0;
+    if(ts && (now-ts)/60000>45) remove(id);
+  });
+},60000);
 function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs).length;}
 
 // ═══════════════════════════
@@ -1307,29 +1338,6 @@ function buildRdList(){
 setInterval(()=>{if(radarOpen)buildRdList();},5000);
 
 // ═══════════════════════════
-// HISTORY
-// ═══════════════════════════
-function toggleHist(){
-  hMode=!hMode;
-  document.getElementById('histBar').classList.toggle('on',hMode);
-  document.getElementById('bnHist').classList.toggle('on',hMode);
-  if(!hMode){stopHP();document.getElementById('hSlid').value=100;document.getElementById('hLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});}
-}
-function onHSlide(v){
-  const pct=+v/100;
-  document.getElementById('hSlid').style.background=`linear-gradient(to right,var(--a) ${v}%,rgba(255,255,255,.08) ${v}%)`;
-  if(pct>=.99){document.getElementById('hLbl').textContent='LIVE';Object.values(obs).forEach(o=>{const el=o.marker.getElement();if(el)el.style.opacity='1';});return;}
-  if(!hLog.length)return;
-  const oldest=hLog[0].ts,newest=hLog[hLog.length-1].ts,t=oldest+(newest-oldest)*pct;
-  document.getElementById('hLbl').textContent=new Date(t).toLocaleTimeString('uk-UA',{hour12:false});
-  const active=new Set();hLog.filter(e=>e.ts<=t).forEach(e=>active.add(e.id));
-  Object.entries(obs).forEach(([id,o])=>{const el=o.marker.getElement();if(el)el.style.opacity=active.has(id)?'1':'.1';});
-}
-function toggleHPlay(){
-  hPlaying=!hPlaying;document.getElementById('hPlayI').className=hPlaying?'fa-solid fa-pause':'fa-solid fa-play';
-  if(hPlaying){let v=+document.getElementById('hSlid').value;hInt=setInterval(()=>{v=Math.min(100,v+.35);document.getElementById('hSlid').value=v;onHSlide(v);if(v>=100)stopHP();},75);}else stopHP();
-}
-function stopHP(){hPlaying=false;clearInterval(hInt);document.getElementById('hPlayI').className='fa-solid fa-play';}
 
 // ═══════════════════════════
 // CLOCK
@@ -1345,6 +1353,40 @@ setInterval(()=>{
 db.on('child_added',  s=>sync(s.key,s.val()));
 db.on('child_changed',s=>sync(s.key,s.val()));
 db.on('child_removed',s=>remove(s.key));
+
+// Моніторинг з'єднання — банер "Немає зв'язку"
+function setConnected(connected){
+  const banner=document.getElementById('noConnBanner');
+  if(banner) banner.classList.toggle('show',!connected);
+  const dot=document.getElementById('connDot');
+  if(dot){dot.style.background=connected?'var(--g)':'var(--red)';dot.title=connected?'Online':'Немає зв\'язку';}
+  if(connected){
+    // При відновленні з'єднання — повна синхронізація
+    db.once('value', snap=>{
+      const fbKeys=new Set();
+      snap.forEach(child=>{fbKeys.add(child.key);sync(child.key,child.val());});
+      Object.keys(obs).forEach(id=>{if(!fbKeys.has(id))remove(id);});
+    });
+  }
+}
+
+firebase.database().ref('.info/connected').on('value', snap=>setConnected(!!snap.val()));
+
+// Також слухаємо браузерні події online/offline
+window.addEventListener('online', ()=>setConnected(true));
+window.addEventListener('offline', ()=>setConnected(false));
+if(!navigator.onLine) setConnected(false);
+
+// Кожні 2 хвилини робимо повну синхронізацію щоб у всіх були однакові цілі
+setInterval(()=>{
+  if(!navigator.onLine) return;
+  db.once('value', snap=>{
+    const fbKeys=new Set();
+    snap.forEach(child=>{fbKeys.add(child.key);sync(child.key,child.val());});
+    // Видаляємо цілі яких вже немає в Firebase
+    Object.keys(obs).forEach(id=>{if(!fbKeys.has(id))remove(id);});
+  });
+},2*60*1000);
 
 // ═══════════════════════════
 // ADMIN
@@ -1419,17 +1461,14 @@ function loadWeekStats(){
   firebase.database().ref('drones').once('value').then(snap=>{
     buildWeekFromCurrent(snap);
   });
-  // Також читаємо hLog (поточна сесія)
-  buildWeekFromLog(since);
+    buildWeekFromLog(since);
 }
 
 function buildWeekFromCurrent(snap){
-  // Поточні цілі + hLog за 7 днів
-  const since=Date.now()-7*24*60*60*1000;
+    const since=Date.now()-7*24*60*60*1000;
   const cityCount={};
 
-  // З hLog (пам'ять сесії)
-  hLog.forEach(entry=>{
+    [].forEach(entry=>{
     if(entry.ts<since)return;
     const city=latLngToCity(entry.d.lat||0,entry.d.lng||0);
     cityCount[city]=(cityCount[city]||0)+1;
@@ -1449,10 +1488,9 @@ function buildWeekFromCurrent(snap){
 }
 
 function buildWeekFromLog(since){
-  // Оновлюємо якщо панель відкрита і нові дані в hLog
-  if(!weekOpen)return;
+    if(!weekOpen)return;
   const cityCount={};
-  hLog.forEach(entry=>{
+  [].forEach(entry=>{
     if(entry.ts<since)return;
     const city=latLngToCity(entry.d?.lat||0,entry.d?.lng||0);
     cityCount[city]=(cityCount[city]||0)+1;
