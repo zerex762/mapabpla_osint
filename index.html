@@ -814,6 +814,8 @@ async function loadOblast(){
       if(document.getElementById('togObl')?.checked)rayonLayer.addTo(map);
     }
   }catch(e){console.warn('GeoJSON load error',e);}
+  // Якщо тривоги вже завантажились раніше — одразу малюємо
+  if(activeAlertNames.size>0||activeRayonNames.size>0) applyAlertStyles();
   startAlertsPolling();
 }
 
@@ -857,10 +859,24 @@ async function fetchAlerts(retry=true){
       }
     });
 
-    activeAlertNames=new Set([...oblasts].map(normName));
-    activeRayonNames=new Set([...rayons].map(normName));
-    applyAlertStyles();
+    const newOblastNames=new Set([...oblasts].map(normName));
+    const newRayonNames=new Set([...rayons].map(normName));
+
+    // Показуємо банер якщо з'явились нові тривоги
+    const totalNew=oblasts.size+rayons.size;
+    const totalOld=activeAlertNames.size+activeRayonNames.size;
+    if(totalNew>totalOld && totalNew>0){
+      const sample=[...oblasts][0]||[...rayons][0]||'';
+      showAlert('⚠️ ПОВІТРЯНА ТРИВОГА', sample?(sample+(totalNew>1?' та ін.':'')):totalNew+' регіонів');
+    }
+
+    activeAlertNames=newOblastNames;
+    activeRayonNames=newRayonNames;
     updateAlertCounter(oblasts.size+rayons.size);
+    // Застосовуємо стилі тільки якщо шари вже завантажені
+    if(Object.keys(oblFeatures).length>0||Object.keys(rayonFeatures).length>0){
+      applyAlertStyles();
+    }
   }catch(e){console.warn('Alerts fetch error',e);}
 }
 
