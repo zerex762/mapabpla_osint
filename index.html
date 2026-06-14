@@ -473,6 +473,10 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
       <i class="fa-solid fa-satellite-dish" style="font-size:8px;opacity:.4"></i>
       <span class="pill-v" id="gpsV" style="color:rgba(255,255,255,.3)">GPS</span>
     </div>
+    <div class="pill" id="alarmPill" style="border-color:rgba(255,68,68,.25)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:8px;opacity:.6;color:var(--red)"></i>
+      <span class="pill-v" style="color:var(--red)" id="alarmC">0</span>
+    </div>
     <div class="pill wx-pill" onclick="toggleWX()">
       <i class="fa-solid fa-cloud-sun" style="font-size:8px;opacity:.4"></i>
       <span class="pill-v" id="wxT" style="color:rgba(255,255,255,.3)">--</span>
@@ -521,7 +525,6 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 <div id="listPnl">
   <div class="lp-head"><span class="lp-title">ACTIVE TARGETS</span><button class="lp-x" onclick="cls('listPnl');document.getElementById('bnList').classList.remove('on')">×</button></div>
-  <div id="top5Box" style="padding:10px 14px;border-bottom:1px solid var(--brd2);"></div>
   <div class="lp-body" id="listBody"></div>
 </div>
 
@@ -562,22 +565,6 @@ const FB2 = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 const SPD = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
 const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
 const SWATCHES = ['#e8ff00','#ff4444','#ff9900','#4fc3f7','#39ff8c','#cc44ff','#ffffff'];
-// base_city (з python-бекенду, нижній регістр) → область, для статистики ТОП-5
-const REGION_OF = {
-  'одеса':'Одеська','чорноморськ':'Одеська','білгород-дністровський':'Одеська','ізмаїл':'Одеська','подільськ':'Одеська','роздільна':'Одеська','арциз':'Одеська','болград':'Одеська','рені':'Одеська','татарбунари':'Одеська','кілія':'Одеська','овідіополь':'Одеська','біляївка':'Одеська','теплодар':'Одеська','южне':'Одеська','затока':'Одеська','кароліно-бугаз':'Одеська','грибівка':'Одеська','санжійка':'Одеська','фонтанка':'Одеська','крижанівка':'Одеська','чорноморка':'Одеська','нерубайське':'Одеська','усатове':'Одеська','авангард':'Одеська','великодолинське':'Одеська','малодолинське':'Одеська','сухий лиман':'Одеська','лиманське':'Одеська','доброслав':'Одеська','любашівка':'Одеська','балта':'Одеська','кодима':'Одеська','ананьїв':'Одеська','ширяєве':'Одеська','березівка':'Одеська','маяки':'Одеська','олексіївка':'Одеська','петродолинське':'Одеська',
-  'миколаїв':'Миколаївська','вознесенськ':'Миколаївська','первомайськ':'Миколаївська','очаків':'Миколаївська','южноукраїнськ':'Миколаївська','березанка':'Миколаївська','рибаківка':'Миколаївська','коблеве':'Миколаївська','олександрівка':'Миколаївська','новий буг':'Миколаївська','баштанка':'Миколаївська','снігурівка':'Миколаївська','нова одеса':'Миколаївська','врадіївка':'Миколаївська','криве озеро':'Миколаївська','куцуруб':'Миколаївська',
-  'херсон':'Херсонська','нова каховка':'Херсонська','каховка':'Херсонська','бериславка':'Херсонська','генічеськ':'Херсонська','скадовськ':'Херсонська','цюрупинськ':'Херсонська','голопристань':'Херсонська',
-  'запоріжжя':'Запорізька','мелітополь':'Запорізька','бердянськ':'Запорізька','енергодар':'Запорізька','пологи':'Запорізька',
-  'дніпро':'Дніпропетровська','кривий ріг':'Дніпропетровська',"нікополь":'Дніпропетровська',"кам'янське":'Дніпропетровська','павлоград':'Дніпропетровська',
-  'краматорськ':'Донецька',"слов'янськ":'Донецька','лиман':'Донецька','покровськ':'Донецька','сєвєродонецьк':'Донецька','маріуполь':'Донецька',
-  'харків':'Харківська','ізюм':'Харківська',"куп'янськ":'Харківська','чугуїв':'Харківська','лозова':'Харківська',
-  'чернігів':'Чернігівська','ніжин':'Чернігівська','прилуки':'Чернігівська',
-  'суми':'Сумська','конотоп':'Сумська','охтирка':'Сумська','шостка':'Сумська',
-  'полтава':'Полтавська','кременчук':'Полтавська','лубни':'Полтавська',
-  'черкаси':'Черкаська','умань':'Черкаська','золотоноша':'Черкаська',
-  'київ':'Київська','бровари':'Київська','бориспіль':'Київська','білоцерківка':'Київська','вишневе':'Київська','фастів':'Київська','ірпінь':'Київська','буча':'Київська',
-  'вінниця':'Вінницька','кропивницький':'Кіровоградська','луцьк':'Волинська','рівне':'Рівненська','житомир':'Житомирська','хмельницький':'Хмельницька','тернопіль':'Тернопільська','івано-франківськ':'Івано-Франківська','ужгород':'Закарпатська','чернівці':'Чернівецька','львів':'Львівська'
-};
 const TINFO = {
   'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE',desc:'Барражуючий боєприпас. GPS+INS. Малі висоти.',threat:'СЕРЕДНЯ'},
   'shahed-238-jet':{name:'Shahed-238 Jet',emoji:'✈️',speed:'550 км/г',range:'1800 км',warhead:'50 кг HE',desc:'Реактивна версія Shahed. Складніший перехват.',threat:'ВИСОКА'},
@@ -605,7 +592,7 @@ let typeColors={'shahed-vp-standart':'#ff9900','shahed-238-jet':'#ff4444','kalib
 let soundOn=true,vol=0.6,pushEnabled=false;
 let userPos=null,uMark=null,selId=null;
 let obs={},hLog=[],hMode=false,hPlaying=false,hInt=null;
-let oblastLayer=null,rangeCircle=null,heatLayer=null;
+let oblastLayer=null,rayonLayer=null,rangeCircle=null,heatLayer=null;
 let radarOpen=false,radarAngle=0,radarRAF=null;
 let alertTimer=null;
 let pendingSync=new Map(),rafPending=false;
@@ -639,21 +626,188 @@ function setBr(v){
   applyBrt(v);
 }
 
-// ═══════ OBLAST ═══════
+// ═══════════════════════════
+// RAYON + OBLAST LAYERS + AIR RAID ALERTS
+// ═══════════════════════════
+const ALERTS_PROXY = "https://morning-dust-7bfc.maksimalek121213.workers.dev";
+const oblFeatures={};
+const rayonFeatures={};
+let activeAlertNames=new Set();
+let activeRayonNames=new Set();
+
+// Маппинг район → область
+const RAYON_TO_OBLAST={
+  "Вінницький район":"Вінницька область","Гайсинський район":"Вінницька область","Жмеринський район":"Вінницька область","Могилів-Подільський район":"Вінницька область","Тульчинський район":"Вінницька область","Хмільницький район":"Вінницька область",
+  "Володимир-Волинський район":"Волинська область","Камінь-Каширський район":"Волинська область","Ковельський район":"Волинська область","Луцький район":"Волинська область",
+  "Дніпровський район":"Дніпропетровська область","Кам'янський район":"Дніпропетровська область","Криворізький район":"Дніпропетровська область","Нікопольський район":"Дніпропетровська область","Новомосковський район":"Дніпропетровська область","Павлоградський район":"Дніпропетровська область","Синельниківський район":"Дніпропетровська область",
+  "Бахмутський район":"Донецька область","Волноваський район":"Донецька область","Горлівський район":"Донецька область","Донецький район":"Донецька область","Кальміуський район":"Донецька область","Краматорський район":"Донецька область","Маріупольський район":"Донецька область","Покровський район":"Донецька область",
+  "Бердичівський район":"Житомирська область","Житомирський район":"Житомирська область","Звягельський район":"Житомирська область","Коростенський район":"Житомирська область","Овруцький район":"Житомирська область",
+  "Берегівський район":"Закарпатська область","Мукачівський район":"Закарпатська область","Рахівський район":"Закарпатська область","Тячівський район":"Закарпатська область","Ужгородський район":"Закарпатська область","Хустський район":"Закарпатська область",
+  "Бердянський район":"Запорізька область","Василівський район":"Запорізька область","Запорізький район":"Запорізька область","Мелітопольський район":"Запорізька область","Пологівський район":"Запорізька область",
+  "Верховинський район":"Івано-Франківська область","Івано-Франківський район":"Івано-Франківська область","Калуський район":"Івано-Франківська область","Коломийський район":"Івано-Франківська область","Косівський район":"Івано-Франківська область","Надвірнянський район":"Івано-Франківська область",
+  "Білоцерківський район":"Київська область","Бориспільський район":"Київська область","Броварський район":"Київська область","Бучанський район":"Київська область","Вишгородський район":"Київська область","Обухівський район":"Київська область","Фастівський район":"Київська область",
+  "Голованівський район":"Кіровоградська область","Кропивницький район":"Кіровоградська область","Новоукраїнський район":"Кіровоградська область","Олександрійський район":"Кіровоградська область",
+  "Алчевський район":"Луганська область","Довжанський район":"Луганська область","Луганський район":"Луганська область","Ровеньківський район":"Луганська область","Сватівський район":"Луганська область","Сєвєродонецький район":"Луганська область","Старобільський район":"Луганська область","Щастинський район":"Луганська область",
+  "Дрогобицький район":"Львівська область","Золочівський район":"Львівська область","Львівський район":"Львівська область","Самбірський район":"Львівська область","Стрийський район":"Львівська область","Червоноградський район":"Львівська область","Яворівський район":"Львівська область",
+  "Баштанський район":"Миколаївська область","Миколаївський район":"Миколаївська область","Первомайський район":"Миколаївська область",
+  "Білгород-Дністровський район":"Одеська область","Болградський район":"Одеська область","Березівський район":"Одеська область","Вознесенський район":"Одеська область","Ізмаїльський район":"Одеська область","Одеський район":"Одеська область","Подільський район":"Одеська область","Роздільнянський район":"Одеська область",
+  "Кременчуцький район":"Полтавська область","Лубенський район":"Полтавська область","Миргородський район":"Полтавська область","Полтавський район":"Полтавська область",
+  "Вараський район":"Рівненська область","Дубенський район":"Рівненська область","Рівненський район":"Рівненська область","Сарненський район":"Рівненська область",
+  "Конотопський район":"Сумська область","Охтирський район":"Сумська область","Роменський район":"Сумська область","Сумський район":"Сумська область","Шосткинський район":"Сумська область",
+  "Кременецький район":"Тернопільська область","Тернопільський район":"Тернопільська область","Чортківський район":"Тернопільська область",
+  "Богодухівський район":"Харківська область","Ізюмський район":"Харківська область","Красноградський район":"Харківська область","Куп'янський район":"Харківська область","Лозівський район":"Харківська область","Харківський район":"Харківська область","Чугуївський район":"Харківська область",
+  "Бериславський район":"Херсонська область","Генічеський район":"Херсонська область","Каховський район":"Херсонська область","Скадовський район":"Херсонська область","Херсонський район":"Херсонська область",
+  "Кам'янець-Подільський район":"Хмельницька область","Хмельницький район":"Хмельницька область","Шепетівський район":"Хмельницька область",
+  "Звенигородський район":"Черкаська область","Золотоніський район":"Черкаська область","Уманський район":"Черкаська область","Черкаський район":"Черкаська область",
+  "Вижницький район":"Чернівецька область","Дністровський район":"Чернівецька область","Чернівецький район":"Чернівецька область",
+  "Корюківський район":"Чернігівська область","Ніжинський район":"Чернігівська область","Новгород-Сіверський район":"Чернігівська область","Прилуцький район":"Чернігівська область","Чернігівський район":"Чернігівська область",
+  "Бахчисарайський район":"Автономна Республіка Крим","Білогірський район":"Автономна Республіка Крим","Джанкойський район":"Автономна Республіка Крим","Євпаторійський район":"Автономна Республіка Крим","Керченський район":"Автономна Республіка Крим","Перекопський район":"Автономна Республіка Крим","Сімферопольський район":"Автономна Республіка Крим","Феодосійський район":"Автономна Республіка Крим","Ялтинський район":"Автономна Республіка Крим","Курманський район":"Автономна Республіка Крим",
+};
+
+// Кількість районів по областях (для перевірки "вся область")
+const OBLAST_RAYON_COUNT={};
+Object.values(RAYON_TO_OBLAST).forEach(obl=>{
+  OBLAST_RAYON_COUNT[obl]=(OBLAST_RAYON_COUNT[obl]||0)+1;
+});
+
+function normName(s){
+  return (s||'').toLowerCase()
+    .replace('район','')
+    .replace('автономна республіка','')
+    .replace('область','').replace('обл.','')
+    .replace('територіальна громада','')
+    .replace('м.','').replace('а.р.','')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function oblStyleFn(name){
+  const isAlert=activeAlertNames.has(normName(name));
+  return isAlert
+    ? {color:'rgba(255,68,68,.3)',weight:.8,fill:true,fillColor:'#ff4444',fillOpacity:.15,dashArray:null}
+    : {color:'rgba(255,255,255,.15)',weight:.8,fill:false,dashArray:'3,7'};
+}
+
+function rayonStyleFn(name){
+  const isAlert=activeRayonNames.has(normName(name));
+  // Якщо вся область вже підсвічена — не малюємо район окремо
+  const oblast=RAYON_TO_OBLAST[name];
+  const oblastActive=oblast && activeAlertNames.has(normName(oblast));
+  if(oblastActive) return {color:'rgba(255,255,255,.08)',weight:.5,fill:false,dashArray:'2,6'};
+  return isAlert
+    ? {color:'rgba(255,68,68,.3)',weight:.8,fill:true,fillColor:'#ff4444',fillOpacity:.15,dashArray:null}
+    : {color:'rgba(255,255,255,.08)',weight:.5,fill:false,dashArray:'2,6'};
+}
+
 async function loadOblast(){
   try{
-    const r=await fetch('https://raw.githubusercontent.com/corvin-rose/ukraine-regions-geojson/main/ukraine.geojson');
-    if(!r.ok)throw 0;
-    const d=await r.json();
-    oblastLayer=L.geoJSON(d,{
-      style:{color:'rgba(255,255,255,.18)',weight:.8,fill:false,dashArray:'3,7'},
-      interactive:false,
-      onEachFeature:(f,l)=>l.bindTooltip(f.properties?.name||'',{className:'ob-tt',sticky:true})
-    });
-    if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
-  }catch(e){}
+    // Завантажуємо обидва GeoJSON паралельно
+    const [rObl, rRay]=await Promise.all([
+      fetch('https://raw.githubusercontent.com/slawomirmatuszak/ukrainian_geodata/main/regiony.geojson'),
+      fetch('https://raw.githubusercontent.com/slawomirmatuszak/ukrainian_geodata/main/rayony.geojson')
+    ]);
+
+    if(rObl.ok){
+      const d=await rObl.json();
+      oblastLayer=L.geoJSON(d,{
+        style:f=>oblStyleFn(f.properties?.region||''),
+        interactive:false,
+        onEachFeature:(f,l)=>{
+          const name=f.properties?.region||'';
+          l.bindTooltip(name,{className:'ob-tt',sticky:true});
+          oblFeatures[name]=l;
+        }
+      });
+      if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
+    }
+
+    if(rRay.ok){
+      const d=await rRay.json();
+      rayonLayer=L.geoJSON(d,{
+        style:f=>rayonStyleFn(f.properties?.rayon||''),
+        interactive:false,
+        onEachFeature:(f,l)=>{
+          const name=f.properties?.rayon||'';
+          l.bindTooltip(name,{className:'ob-tt',sticky:true});
+          rayonFeatures[name]=l;
+        }
+      });
+      if(document.getElementById('togObl')?.checked)rayonLayer.addTo(map);
+    }
+  }catch(e){console.warn('GeoJSON load error',e);}
+  startAlertsPolling();
 }
-function toggleObl(){if(!oblastLayer)return;document.getElementById('togObl').checked?oblastLayer.addTo(map):map.removeLayer(oblastLayer);}
+
+async function fetchAlerts(retry=true){
+  try{
+    const r=await fetch(ALERTS_PROXY);
+    if(!r.ok)throw 0;
+    const data=await r.json();
+
+    const alerts=data.alerts||data;
+    if(!Array.isArray(alerts)||alerts.length===0){
+      console.warn('Alerts: empty response, keeping previous state');
+      if(retry)setTimeout(()=>fetchAlerts(false),60000);
+      return;
+    }
+
+    const oblasts=new Set();
+    const rayons=new Set();
+
+    alerts.forEach(alert=>{
+      if(alert.alert_type!=='air_raid') return;
+      if(alert.location_type==='oblast' && alert.location_oblast){
+        oblasts.add(alert.location_oblast);
+      }
+      if(alert.location_type==='raion' && alert.location_title){
+        rayons.add(alert.location_title);
+      }
+    });
+
+    // Підраховуємо скільки районів кожної oblasti в тривозі
+    const oblastRayonCount={};
+    rayons.forEach(rayonTitle=>{
+      const obl=RAYON_TO_OBLAST[rayonTitle];
+      if(obl) oblastRayonCount[obl]=(oblastRayonCount[obl]||0)+1;
+    });
+
+    // Якщо ВСІ райони области в тривозі → підсвічуємо всю область
+    Object.entries(oblastRayonCount).forEach(([obl,cnt])=>{
+      if(cnt>0 && cnt>=(OBLAST_RAYON_COUNT[obl]||99)){
+        oblasts.add(obl);
+      }
+    });
+
+    activeAlertNames=new Set([...oblasts].map(normName));
+    activeRayonNames=new Set([...rayons].map(normName));
+    applyAlertStyles();
+    updateAlertCounter(oblasts.size+rayons.size);
+  }catch(e){console.warn('Alerts fetch error',e);}
+}
+
+function applyAlertStyles(){
+  Object.entries(oblFeatures).forEach(([name,layer])=>{
+    layer.setStyle(oblStyleFn(name));
+  });
+  Object.entries(rayonFeatures).forEach(([name,layer])=>{
+    layer.setStyle(rayonStyleFn(name));
+  });
+}
+
+function updateAlertCounter(n){
+  const el=document.getElementById('alarmC');
+  if(el)el.textContent=n;
+}
+
+function startAlertsPolling(){
+  fetchAlerts();
+  setInterval(fetchAlerts,15000); // кожні 15 сек
+}
+function toggleObl(){
+  const on=document.getElementById('togObl')?.checked;
+  if(oblastLayer){on?oblastLayer.addTo(map):map.removeLayer(oblastLayer);}
+  if(rayonLayer){on?rayonLayer.addTo(map):map.removeLayer(rayonLayer);}
+}
 function toggleRng(){
   const on=document.getElementById('togRng')?.checked;
   if(on&&userPos){
@@ -928,7 +1082,6 @@ function toggleList(){
 }
 function buildListUI(){
   if(!document.getElementById('listPnl').classList.contains('on'))return;
-  buildTop5();
   const body=document.getElementById('listBody');body.innerHTML='';
   const en=Object.entries(obs);
   if(!en.length){body.innerHTML='<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.2);padding:12px;font-family:Orbitron">НЕМАЄ ЦІЛЕЙ</div>';return;}
@@ -945,38 +1098,6 @@ function buildListUI(){
     el.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
     body.appendChild(el);
   });
-}
-
-// ═══════ TOP-5 РЕГІОНІВ ═══════
-function buildTop5(){
-  const box=document.getElementById('top5Box');if(!box)return;
-  const counts={};
-  // активні цілі
-  Object.values(obs).forEach(o=>{
-    const reg=REGION_OF[(o.data.base_city||'').toLowerCase()];
-    if(reg)counts[reg]=(counts[reg]||0)+1;
-  });
-  // історія (унікальні id за весь час спостереження)
-  const seen=new Set();
-  hLog.forEach(e=>{
-    const bc=(e.d.base_city||'').toLowerCase();const reg=REGION_OF[bc];
-    if(!reg)return;
-    const key=reg+'|'+e.id;
-    if(!seen.has(key)){seen.add(key);counts[reg]=(counts[reg]||0)+ (Object.values(obs).some(o=>o.data.base_city&&o.data.base_city.toLowerCase()===bc)?0:1);}
-  });
-  const arr=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  if(!arr.length){box.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.2);font-family:Orbitron;text-align:center;padding:4px">НЕМАЄ ДАНИХ</div>';return;}
-  const max=arr[0][1]||1;
-  box.innerHTML=`<div style="font-family:Orbitron;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.15em;margin-bottom:8px">⚠ ТОП-5 НАЙБІЛЬШ АТАКОВАНИХ ОБЛАСТЕЙ</div>`+
-    arr.map(([reg,c],i)=>`
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-family:Orbitron;font-size:9px;color:var(--a);width:14px;">${i+1}</span>
-        <span style="flex:1;font-size:10px;color:rgba(255,255,255,.75)">${reg}</span>
-        <div style="width:60px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;">
-          <div style="height:100%;width:${(c/max*100).toFixed(0)}%;background:var(--a);box-shadow:0 0 6px var(--a)"></div>
-        </div>
-        <span style="font-family:Orbitron;font-size:10px;color:#fff;min-width:18px;text-align:right">${c}</span>
-      </div>`).join('');
 }
 
 // ═══════ RADAR ═══════
