@@ -297,7 +297,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 /* ═══════ SETTINGS SHEET ═══════ */
 #setSh{position:fixed;inset:0;z-index:8500;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);}
 #setSh.on{display:flex;}
-.set-sheet{background:var(--glass2);border:1px solid var(--brd);border-bottom:none;border-radius:20px 20px 0 0;width:min(580px,100%);padding:18px 14px calc(var(--sb)+26px);max-height:92vh;overflow-y:auto;animation:shUp .3s cubic-bezier(.19,1,.22,1);}
+.set-sheet{background:var(--glass2);border:1px solid var(--brd);border-bottom:none;border-radius:20px 20px 0 0;width:min(580px,100%);padding:14px 0 calc(var(--sb)+18px);max-height:92vh;overflow:hidden;display:flex;flex-direction:column;animation:shUp .3s cubic-bezier(.19,1,.22,1);}
 .ss-sec{margin-bottom:16px;}
 .ss-lbl{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.25);letter-spacing:.15em;text-transform:uppercase;margin-bottom:9px;display:block;border-bottom:1px solid var(--brd2);padding-bottom:4px;}
 .ss-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
@@ -325,6 +325,41 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .ptc-lbl{font-size:10px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:6px;}
 .msw{width:18px;height:18px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:.12s;}
 .msw.on{border-color:#fff;transform:scale(1.18);}
+
+/* ─── SETTINGS HEADER / TABS ─── */
+.ss-head{padding:0 14px 12px;flex-shrink:0;}
+.ss-tabs{display:flex;gap:4px;padding:0 14px 12px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.ss-tabs::-webkit-scrollbar{display:none;}
+.ss-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:9px 6px;border-radius:12px;cursor:pointer;
+  background:rgba(255,255,255,.03);border:1px solid var(--brd2);
+  color:rgba(255,255,255,.35);transition:.16s;
+  font-family:'Orbitron';font-size:7.5px;letter-spacing:.08em;
+  min-width:64px;text-transform:uppercase;
+}
+.ss-tab i{font-size:15px;}
+.ss-tab.on{background:var(--ar);border-color:var(--a);color:var(--a);}
+.ss-tab.on i{color:var(--a);}
+.ss-pages{overflow-y:auto;padding:0 14px;flex:1;}
+.ss-page{display:none;animation:fadeUp .2s ease;}
+.ss-page.on{display:block;}
+
+/* ─── Card-style sections for cleaner grouping ─── */
+.ss-card{
+  background:rgba(255,255,255,.025);border:1px solid var(--brd2);
+  border-radius:14px;padding:13px;margin-bottom:10px;
+}
+.ss-card-h{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  font-family:'Orbitron';font-size:9px;letter-spacing:.12em;
+  color:rgba(255,255,255,.45);text-transform:uppercase;
+}
+.ss-card-h i{color:var(--a);font-size:11px;}
+.ss-card .ss-row:last-child,.ss-card .sl-row:last-child{margin-bottom:0;}
+.ss-card .ss-lbl{border-bottom:none;padding-bottom:0;margin-bottom:8px;}
+
+.swatch-lbl{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:7px;display:block;}
 
 /* ═══════ ADMIN ═══════ */
 #adm{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;display:none;align-items:center;justify-content:center;padding:14px;}
@@ -475,99 +510,140 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 <div id="setSh" onclick="bgcl(event,'setSh')">
   <div class="set-sheet">
     <div class="th-drag"></div>
-    <div class="th-title">SETTINGS</div>
+    <div class="ss-head">
+      <div class="th-title" style="margin-bottom:0">SETTINGS</div>
+    </div>
 
-    <!-- Вигляд цілей -->
-    <div class="ss-sec">
-      <span class="ss-lbl">Вигляд цілей</span>
-      <div class="sl-row"><span>Розмір іконки</span>
-        <input type="range" class="rng" id="iszR" min="12" max="60" value="22" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 20%,rgba(255,255,255,.08) 20%)">
-        <span class="sl-val" id="iszV">22px</span>
-      </div>
-      <div class="ss-row"><span>Режим кольору</span></div>
-      <div class="cmodes">
-        <button class="cm-btn on" id="cm0" onclick="setCM('single',this)">🎨 SINGLE</button>
-        <button class="cm-btn" id="cm1" onclick="setCM('type',this)">🏷 BY TYPE</button>
-        <button class="cm-btn" id="cm2" onclick="setCM('heat',this)">🔥 HEAT</button>
-      </div>
-      <!-- Single color -->
-      <div id="singleRow" class="ss-row"><span>Колір цілей</span>
-        <div class="swg" id="tcSw">
-          <div class="sw on" style="background:#e8ff00" onclick="setGC('#e8ff00',this)"></div>
-          <div class="sw" style="background:#ff4444" onclick="setGC('#ff4444',this)"></div>
-          <div class="sw" style="background:#ff9900" onclick="setGC('#ff9900',this)"></div>
-          <div class="sw" style="background:#4fc3f7" onclick="setGC('#4fc3f7',this)"></div>
-          <div class="sw" style="background:#39ff8c" onclick="setGC('#39ff8c',this)"></div>
-          <div class="sw" style="background:#cc44ff" onclick="setGC('#cc44ff',this)"></div>
-          <div class="sw" style="background:#fff" onclick="setGC('#ffffff',this)"></div>
+    <!-- TABS -->
+    <div class="ss-tabs">
+      <div class="ss-tab on" id="sst0" onclick="setSSTab(0)"><i class="fa-solid fa-map"></i><span>КАРТА</span></div>
+      <div class="ss-tab" id="sst1" onclick="setSSTab(1)"><i class="fa-solid fa-crosshairs"></i><span>ЦІЛІ</span></div>
+      <div class="ss-tab" id="sst2" onclick="setSSTab(2)"><i class="fa-solid fa-triangle-exclamation"></i><span>ТРИВОГА</span></div>
+      <div class="ss-tab" id="sst3" onclick="setSSTab(3)"><i class="fa-solid fa-volume-high"></i><span>ЗВУК</span></div>
+    </div>
+
+    <div class="ss-pages">
+
+      <!-- ═══ PAGE 0 — КАРТА ═══ -->
+      <div class="ss-page on" id="ssp0">
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-layer-group"></i> Шари карти</div>
+          <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
+        </div>
+
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-route"></i> Траєкторії цілей</div>
+          <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>Прогноз курсу (Ghost Trail)</span><label class="tog"><input type="checkbox" id="togFc" checked onchange="toggleForecastAll()"><span class="tog-sl"></span></label></div>
+        </div>
+
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-palette"></i> Акцент інтерфейсу</div>
+          <span class="swatch-lbl">Колір кнопок, пілюль та підсвітки UI</span>
+          <div class="swg" id="uiSw" style="flex-wrap:wrap;gap:6px;">
+            <div class="sw on" style="background:#e8ff00" onclick="setUI('#e8ff00',this)"></div>
+            <div class="sw" style="background:#ff4444" onclick="setUI('#ff4444',this)"></div>
+            <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
+            <div class="sw" style="background:#4fc3f7" onclick="setUI('#4fc3f7',this)"></div>
+            <div class="sw" style="background:#39ff8c" onclick="setUI('#39ff8c',this)"></div>
+            <div class="sw" style="background:#cc44ff" onclick="setUI('#cc44ff',this)"></div>
+          </div>
         </div>
       </div>
-      <!-- Per-type colors -->
-      <div id="typeBlock" style="display:none">
-        <div class="ptc-row"><div class="ptc-lbl"><span>🚁</span> Shahed-136</div><div class="swg" id="ptc0"></div></div>
-        <div class="ptc-row"><div class="ptc-lbl"><span>✈️</span> Shahed-238</div><div class="swg" id="ptc1"></div></div>
-        <div class="ptc-row"><div class="ptc-lbl"><span>🚀</span> Kalibr</div><div class="swg" id="ptc2"></div></div>
-        <div class="ptc-row"><div class="ptc-lbl"><span>✈️</span> Tu-95MS</div><div class="swg" id="ptc3"></div></div>
+
+      <!-- ═══ PAGE 1 — ЦІЛІ (вигляд) ═══ -->
+      <div class="ss-page" id="ssp1">
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-expand"></i> Розмір іконки</div>
+          <div class="sl-row" style="margin-bottom:0">
+            <input type="range" class="rng" id="iszR" min="12" max="60" value="22" oninput="setISZ(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 20%,rgba(255,255,255,.08) 20%)">
+            <span class="sl-val" id="iszV">22px</span>
+          </div>
+        </div>
+
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-droplet"></i> Режим кольору</div>
+          <div class="cmodes">
+            <button class="cm-btn on" id="cm0" onclick="setCM('single',this)">🎨 SINGLE</button>
+            <button class="cm-btn" id="cm1" onclick="setCM('type',this)">🏷 BY TYPE</button>
+            <button class="cm-btn" id="cm2" onclick="setCM('heat',this)">🔥 HEAT</button>
+          </div>
+          <!-- Single color -->
+          <div id="singleRow">
+            <span class="swatch-lbl">Колір усіх цілей</span>
+            <div class="swg" id="tcSw" style="flex-wrap:wrap;gap:6px;">
+              <div class="sw on" style="background:#e8ff00" onclick="setGC('#e8ff00',this)"></div>
+              <div class="sw" style="background:#ff4444" onclick="setGC('#ff4444',this)"></div>
+              <div class="sw" style="background:#ff9900" onclick="setGC('#ff9900',this)"></div>
+              <div class="sw" style="background:#4fc3f7" onclick="setGC('#4fc3f7',this)"></div>
+              <div class="sw" style="background:#39ff8c" onclick="setGC('#39ff8c',this)"></div>
+              <div class="sw" style="background:#cc44ff" onclick="setGC('#cc44ff',this)"></div>
+              <div class="sw" style="background:#fff" onclick="setGC('#ffffff',this)"></div>
+            </div>
+          </div>
+          <!-- Per-type colors -->
+          <div id="typeBlock" style="display:none">
+            <span class="swatch-lbl">Колір окремо для кожного типу цілі</span>
+            <div class="ptc-row"><div class="ptc-lbl"><span>🚁</span> Shahed-136</div><div class="swg" id="ptc0"></div></div>
+            <div class="ptc-row"><div class="ptc-lbl"><span>✈️</span> Shahed-238</div><div class="swg" id="ptc1"></div></div>
+            <div class="ptc-row"><div class="ptc-lbl"><span>🚀</span> Kalibr</div><div class="swg" id="ptc2"></div></div>
+            <div class="ptc-row" style="margin-bottom:0"><div class="ptc-lbl"><span>✈️</span> Tu-95MS</div><div class="swg" id="ptc3"></div></div>
+          </div>
+        </div>
       </div>
+
+      <!-- ═══ PAGE 2 — ТРИВОГА ═══ -->
+      <div class="ss-page" id="ssp2">
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-fire"></i> Колір підсвітки тривожних областей</div>
+          <span class="swatch-lbl">Областi та райони в повітряній тривозі будуть забарвлені цим кольором</span>
+          <div class="swg" id="alcSw" style="flex-wrap:wrap;gap:6px;">
+            <div class="sw on" style="background:#ff4444" onclick="setAlertColor('#ff4444',this)"></div>
+            <div class="sw" style="background:#ff9900" onclick="setAlertColor('#ff9900',this)"></div>
+            <div class="sw" style="background:#e8ff00" onclick="setAlertColor('#e8ff00',this)"></div>
+            <div class="sw" style="background:#cc44ff" onclick="setAlertColor('#cc44ff',this)"></div>
+            <div class="sw" style="background:#4fc3f7" onclick="setAlertColor('#4fc3f7',this)"></div>
+            <div class="sw" style="background:#39ff8c" onclick="setAlertColor('#39ff8c',this)"></div>
+            <div class="sw" style="background:#ffffff" onclick="setAlertColor('#ffffff',this)"></div>
+          </div>
+        </div>
+
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-bell"></i> Push-сповіщення</div>
+          <div class="ss-row" style="margin-bottom:0"><span>Сповіщати про нові цілі поза вкладкою</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="tog-sl"></span></label></div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE 3 — ЗВУК ═══ -->
+      <div class="ss-page" id="ssp3">
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-volume-high"></i> Звук</div>
+          <div class="ss-row"><span>Звукові сповіщення</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="tog-sl"></span></label></div>
+          <div class="sl-row" style="margin-bottom:0"><span>Гучність</span>
+            <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.08) 60%)">
+            <span class="sl-val" id="volV">60%</span>
+          </div>
+        </div>
+
+        <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-circle-play"></i> Перевірка звуків</div>
+          <div class="snd-g">
+            <button class="snd-b on" onclick="testSnd('new')">🔔 Нова ціль</button>
+            <button class="snd-b on" onclick="testSnd('del')">✅ Знищена</button>
+            <button class="snd-b on" onclick="testSnd('alm')">🚨 Тривога</button>
+            <button class="snd-b" onclick="testSnd('tick')">⏱ Тік</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Шари -->
-    <div class="ss-sec">
-      <span class="ss-lbl">Шари карти</span>
-      <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>Прогноз курсу (Ghost Trail)</span><label class="tog"><input type="checkbox" id="togFc" checked onchange="toggleForecastAll()"><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
+    <div style="padding:12px 14px 0">
+      <button class="th-close" onclick="cls('setSh')">CLOSE</button>
     </div>
-
-    <!-- Тривоги -->
-    <div class="ss-sec">
-      <span class="ss-lbl">Повітряна тривога</span>
-      <div class="alc-row"><span style="font-size:11px;color:rgba(255,255,255,.6)">Колір підсвітки тривожних областей</span></div>
-      <div class="swg" id="alcSw" style="flex-wrap:wrap;gap:6px;">
-        <div class="sw on" style="background:#ff4444" onclick="setAlertColor('#ff4444',this)"></div>
-        <div class="sw" style="background:#ff9900" onclick="setAlertColor('#ff9900',this)"></div>
-        <div class="sw" style="background:#e8ff00" onclick="setAlertColor('#e8ff00',this)"></div>
-        <div class="sw" style="background:#cc44ff" onclick="setAlertColor('#cc44ff',this)"></div>
-        <div class="sw" style="background:#4fc3f7" onclick="setAlertColor('#4fc3f7',this)"></div>
-        <div class="sw" style="background:#39ff8c" onclick="setAlertColor('#39ff8c',this)"></div>
-        <div class="sw" style="background:#ffffff" onclick="setAlertColor('#ffffff',this)"></div>
-      </div>
-    </div>
-
-    <!-- Звуки -->
-    <div class="ss-sec">
-      <span class="ss-lbl">Сповіщення</span>
-      <div class="ss-row"><span>Push-сповіщення</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="tog-sl"></span></label></div>
-      <div class="ss-row"><span>Звуки</span><label class="tog"><input type="checkbox" id="togSnd" checked onchange="soundOn=this.checked"><span class="tog-sl"></span></label></div>
-      <div class="sl-row"><span>Гучність</span>
-        <input type="range" class="rng" id="volR" min="0" max="100" value="60" oninput="setVol(this.value)" style="flex:1;background:linear-gradient(to right,var(--a) 60%,rgba(255,255,255,.08) 60%)">
-        <span class="sl-val" id="volV">60%</span>
-      </div>
-      <div class="snd-g">
-        <button class="snd-b on" onclick="testSnd('new')">🔔 Нова ціль</button>
-        <button class="snd-b on" onclick="testSnd('del')">✅ Знищена</button>
-        <button class="snd-b on" onclick="testSnd('alm')">🚨 Тривога</button>
-        <button class="snd-b" onclick="testSnd('tick')">⏱ Тік</button>
-      </div>
-    </div>
-
-    <!-- UI -->
-    <div class="ss-sec">
-      <span class="ss-lbl">Акцент UI</span>
-      <div class="swg" id="uiSw" style="flex-wrap:wrap;gap:6px;">
-        <div class="sw on" style="background:#e8ff00" onclick="setUI('#e8ff00',this)"></div>
-        <div class="sw" style="background:#ff4444" onclick="setUI('#ff4444',this)"></div>
-        <div class="sw" style="background:#ff9900" onclick="setUI('#ff9900',this)"></div>
-        <div class="sw" style="background:#4fc3f7" onclick="setUI('#4fc3f7',this)"></div>
-        <div class="sw" style="background:#39ff8c" onclick="setUI('#39ff8c',this)"></div>
-        <div class="sw" style="background:#cc44ff" onclick="setUI('#cc44ff',this)"></div>
-      </div>
-    </div>
-
-    <button class="th-close" onclick="cls('setSh')">CLOSE</button>
   </div>
 </div>
 
@@ -1153,6 +1229,16 @@ function sendPush(title,body){if(pushEnabled&&document.hidden)try{new Notificati
 function opn(id){document.getElementById(id).classList.add('on');}
 function cls(id){document.getElementById(id).classList.remove('on');}
 function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
+
+// ═══════════════════════════
+// SETTINGS TABS
+// ═══════════════════════════
+function setSSTab(i){
+  for(let j=0;j<4;j++){
+    document.getElementById('sst'+j)?.classList.toggle('on',j===i);
+    document.getElementById('ssp'+j)?.classList.toggle('on',j===i);
+  }
+}
 function toast(t,d=1500){const el=document.getElementById('toast');el.textContent=t;el.style.opacity='1';clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity='0',d);}
 
 // Alert banner
