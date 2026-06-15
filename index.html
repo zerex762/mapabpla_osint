@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -348,6 +347,34 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 }
 /* LEAFLET TOOLTIP */
 .leaflet-tooltip.ob-tt{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-family:'Orbitron';font-size:8px;padding:3px 6px;}
+
+/* ═══════ THREAT PULSE RINGS ═══════ */
+.tgt-pulse{
+  position:absolute;left:50%;top:50%;
+  border-radius:50%;
+  border:1.5px solid currentColor;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  opacity:0;
+}
+.tgt-pulse.p1{animation:pulseRing 2.6s ease-out infinite;}
+.tgt-pulse.p2{animation:pulseRing 1.6s ease-out infinite;}
+.tgt-pulse.p3{animation:pulseRing .9s ease-out infinite;}
+.tgt-pulse.p2-d{animation-delay:.55s;}
+.tgt-pulse.p3-d{animation-delay:.3s;}
+@keyframes pulseRing{
+  0%{width:100%;height:100%;opacity:.65;}
+  100%{width:340%;height:340%;opacity:0;}
+}
+
+/* ═══════ GHOST TRAIL FORECAST ═══════ */
+.gt-tick{
+  font-family:'Orbitron';font-size:7px;letter-spacing:.03em;
+  white-space:nowrap;text-shadow:0 0 4px #000,0 0 4px #000;
+  pointer-events:none;
+  padding:1px 4px;border-radius:4px;
+  background:rgba(0,0,0,.35);
+}
 /* ═══════ NO CONNECTION BANNER ═══════ */
 #noConnBanner{
   position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -490,6 +517,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
       <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
       <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
       <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
+      <div class="ss-row"><span>Прогноз курсу (Ghost Trail)</span><label class="tog"><input type="checkbox" id="togFc" checked onchange="toggleForecastAll()"><span class="tog-sl"></span></label></div>
       <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
       <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
     </div>
@@ -1081,12 +1109,13 @@ function setCM(m,el){
 }
 function getC(type){return colorMode==='type'?typeColors[type]||globalC:globalC;}
 function redrawAll(){
-  Object.values(obs).forEach(o=>{
+  Object.entries(obs).forEach(([id,o])=>{
     o.marker.setIcon(mkIcon(o.data));
     const c=getC(o.data.type);
     if(o.circle)o.circle.setStyle({color:c,fillColor:c});
     if(o.line)o.line.setStyle({color:c});
     if(o.trail)o.trail.setStyle({color:c});
+    renderForecast(id,o.data);
   });
 }
 function toggleCircles(){
@@ -1247,14 +1276,27 @@ function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;ret
 
 // ═══════════════════════════
 // ICON — compact, no circle, no separate arrow
-// Just drone image with tiny course dot
+// Just drone image with tiny course dot + threat pulse ring
 // ═══════════════════════════
 function mkIcon(d){
   const ang=+d.angle||0, sz=ISZ, c=getC(d.type);
   const showCrs=document.getElementById('togCrs')?.checked!==false;
   const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
+
+  // Рівень загрози → інтенсивність/швидкість пульсації
+  const threat=(TINFO[d.type]||{}).threat;
+  let pulseHtml='';
+  if(threat==='КРИТИЧНА'){
+    pulseHtml=`<div class="tgt-pulse p3" style="color:${c}"></div><div class="tgt-pulse p3 p3-d" style="color:${c}"></div>`;
+  }else if(threat==='ВИСОКА'){
+    pulseHtml=`<div class="tgt-pulse p2" style="color:${c}"></div><div class="tgt-pulse p2 p2-d" style="color:${c}"></div>`;
+  }else{
+    pulseHtml=`<div class="tgt-pulse p1" style="color:${c}"></div>`;
+  }
+
   const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
-    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
+    ${pulseHtml}
+    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
     ${cLbl}
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+11],iconAnchor:[sz/2,sz/2]});
@@ -1270,6 +1312,67 @@ function updateTrail(id,lat,lng){
   trailPts[id].push([lat,lng]);
   if(trailPts[id].length>TMAX)trailPts[id].shift();
   if(obs[id]?.trail)obs[id].trail.setLatLngs(trailPts[id]);
+}
+
+// ═══════════════════════════
+// GHOST TRAIL FORECAST — пунктирна лінія прогнозу курсу
+// з підписами часу (+5/+10/+15/+20 хв)
+// ═══════════════════════════
+const FC_STEPS=[5,10,15,20]; // хвилини
+
+function buildForecastPts(d){
+  const ang=+d.angle||0, spd=SPD[d.type]||200;
+  const pts=[[d.lat,d.lng]];
+  const labels=[];
+  FC_STEPS.forEach(min=>{
+    // vect() рахує зміщення за 10 хв при заданій швидкості — масштабуємо пропорційно
+    const v=vect(d.lat,d.lng,ang,spd*(min/10));
+    pts.push([v.lat,v.lng]);
+    labels.push({lat:v.lat,lng:v.lng,min});
+  });
+  return {pts,labels};
+}
+
+function renderForecast(id,d){
+  const on=document.getElementById('togFc')?.checked!==false;
+  const o=obs[id];
+  if(!o)return;
+  // Прибрати попередній прогноз
+  if(o.fcLine){map.removeLayer(o.fcLine);o.fcLine=null;}
+  if(o.fcTicks){o.fcTicks.forEach(m=>map.removeLayer(m));o.fcTicks=[];}
+  if(!on)return;
+
+  const {pts,labels}=buildForecastPts(d);
+  const c=getC(d.type);
+  o.fcLine=L.polyline(pts,{
+    renderer:cvs,color:c,weight:1,opacity:.4,
+    dashArray:'1,6',interactive:false
+  }).addTo(map);
+
+  o.fcTicks=labels.map(lb=>{
+    return L.marker([lb.lat,lb.lng],{
+      icon:L.divIcon({
+        className:'',
+        html:`<div class="gt-tick" style="color:${c}">+${lb.min}хв</div>`,
+        iconSize:[34,12],
+        iconAnchor:[17,6]
+      }),
+      interactive:false
+    }).addTo(map);
+  });
+}
+
+function removeForecast(o){
+  if(!o)return;
+  if(o.fcLine){map.removeLayer(o.fcLine);o.fcLine=null;}
+  if(o.fcTicks){o.fcTicks.forEach(m=>map.removeLayer(m));o.fcTicks=[];}
+}
+
+function toggleForecastAll(){
+  const on=document.getElementById('togFc')?.checked;
+  Object.entries(obs).forEach(([id,o])=>{
+    if(on)renderForecast(id,o.data); else removeForecast(o);
+  });
 }
 
 // ═══════════════════════════
@@ -1296,6 +1399,7 @@ function doSync(id,d){
     if(obs[id].circle&&document.getElementById('togCir')?.checked)obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
     if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
     obs[id].data=d;if(selId===id)showTrack(id,d);
+    renderForecast(id,d);
   } else {
     sndNew();
     const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
@@ -1309,7 +1413,8 @@ function doSync(id,d){
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
     marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
-    obs[id]={marker,circle,line,trail,data:d};
+    obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[]};
+    renderForecast(id,d);
   }
 }
 function remove(id){
@@ -1318,6 +1423,7 @@ function remove(id){
   if(obs[id].circle)map.removeLayer(obs[id].circle);
   if(obs[id].line)map.removeLayer(obs[id].line);
   if(obs[id].trail)map.removeLayer(obs[id].trail);
+  removeForecast(obs[id]);
   delete trailPts[id];if(selId===id)closeTrack();delete obs[id];
   updCounts();refreshHeat();buildListUI();
 }
