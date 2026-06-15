@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .ab-close{background:none;border:none;color:rgba(255,255,255,.25);font-size:15px;cursor:pointer;padding:0;line-height:1;}
 
 /* ═══════ TRACK PANEL ═══════ */
-#trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:60px;max-width:380px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;}
+#trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:400px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;max-height:80vh;overflow-y:auto;}
 #trackPnl.on{display:block;}
 .tp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;font-weight:600;}
@@ -227,6 +227,19 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .tp-txt{font-size:10px;color:rgba(255,255,255,.5);line-height:1.5;}
 .tp-txt b{color:rgba(255,255,255,.82);}
 .tp-vec{margin-top:7px;padding:6px 9px;background:rgba(255,255,255,.03);border:1px solid var(--brd2);border-radius:7px;font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.35);line-height:1.6;}
+/* ── TARGET PHOTO ── */
+.tp-photo{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;border:1px solid var(--brd);display:block;}
+.tp-photo-wrap{position:relative;margin-bottom:10px;}
+.tp-photo-badge{position:absolute;top:7px;right:7px;font-family:'Orbitron';font-size:8px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.08em;}
+.threat-СЕРЕДНЯ{background:rgba(255,153,0,.2);color:#ff9900;border:1px solid rgba(255,153,0,.4);}
+.threat-ВИСОКА{background:rgba(255,68,68,.2);color:#ff4444;border:1px solid rgba(255,68,68,.4);}
+.threat-КРИТИЧНА{background:rgba(200,0,0,.25);color:#ff2222;border:1px solid rgba(200,0,0,.5);}
+.tp-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;}
+.tp-stat{background:rgba(255,255,255,.03);border:1px solid var(--brd2);border-radius:8px;padding:6px 8px;}
+.tp-stat .lb{font-size:7px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+.tp-stat .vl{font-family:'Orbitron';font-size:10px;color:#fff;}
+.tp-intercept{margin-top:6px;padding:6px 9px;background:rgba(57,255,140,.04);border:1px solid rgba(57,255,140,.12);border-radius:7px;font-size:9px;color:rgba(255,255,255,.45);line-height:1.5;}
+.tp-intercept b{color:var(--ok);}
 
 /* ═══════ RADAR ═══════ */
 #radarPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid rgba(0,255,136,.15);border-radius:16px;padding:12px 14px;width:240px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;}
@@ -752,13 +765,22 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 <!-- TRACK PANEL -->
 <div id="trackPnl">
   <div class="tp-head"><div class="tp-type" id="tpType">--</div><button class="tp-x" onclick="closeTrack()">×</button></div>
-  <div class="tp-grid">
-    <div class="tp-cell"><div class="lb">Позиція</div><div class="vl y" id="tpPos">--</div></div>
-    <div class="tp-cell"><div class="lb">Курс</div><div class="vl" id="tpAng">--</div></div>
-    <div class="tp-cell"><div class="lb">Час виявл.</div><div class="vl g" id="tpAge">--</div></div>
-    <div class="tp-cell"><div class="lb">ETA до вас</div><div class="vl y" id="tpETA">--</div></div>
+  <!-- ФОТО + BADGE -->
+  <div class="tp-photo-wrap" id="tpPhotoWrap" style="display:none">
+    <img id="tpPhoto" class="tp-photo" src="" alt="">
+    <span class="tp-photo-badge" id="tpThreatBadge"></span>
+  </div>
+  <!-- СТАТИСТИКА -->
+  <div class="tp-stats">
+    <div class="tp-stat"><div class="lb">Позиція</div><div class="vl y" id="tpPos">--</div></div>
+    <div class="tp-stat"><div class="lb">Курс</div><div class="vl" id="tpAng">--</div></div>
+    <div class="tp-stat"><div class="lb">Швидкість</div><div class="vl" id="tpSpd">--</div></div>
+    <div class="tp-stat"><div class="lb">Дальність</div><div class="vl" id="tpRange">--</div></div>
+    <div class="tp-stat"><div class="lb">Час виявл.</div><div class="vl g" id="tpAge">--</div></div>
+    <div class="tp-stat"><div class="lb">ETA до вас</div><div class="vl y" id="tpETA">--</div></div>
   </div>
   <div class="tp-info" id="tpInfo"></div>
+  <div class="tp-intercept" id="tpIntercept" style="display:none"><b>⚔️ Перехват:</b> <span id="tpInterceptTxt"></span></div>
   <div class="tp-vec" id="tpVec">--</div>
 </div>
 
@@ -872,10 +894,51 @@ const WMO_ICO = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'
 const WMO_TXT = {0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
 
 const TINFO = {
-  'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE',desc:'Барражуючий боєприпас. GPS+INS. Малі висоти.',threat:'СЕРЕДНЯ'},
-  'shahed-238-jet':{name:'Shahed-238 Jet',emoji:'✈️',speed:'550 км/г',range:'1800 км',warhead:'50 кг HE',desc:'Реактивна версія Shahed. Складніший перехват.',threat:'ВИСОКА'},
-  'kalibr-cruise':{name:'Kalibr 3M-14',emoji:'🚀',speed:'880 км/г',range:'2000+ км',warhead:'450 кг HE / ядерна',desc:'Крилата ракета. Надзвукова фаза при підльоті.',threat:'КРИТИЧНА'},
-  'tu-95ms-strat':{name:'Tu-95MS',emoji:'✈️',speed:'830 км/г',range:'15000 км',warhead:'До 16 ракет Х-101',desc:'Стратегічний бомбардувальник. Пуск з безпечної відстані.',threat:'КРИТИЧНА'}
+  'shahed-vp-standart':{
+    name:'Shahed-136/131', emoji:'🚁',
+    photo:'shahed136.jpg',
+    speed:'185 км/г', range:'2500 км', warhead:'40 кг HE',
+    ceiling:'50–100 м', accuracy:'GPS+INS ±10 м',
+    desc:'Барражуючий боєприпас. Летить на малих висотах, важко виявити радаром. Атакує зверху пікіруванням.',
+    threat:'СЕРЕДНЯ', threatLvl:2,
+    intercept:'Збивається ПЗРК, ЗСУ-23-4, Gepard, Patriot'
+  },
+  'shahed-238-jet':{
+    name:'Shahed-238 Реактивний', emoji:'✈️',
+    photo:'shahed-238-standart.png',
+    speed:'550 км/г', range:'1800 км', warhead:'50 кг HE',
+    ceiling:'200–500 м', accuracy:'GPS+INS ±15 м',
+    desc:'Реактивна версія Shahed-136. Вдвічі швидший за звичайний. Значно складніший для перехвату.',
+    threat:'ВИСОКА', threatLvl:3,
+    intercept:'Patriot, IRIS-T, Hawk. ПЗРК — обмежено'
+  },
+  'shahed-238-standart':{
+    name:'Shahed-238 Реактивний', emoji:'✈️',
+    photo:'shahed-238-standart.png',
+    speed:'550 км/г', range:'1800 км', warhead:'50 кг HE',
+    ceiling:'200–500 м', accuracy:'GPS+INS ±15 м',
+    desc:'Реактивна версія Shahed-136. Вдвічі швидший за звичайний. Значно складніший для перехвату.',
+    threat:'ВИСОКА', threatLvl:3,
+    intercept:'Patriot, IRIS-T, Hawk. ПЗРК — обмежено'
+  },
+  'kalibr-cruise':{
+    name:'Kalibr 3M-14', emoji:'🚀',
+    photo:null,
+    speed:'880 км/г', range:'2000+ км', warhead:'450 кг HE / ядерна',
+    ceiling:'50–150 м', accuracy:'TERCOM+INS ±3 м',
+    desc:'Крилата ракета морського/повітряного базування. Надзвукова фаза при підльоті до цілі.',
+    threat:'КРИТИЧНА', threatLvl:4,
+    intercept:'Patriot PAC-3, SAMP/T. Дуже складно'
+  },
+  'tu-95ms-strat':{
+    name:'Tu-95MS', emoji:'✈️',
+    photo:null,
+    speed:'830 км/г', range:'15000 км', warhead:'До 16 ракет Х-101',
+    ceiling:'12000 м', accuracy:'Пуск з відстані 1500+ км',
+    desc:'Стратегічний бомбардувальник. Несе крилаті ракети Х-101/Х-555. Пуск здійснюється поза зоною ППО.',
+    threat:'КРИТИЧНА', threatLvl:4,
+    intercept:'Перехват F-16/МіГ-29 до пуску'
+  }
 };
 
 const TURLS = [
@@ -1589,22 +1652,67 @@ function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs
 // ═══════════════════════════
 function showTrack(id,d){
   document.getElementById('trackPnl').classList.add('on');
-  const spd=SPD[d.type]||200,ang=+d.angle||0,info=TINFO[d.type]||{};
+  const spd=SPD[d.type]||200, ang=+d.angle||0, info=TINFO[d.type]||{};
+
+  // Заголовок
   document.getElementById('tpType').textContent=(info.name||d.type||'?').toUpperCase();
+
+  // Фото
+  const photoWrap=document.getElementById('tpPhotoWrap');
+  const photoEl=document.getElementById('tpPhoto');
+  if(info.photo){
+    photoEl.src=info.photo;
+    photoEl.onerror=()=>{photoWrap.style.display='none';};
+    photoWrap.style.display='block';
+    // Threat badge
+    const badge=document.getElementById('tpThreatBadge');
+    const t=info.threat||'';
+    badge.textContent='⚠ '+t;
+    badge.className='tp-photo-badge threat-'+t;
+  } else {
+    photoWrap.style.display='none';
+  }
+
+  // Статистика
   document.getElementById('tpPos').textContent=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
   document.getElementById('tpAng').textContent=`${Math.round(ang)}° ${dir(ang)}`;
+  document.getElementById('tpSpd').textContent=info.speed||`${spd} км/г`;
+  document.getElementById('tpRange').textContent=info.range||'--';
   document.getElementById('tpAge').textContent=age(d.timestamp);
+
+  if(userPos){
+    const km=map.distance(userPos,[d.lat,d.lng])/1000;
+    document.getElementById('tpETA').textContent=`${km.toFixed(1)} км · ~${Math.round(km/spd*60)} хв`;
+  } else {
+    document.getElementById('tpETA').textContent='GPS off';
+  }
+
+  // Вектор руху
   const v=vect(d.lat,d.lng,ang,spd);
   document.getElementById('tpVec').textContent=`→ ${dir(ang)} · ~${v.dist.toFixed(1)} км за 10 хв · [${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}]`;
-  if(userPos){const km=map.distance(userPos,[d.lat,d.lng])/1000;document.getElementById('tpETA').textContent=`${km.toFixed(1)} км · ~${Math.round(km/spd*60)} хв`;}
-  else document.getElementById('tpETA').textContent='GPS off';
+
+  // Опис
   const ibox=document.getElementById('tpInfo');
-  if(info.name){const tc=info.threat==='КРИТИЧНА'?'#ff2222':info.threat==='ВИСОКА'?'#ff4444':'#ff9900';
-    ibox.innerHTML=`<div class="tp-row"><span class="tp-ico">${info.emoji}</span><div class="tp-txt"><b>${info.name}</b> — ${info.desc}</div></div>
-    <div class="tp-row"><span class="tp-ico">⚡</span><div class="tp-txt"><b>${info.speed}</b> · ${info.range}</div></div>
-    <div class="tp-row"><span class="tp-ico">💥</span><div class="tp-txt"><b>${info.warhead}</b></div></div>
-    <div class="tp-row"><span class="tp-ico">⚠️</span><div class="tp-txt"><b style="color:${tc}">${info.threat}</b></div></div>`;}
-  else ibox.innerHTML='';
+  if(info.name){
+    const tc=info.threat==='КРИТИЧНА'?'#ff2222':info.threat==='ВИСОКА'?'#ff4444':'#ff9900';
+    ibox.innerHTML=`
+      <div class="tp-row"><span class="tp-ico">💥</span><div class="tp-txt"><b>Бойова частина:</b> ${info.warhead}</div></div>
+      <div class="tp-row"><span class="tp-ico">📡</span><div class="tp-txt"><b>Точність:</b> ${info.accuracy||'--'}</div></div>
+      <div class="tp-row"><span class="tp-ico">✈️</span><div class="tp-txt"><b>Висота:</b> ${info.ceiling||'--'}</div></div>
+      <div class="tp-row"><span class="tp-ico">ℹ️</span><div class="tp-txt">${info.desc}</div></div>`;
+  } else {
+    ibox.innerHTML='';
+  }
+
+  // Перехват
+  const intEl=document.getElementById('tpIntercept');
+  const intTxt=document.getElementById('tpInterceptTxt');
+  if(info.intercept){
+    intTxt.textContent=info.intercept;
+    intEl.style.display='block';
+  } else {
+    intEl.style.display='none';
+  }
 }
 function closeTrack(){document.getElementById('trackPnl').classList.remove('on');selId=null;}
 map.on('click',closeTrack);
