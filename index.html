@@ -1247,49 +1247,42 @@ function toggleRng(){
 }
 
 // ── КООРДИНАТНА СІТКА ────────────────────────────────────────
-let gridMarkers=[];
+let gridLines=[];
 function drawGrid(){
   clearGrid();
+  const z=map.getZoom();
+  // Крок сітки залежно від зуму
+  const step = z>=9 ? 0.5 : z>=7 ? 1 : 2;
   const bounds=map.getBounds();
-  const step=getLat()>8?2:1; // крок залежно від зуму
   const minLat=Math.floor(bounds.getSouth()/step)*step;
   const maxLat=Math.ceil(bounds.getNorth()/step)*step;
   const minLng=Math.floor(bounds.getWest()/step)*step;
   const maxLng=Math.ceil(bounds.getEast()/step)*step;
-  const lines=[];
-  // Горизонтальні лінії (широта)
+  // Горизонтальні лінії
   for(let lat=minLat;lat<=maxLat;lat+=step){
-    lines.push(L.polyline([[lat,minLng-1],[lat,maxLng+1]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
+    const l=L.polyline([[lat,minLng-2],[lat,maxLng+2]],{
+      color:'rgba(57,255,140,.18)',weight:.8,
+      interactive:false,renderer:cvs
+    }).addTo(map);
+    gridLines.push(l);
   }
-  // Вертикальні лінії (довгота)
+  // Вертикальні лінії
   for(let lng=minLng;lng<=maxLng;lng+=step){
-    lines.push(L.polyline([[minLat-1,lng],[maxLat+1,lng]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
+    const l=L.polyline([[minLat-2,lng],[maxLat+2,lng]],{
+      color:'rgba(57,255,140,.18)',weight:.8,
+      interactive:false,renderer:cvs
+    }).addTo(map);
+    gridLines.push(l);
   }
-  // Підписи на перетинах
-  for(let lat=minLat;lat<=maxLat;lat+=step){
-    for(let lng=minLng;lng<=maxLng;lng+=step){
-      if(lat>=44&&lat<=53&&lng>=22&&lng<=40){
-        const m=L.marker([lat,lng],{
-          icon:L.divIcon({className:'',html:`<div class="grid-lbl">${lat}°N ${lng}°E</div>`,iconSize:[80,12],iconAnchor:[0,6]}),
-          interactive:false
-        });
-        gridMarkers.push(m);
-      }
-    }
-  }
-  lines.forEach(l=>{l.addTo(map);gridMarkers.push(l);});
-  gridMarkers.forEach(m=>{if(m instanceof L.Marker)m.addTo(map);});
 }
-function getLat(){return map.getZoom();}
 function clearGrid(){
-  gridMarkers.forEach(m=>map.removeLayer(m));
-  gridMarkers=[];
+  gridLines.forEach(l=>map.removeLayer(l));
+  gridLines=[];
 }
 function toggleGrid(){
   const on=document.getElementById('togGrid')?.checked;
   if(on) drawGrid(); else clearGrid();
 }
-// Перемальовуємо сітку при зміні виду
 map.on('moveend zoomend',()=>{
   if(document.getElementById('togGrid')?.checked) drawGrid();
 });
