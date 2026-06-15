@@ -470,6 +470,64 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
 /* ═══════ ALERT COLOR SWATCHES (settings) ═══════ */
 .alc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+
+/* ═══════ REGION SELECT (settings) ═══════ */
+.ss-select{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--brd2);
+  color:#fff;font-size:11px;font-family:'Inter',sans-serif;padding:8px 10px;
+  border-radius:8px;outline:none;-webkit-appearance:none;appearance:none;
+  margin-top:6px;
+}
+.ss-select option{background:#111;color:#fff;}
+
+/* ═══════ MEASURE MODE ═══════ */
+.measure-pt{
+  width:10px;height:10px;border-radius:50%;background:var(--a);
+  border:2px solid #000;box-shadow:0 0 8px var(--a);
+}
+#measureLbl{
+  font-family:'Orbitron';font-size:10px;color:#000;background:var(--a);
+  padding:4px 8px;border-radius:6px;white-space:nowrap;font-weight:700;
+  box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+#measureHint{
+  position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);
+  z-index:2000;background:var(--glass);backdrop-filter:blur(14px);
+  border:1px solid var(--brd);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--a);font-family:'Orbitron';letter-spacing:.05em;
+  display:none;box-shadow:var(--sh);white-space:nowrap;
+}
+#measureHint.on{display:block;}
+
+/* ═══════ OBSERVER MODE ═══════ */
+body.observer-mode #topBar,
+body.observer-mode #bnavWrap,
+body.observer-mode #reticle,
+body.observer-mode .plink,
+body.observer-mode #cityPnl,
+body.observer-mode #trackPnl,
+body.observer-mode #listPnl,
+body.observer-mode #radarPnl,
+body.observer-mode #weekPnl,
+body.observer-mode #alertBanner,
+body.observer-mode #measureHint{
+  display:none!important;
+}
+#obsExit{
+  position:fixed;bottom:calc(var(--sb)+10px);right:10px;z-index:5000;
+  background:var(--glass2);border:1px solid var(--brd);border-radius:14px;
+  padding:7px 12px;font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.4);
+  letter-spacing:.06em;display:none;backdrop-filter:blur(14px);
+}
+body.observer-mode #obsExit{display:block;}
+
+/* ═══════ SWARM MARKER ═══════ */
+.swarm-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:var(--red);color:#fff;font-family:'Orbitron';font-size:8px;
+  font-weight:700;border-radius:8px;padding:1px 4px;
+  box-shadow:0 0 6px rgba(0,0,0,.6);line-height:1.3;
+}
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -580,10 +638,17 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
         </div>
 
         <div class="ss-card">
+          <div class="ss-card-h"><i class="fa-solid fa-eye-slash"></i> Спеціальні режими</div>
+          <div class="ss-row"><span>Режим спостереження (тільки карта)</span><label class="tog"><input type="checkbox" id="togObserver" onchange="toggleObserver()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row" style="margin-bottom:0"><span>Офлайн-кеш останніх даних</span><label class="tog"><input type="checkbox" id="togOffline" checked onchange="toggleOfflineCache()"><span class="tog-sl"></span></label></div>
+        </div>
+
+        <div class="ss-card">
           <div class="ss-card-h"><i class="fa-solid fa-route"></i> Траєкторії цілей</div>
           <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Прогноз курсу (Ghost Trail)</span><label class="tog"><input type="checkbox" id="togFc" checked onchange="toggleForecastAll()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row" style="margin-bottom:0"><span>Групувати рої цілей</span><label class="tog"><input type="checkbox" id="togSwarm" onchange="toggleSwarmMode()"><span class="tog-sl"></span></label></div>
         </div>
 
         <div class="ss-card">
@@ -659,7 +724,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 
         <div class="ss-card">
           <div class="ss-card-h"><i class="fa-solid fa-bell"></i> Push-сповіщення</div>
-          <div class="ss-row" style="margin-bottom:0"><span>Сповіщати про нові цілі поза вкладкою</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row" style="margin-bottom:0"><span>Сповіщати про нові цілі поза вкладкою (з вібрацією)</span><label class="tog"><input type="checkbox" id="togPush" onchange="togglePush()"><span class="tog-sl"></span></label></div>
         </div>
       </div>
 
@@ -710,6 +775,13 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 </div>
 
 <div id="toast"></div>
+
+<!-- MEASURE MODE HINT -->
+<div id="measureHint">📏 Виберіть першу точку</div>
+
+<!-- OBSERVER MODE EXIT -->
+<div id="obsExit" onclick="toggleObserver()">👁 SPECTATOR · вийти</div>
+
 
 <!-- ALERT BANNER -->
 <div id="alertBanner">
@@ -867,6 +939,9 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   <button class="bn-item" id="bnWeek" onclick="toggleWeek()">
     <i class="fa-solid fa-chart-bar"></i><span>7 ДНІВ</span>
   </button>
+  <button class="bn-item" id="bnMeasure" onclick="toggleMeasure()">
+    <i class="fa-solid fa-ruler"></i><span>ВІДСТАНЬ</span>
+  </button>
   <div class="bn-sep"></div>
   <button class="bn-item" onclick="locateMe()">
     <i class="fa-solid fa-location-crosshairs"></i><span>GPS</span>
@@ -973,6 +1048,15 @@ let pendingSync=new Map(), rafPending=false;
 let audioCtx=null;
 let alertColor='#ff4444';
 
+// ── New feature state ──
+let regionMode=false, regionFilter='';
+let swarmMode=false;
+let measureMode=false, measurePts=[], measureMarkers=[], measureLine=null, measureLbl=null;
+let observerMode=false;
+let offlineCacheOn=true;
+const OFFLINE_KEY='sd_offline_cache';
+
+
 // ═══════════════════════════
 // MAP
 // ═══════════════════════════
@@ -1011,6 +1095,7 @@ function setBr(v){
 // RAYON + OBLAST LAYERS
 // ═══════════════════════════
 const oblFeatures={};
+const oblGeoms={};
 const rayonFeatures={};
 let activeAlertNames=new Set();
 let activeRayonNames=new Set();
@@ -1105,6 +1190,7 @@ async function loadOblast(){
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
           l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
           oblFeatures[name]=l;
+          oblGeoms[name]=f.geometry;
         }
       });
       if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
@@ -1128,6 +1214,7 @@ async function loadOblast(){
   // Якщо тривоги вже завантажились раніше — одразу малюємо
   if(activeAlertNames.size>0||activeRayonNames.size>0) applyAlertStyles();
   startAlertsPolling();
+  if(regionMode&&regionFilter) zoomToRegion(regionFilter);
 }
 
 async function fetchAlerts(retry=true){
@@ -1238,6 +1325,95 @@ function toggleObl(){
   if(oblastLayer){on?oblastLayer.addTo(map):map.removeLayer(oblastLayer);}
   if(rayonLayer){on?rayonLayer.addTo(map):map.removeLayer(rayonLayer);}
 }
+
+// ═══════════════════════════
+// REGION MODE — "тільки мій регіон"
+// ═══════════════════════════
+// Простий ray-casting тест точки в полігоні (GeoJSON координати: [lng,lat])
+function pointInRing(lat,lng,ring){
+  let inside=false;
+  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+    const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
+    if(((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi)+xi)){
+      inside=!inside;
+    }
+  }
+  return inside;
+}
+function pointInGeometry(lat,lng,geom){
+  if(!geom)return false;
+  if(geom.type==='Polygon'){
+    if(!pointInRing(lat,lng,geom.coordinates[0]))return false;
+    // дірки (holes)
+    for(let h=1;h<geom.coordinates.length;h++){
+      if(pointInRing(lat,lng,geom.coordinates[h]))return false;
+    }
+    return true;
+  }
+  if(geom.type==='MultiPolygon'){
+    return geom.coordinates.some(poly=>{
+      if(!pointInRing(lat,lng,poly[0]))return false;
+      for(let h=1;h<poly.length;h++){if(pointInRing(lat,lng,poly[h]))return false;}
+      return true;
+    });
+  }
+  return false;
+}
+function isInSelectedRegion(lat,lng){
+  if(!regionMode||!regionFilter)return true;
+  const geom=oblGeoms[regionFilter];
+  if(!geom)return true; // геодані ще не завантажені — не фільтруємо
+  return pointInGeometry(lat,lng,geom);
+}
+function toggleRegionMode(){
+  regionMode=document.getElementById('togRegion')?.checked;
+  const sel=document.getElementById('regionSel');
+  if(sel)sel.disabled=!regionMode;
+  if(regionMode&&!regionFilter){
+    toast('Оберіть область зі списку');
+  }
+  applyRegionFilter();
+  if(regionMode&&regionFilter)zoomToRegion(regionFilter);
+}
+function setRegionFilter(name){
+  regionFilter=name;
+  if(regionMode){
+    applyRegionFilter();
+    if(name)zoomToRegion(name);
+  }
+}
+// Приховуємо/показуємо маркери цілей, що не входять в обраний регіон
+function applyRegionFilter(){
+  Object.entries(obs).forEach(([id,o])=>{
+    const inReg=isInSelectedRegion(o.data.lat,o.data.lng);
+    const show=!regionMode||!regionFilter||inReg;
+    [o.marker,o.circle,o.line,o.trail,o.fcLine].forEach(l=>{
+      if(!l)return;
+      const has=map.hasLayer(l);
+      if(show&&!has)l.addTo(map);
+      if(!show&&has)map.removeLayer(l);
+    });
+    if(o.fcTicks)o.fcTicks.forEach(m=>{
+      const has=map.hasLayer(m);
+      if(show&&!has)m.addTo(map);
+      if(!show&&has)map.removeLayer(m);
+    });
+    if(o.swarmMarker){
+      const has=map.hasLayer(o.swarmMarker);
+      if(show&&!has)o.swarmMarker.addTo(map);
+      if(!show&&has)map.removeLayer(o.swarmMarker);
+    }
+  });
+  buildListUI();
+  refreshHeat();
+}
+function zoomToRegion(name){
+  const layer=oblFeatures[name];
+  if(layer&&layer.getBounds){
+    try{map.fitBounds(layer.getBounds(),{padding:[20,20]});}catch{}
+  }
+}
+
 function toggleRng(){
   const on=document.getElementById('togRng')?.checked;
   if(on&&userPos){
@@ -1246,43 +1422,52 @@ function toggleRng(){
   }else if(rangeCircle){map.removeLayer(rangeCircle);rangeCircle=null;}
 }
 
+
+
 // ── КООРДИНАТНА СІТКА ────────────────────────────────────────
-let gridLines=[];
+let gridMarkers=[];
 function drawGrid(){
   clearGrid();
-  const z=map.getZoom();
-  // Крок сітки залежно від зуму
-  const step = z>=9 ? 0.5 : z>=7 ? 1 : 2;
   const bounds=map.getBounds();
+  const step=getLat()>8?2:1; // крок залежно від зуму
   const minLat=Math.floor(bounds.getSouth()/step)*step;
   const maxLat=Math.ceil(bounds.getNorth()/step)*step;
   const minLng=Math.floor(bounds.getWest()/step)*step;
   const maxLng=Math.ceil(bounds.getEast()/step)*step;
-  // Горизонтальні лінії
+  const lines=[];
+  // Горизонтальні лінії (широта)
   for(let lat=minLat;lat<=maxLat;lat+=step){
-    const l=L.polyline([[lat,minLng-2],[lat,maxLng+2]],{
-      color:'rgba(57,255,140,.18)',weight:.8,
-      interactive:false,renderer:cvs
-    }).addTo(map);
-    gridLines.push(l);
+    lines.push(L.polyline([[lat,minLng-1],[lat,maxLng+1]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
   }
-  // Вертикальні лінії
+  // Вертикальні лінії (довгота)
   for(let lng=minLng;lng<=maxLng;lng+=step){
-    const l=L.polyline([[minLat-2,lng],[maxLat+2,lng]],{
-      color:'rgba(57,255,140,.18)',weight:.8,
-      interactive:false,renderer:cvs
-    }).addTo(map);
-    gridLines.push(l);
+    lines.push(L.polyline([[minLat-1,lng],[maxLat+1,lng]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
   }
+  // Підписи на перетинах
+  for(let lat=minLat;lat<=maxLat;lat+=step){
+    for(let lng=minLng;lng<=maxLng;lng+=step){
+      if(lat>=44&&lat<=53&&lng>=22&&lng<=40){
+        const m=L.marker([lat,lng],{
+          icon:L.divIcon({className:'',html:`<div class="grid-lbl">${lat}°N ${lng}°E</div>`,iconSize:[80,12],iconAnchor:[0,6]}),
+          interactive:false
+        });
+        gridMarkers.push(m);
+      }
+    }
+  }
+  lines.forEach(l=>{l.addTo(map);gridMarkers.push(l);});
+  gridMarkers.forEach(m=>{if(m instanceof L.Marker)m.addTo(map);});
 }
+function getLat(){return map.getZoom();}
 function clearGrid(){
-  gridLines.forEach(l=>map.removeLayer(l));
-  gridLines=[];
+  gridMarkers.forEach(m=>map.removeLayer(m));
+  gridMarkers=[];
 }
 function toggleGrid(){
   const on=document.getElementById('togGrid')?.checked;
   if(on) drawGrid(); else clearGrid();
 }
+// Перемальовуємо сітку при зміні виду
 map.on('moveend zoomend',()=>{
   if(document.getElementById('togGrid')?.checked) drawGrid();
 });
@@ -1384,9 +1569,21 @@ function testSnd(t){if(t==='new')sndNew();else if(t==='del')sndDel();else if(t==
 // PUSH
 async function togglePush(){
   const cb=document.getElementById('togPush');
-  if(cb.checked&&'Notification' in window){const p=await Notification.requestPermission();pushEnabled=p==='granted';if(!pushEnabled){cb.checked=false;toast('Push відхилено');}else toast('Push увімкнено');}else pushEnabled=false;
+  if(cb.checked&&'Notification' in window){
+    const p=await Notification.requestPermission();
+    pushEnabled=p==='granted';
+    if(!pushEnabled){cb.checked=false;toast('Push відхилено');}
+    else{
+      toast('Push + вібрація увімкнено');
+      try{if('vibrate' in navigator)navigator.vibrate(200);}catch{}
+    }
+  }else pushEnabled=false;
 }
-function sendPush(title,body){if(pushEnabled&&document.hidden)try{new Notification(title,{body});}catch{}}
+function sendPush(title,body){
+  if(!pushEnabled||!document.hidden)return;
+  try{new Notification(title,{body});}catch{}
+  try{if('vibrate' in navigator)navigator.vibrate([200,100,200,100,300]);}catch{}
+}
 
 // ═══════════════════════════
 // SHEETS / UI
@@ -1394,6 +1591,57 @@ function sendPush(title,body){if(pushEnabled&&document.hidden)try{new Notificati
 function opn(id){document.getElementById(id).classList.add('on');}
 function cls(id){document.getElementById(id).classList.remove('on');}
 function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
+
+// ═══════════════════════════
+// OBSERVER MODE — режим спостереження (тільки карта, без UI)
+// ═══════════════════════════
+function toggleObserver(){
+  observerMode=!observerMode;
+  document.body.classList.toggle('observer-mode',observerMode);
+  const cb=document.getElementById('togObserver');
+  if(cb)cb.checked=observerMode;
+  if(observerMode){
+    // Закриваємо всі відкриті панелі
+    ['setSh','themeSh','listPnl','radarPnl','weekPnl','cityPnl','trackPnl'].forEach(id=>cls(id));
+    toast('SPECTATOR MODE · карта без керування');
+  }else{
+    toast('Звичайний режим');
+  }
+}
+
+// ═══════════════════════════
+// OFFLINE CACHE — кеш останніх даних для роботи без інтернету
+// ═══════════════════════════
+function toggleOfflineCache(){
+  offlineCacheOn=document.getElementById('togOffline')?.checked;
+  if(offlineCacheOn){saveOfflineCache();toast('Офлайн-кеш увімкнено');}
+  else{try{localStorage.removeItem(OFFLINE_KEY);}catch{}toast('Офлайн-кеш вимкнено');}
+}
+function saveOfflineCache(){
+  if(!offlineCacheOn)return;
+  try{
+    const data={};
+    Object.entries(obs).forEach(([id,o])=>{data[id]=o.data;});
+    localStorage.setItem(OFFLINE_KEY,JSON.stringify({ts:Date.now(),data,alerts:[...activeAlertNames],rayons:[...activeRayonNames]}));
+  }catch(e){console.warn('offline cache save error',e);}
+}
+function loadOfflineCache(){
+  if(!offlineCacheOn)return;
+  try{
+    const raw=localStorage.getItem(OFFLINE_KEY);
+    if(!raw)return;
+    const cached=JSON.parse(raw);
+    if(!cached?.data)return;
+    const ageMin=(Date.now()-(cached.ts||0))/60000;
+    Object.entries(cached.data).forEach(([id,d])=>{
+      if(!d)return;
+      sync(id,{...d,_offline:true});
+    });
+    if(Array.isArray(cached.alerts))activeAlertNames=new Set(cached.alerts);
+    if(Array.isArray(cached.rayons))activeRayonNames=new Set(cached.rayons);
+    toast(`Завантажено офлайн-кеш (${ageMin.toFixed(0)} хв тому)`);
+  }catch(e){console.warn('offline cache load error',e);}
+}
 
 // ═══════════════════════════
 // SETTINGS TABS
@@ -1565,6 +1813,92 @@ function mkIcon(d){
 }
 
 // ═══════════════════════════
+// SWARM GROUPING — групування цілей, що летять разом
+// ═══════════════════════════
+function mkSwarmIcon(type,count,ang){
+  const sz=ISZ+6, c=getC(type);
+  const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
+    <img src="${type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:drop-shadow(0 0 4px ${c}) brightness(1.1);">
+    <div class="swarm-badge">×${count}</div>
+  </div>`;
+  return L.divIcon({className:'',html,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+// Групуємо цілі одного типу, що знаходяться близько (≤12 км) і летять у схожому напрямку (≤25°)
+function updateSwarms(){
+  // Прибираємо старі групові маркери
+  Object.values(obs).forEach(o=>{
+    if(o.swarmMarker){map.removeLayer(o.swarmMarker);o.swarmMarker=null;}
+    if(o.marker)o._inSwarm=false;
+  });
+  const entries=Object.entries(obs);
+  const used=new Set();
+  for(let i=0;i<entries.length;i++){
+    const [idA,oA]=entries[i];
+    if(used.has(idA))continue;
+    const dA=oA.data;
+    const group=[[idA,oA]];
+    for(let j=i+1;j<entries.length;j++){
+      const [idB,oB]=entries[j];
+      if(used.has(idB))continue;
+      const dB=oB.data;
+      if(dB.type!==dA.type)continue;
+      const distKm=map.distance([dA.lat,dA.lng],[dB.lat,dB.lng])/1000;
+      if(distKm>12)continue;
+      let angDiff=Math.abs((+dA.angle||0)-(+dB.angle||0));
+      if(angDiff>180)angDiff=360-angDiff;
+      if(angDiff>25)continue;
+      group.push([idB,oB]);
+    }
+    if(group.length>1){
+      group.forEach(([gid])=>used.add(gid));
+      const lat=group.reduce((s,[,o])=>s+o.data.lat,0)/group.length;
+      const lng=group.reduce((s,[,o])=>s+o.data.lng,0)/group.length;
+      const ang=group.reduce((s,[,o])=>s+(+o.data.angle||0),0)/group.length;
+      // Приховуємо індивідуальні маркери, показуємо один груповий
+      group.forEach(([,o])=>{
+        [o.marker,o.circle,o.line,o.trail,o.fcLine].forEach(l=>{if(l&&map.hasLayer(l))map.removeLayer(l);});
+        if(o.fcTicks)o.fcTicks.forEach(m=>{if(map.hasLayer(m))map.removeLayer(m);});
+        o._inSwarm=true;
+      });
+      const [, lead]=group[0];
+      const swarmMarker=L.marker([lat,lng],{icon:mkSwarmIcon(dA.type,group.length,ang)}).addTo(map);
+      swarmMarker.on('click',e=>{
+        L.DomEvent.stopPropagation(e);
+        toast(`Рій · ${group.length} цілей · ${(TINFO[dA.type]||{}).name||dA.type}`);
+        selId=group[0][0];showTrack(group[0][0],group[0][1].data);
+      });
+      group.forEach(([,o])=>{o.swarmMarker=swarmMarker;});
+    } else {
+      used.add(idA);
+      // Поодинока ціль — переконуємось, що маркери видимі (якщо не приховані regionMode)
+      const show=!regionMode||!regionFilter||isInSelectedRegion(dA.lat,dA.lng);
+      if(show){
+        [oA.marker,oA.circle,oA.line,oA.trail,oA.fcLine].forEach(l=>{if(l&&!map.hasLayer(l))l.addTo(map);});
+        if(oA.fcTicks)oA.fcTicks.forEach(m=>{if(!map.hasLayer(m))m.addTo(map);});
+      }
+    }
+  }
+}
+function toggleSwarmMode(){
+  swarmMode=document.getElementById('togSwarm')?.checked;
+  if(swarmMode){
+    updateSwarms();
+    toast('Групування роїв увімкнено');
+  }else{
+    // Знімаємо групові маркери та повертаємо індивідуальні
+    Object.values(obs).forEach(o=>{
+      if(o.swarmMarker){map.removeLayer(o.swarmMarker);o.swarmMarker=null;}
+      const show=!regionMode||!regionFilter||isInSelectedRegion(o.data.lat,o.data.lng);
+      if(show){
+        [o.marker,o.circle,o.line,o.trail,o.fcLine].forEach(l=>{if(l&&!map.hasLayer(l))l.addTo(map);});
+        if(o.fcTicks)o.fcTicks.forEach(m=>{if(!map.hasLayer(m))m.addTo(map);});
+      }
+    });
+    toast('Групування роїв вимкнено');
+  }
+}
+
+// ═══════════════════════════
 // TRAIL
 // ═══════════════════════════
 const trailPts={};const TMAX=16;
@@ -1649,6 +1983,9 @@ function sync(id,d){
 function flush(){
   rafPending=false;pendingSync.forEach((d,id)=>doSync(id,d));pendingSync.clear();
   updCounts();refreshHeat();buildListUI();
+  if(regionMode&&regionFilter)applyRegionFilter();
+  if(swarmMode)updateSwarms();
+  saveOfflineCache();
 }
 function doSync(id,d){
   const ang=+d.angle||0;
@@ -1663,12 +2000,14 @@ function doSync(id,d){
     obs[id].data=d;if(selId===id)showTrack(id,d);
     renderForecast(id,d);
   } else {
-    sndNew();
-    const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
-    const cityName=latLngToCity(d.lat,d.lng);
-    showAlert(`🎯 НОВА ЦІЛЬ · ${typName}`,`${cityName} · ${Math.round(ang)}° ${dir(ang)}`);
-    sendPush('SKY DEFENSE',`${typName} · ${cityName}`);
-    logHistory(id,d);
+    if(!d._offline){
+      sndNew();
+      const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
+      const cityName=latLngToCity(d.lat,d.lng);
+      showAlert(`🎯 НОВА ЦІЛЬ · ${typName}`,`${cityName} · ${Math.round(ang)}° ${dir(ang)}`);
+      sendPush('SKY DEFENSE',`${typName} · ${cityName}`);
+      logHistory(id,d);
+    }
     const c=getC(d.type);
     const cirOn=document.getElementById('togCir')?.checked;
     const circle=cirOn?L.circle([d.lat,d.lng],{renderer:cvs,radius:errR,color:c,weight:1,fillColor:c,fillOpacity:.05,dashArray:'3,8',interactive:false}).addTo(map):null;
@@ -1676,8 +2015,11 @@ function doSync(id,d){
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
     marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
-    obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[]};
+    obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null};
     renderForecast(id,d);
+    if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
+      [marker,circle,line,trail].forEach(l=>{if(l)map.removeLayer(l);});
+    }
   }
 }
 function remove(id){
@@ -1686,9 +2028,11 @@ function remove(id){
   if(obs[id].circle)map.removeLayer(obs[id].circle);
   if(obs[id].line)map.removeLayer(obs[id].line);
   if(obs[id].trail)map.removeLayer(obs[id].trail);
+  if(obs[id].swarmMarker)map.removeLayer(obs[id].swarmMarker);
   removeForecast(obs[id]);
   delete trailPts[id];if(selId===id)closeTrack();delete obs[id];
   updCounts();refreshHeat();buildListUI();
+  if(swarmMode)updateSwarms();
 }
 
 // Автоматично видаляємо застарілі цілі кожну хвилину (без перезавантаження сторінки)
@@ -1769,7 +2113,50 @@ function showTrack(id,d){
   }
 }
 function closeTrack(){document.getElementById('trackPnl').classList.remove('on');selId=null;}
-map.on('click',closeTrack);
+map.on('click',e=>{
+  if(measureMode){handleMeasureClick(e);return;}
+  closeTrack();
+});
+
+// ═══════════════════════════
+// MEASURE — відстань між двома точками
+// ═══════════════════════════
+function toggleMeasure(){
+  measureMode=!measureMode;
+  document.getElementById('bnMeasure')?.classList.toggle('on',measureMode);
+  document.getElementById('measureHint')?.classList.toggle('on',measureMode);
+  if(measureMode){
+    clearMeasure();
+    document.getElementById('measureHint').textContent='📏 Виберіть першу точку';
+    map.getContainer().style.cursor='crosshair';
+  }else{
+    clearMeasure();
+    map.getContainer().style.cursor='';
+  }
+}
+function clearMeasure(){
+  measurePts=[];
+  measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
+  if(measureLine){map.removeLayer(measureLine);measureLine=null;}
+  if(measureLbl){map.removeLayer(measureLbl);measureLbl=null;}
+}
+function handleMeasureClick(e){
+  if(measurePts.length>=2)clearMeasure();
+  const ll=e.latlng;
+  measurePts.push(ll);
+  const m=L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="measure-pt"></div>',iconSize:[10,10],iconAnchor:[5,5]}),interactive:false}).addTo(map);
+  measureMarkers.push(m);
+  if(measurePts.length===1){
+    document.getElementById('measureHint').textContent='📏 Виберіть другу точку';
+  } else {
+    const [a,b]=measurePts;
+    measureLine=L.polyline([a,b],{renderer:cvs,color:'#e8ff00',weight:2,dashArray:'6,6',opacity:.9}).addTo(map);
+    const km=map.distance(a,b)/1000;
+    const mid=L.latLng((a.lat+b.lat)/2,(a.lng+b.lng)/2);
+    measureLbl=L.marker(mid,{icon:L.divIcon({className:'',html:`<div id="measureLbl">${km.toFixed(2)} км</div>`,iconSize:[80,20],iconAnchor:[40,10]}),interactive:false}).addTo(map);
+    document.getElementById('measureHint').textContent=`📏 ${km.toFixed(2)} км · клік для нового заміру`;
+  }
+}
 
 // ═══════════════════════════
 // TARGET LIST
@@ -1889,6 +2276,8 @@ function setConnected(connected){
       snap.forEach(child=>{fbKeys.add(child.key);sync(child.key,child.val());});
       Object.keys(obs).forEach(id=>{if(!fbKeys.has(id))remove(id);});
     });
+  }else if(Object.keys(obs).length===0){
+    loadOfflineCache();
   }
 }
 
