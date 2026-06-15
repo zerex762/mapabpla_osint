@@ -202,7 +202,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 #toast{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3000;background:var(--a);color:#000;padding:5px 16px;border-radius:20px;font-size:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;font-family:'Orbitron';letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 20px rgba(232,255,0,.4);}
 
 /* ═══════ ALERT BANNER ═══════ */
-#alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(8,8,6,.95);border:1px solid rgba(255,60,60,.35);border-radius:12px;padding:9px 14px;box-shadow:0 0 24px rgba(255,50,50,.2);min-width:220px;max-width:92vw;animation:fadeUp .28s ease;}
+#alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(6,5,4,.97);border:1px solid rgba(255,60,60,.5);border-radius:14px;padding:11px 16px;box-shadow:0 0 32px rgba(255,50,50,.35),0 0 0 1px rgba(255,60,60,.1);min-width:260px;max-width:94vw;animation:fadeUp .28s ease;}
 .ab-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);flex-shrink:0;animation:abpulse 1.2s infinite;}
 @keyframes abpulse{0%,100%{opacity:1}50%{opacity:.3}}
 .ab-body{flex:1;}
@@ -574,6 +574,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
         <div class="ss-card">
           <div class="ss-card-h"><i class="fa-solid fa-layer-group"></i> Шари карти</div>
           <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>Координатна сітка</span><label class="tog"><input type="checkbox" id="togGrid" onchange="toggleGrid()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
         </div>
@@ -716,6 +717,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   <div class="ab-body">
     <div class="ab-title" id="abTitle">НОВА ЦІЛЬ</div>
     <div class="ab-sub" id="abSub">--</div>
+    <div style="font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.25);margin-top:3px;letter-spacing:.08em" id="abTime"></div>
   </div>
   <button class="ab-close" onclick="closeAlert()">×</button>
 </div>
@@ -1191,7 +1193,14 @@ async function fetchAlerts(retry=true){
     // Показуємо банер якщо з'явились нові тривоги
     const totalNew=oblasts.size+rayons.size;
     const totalOld=activeAlertNames.size+activeRayonNames.size;
-    if(totalNew>totalOld && totalNew>0){
+    // Нові тривоги — показати список що з'явились
+    const prevObl=new Set([...activeAlertNames]);
+    const newObl=[...oblasts].filter(o=>!prevObl.has(normName(o)));
+    if(newObl.length>0){
+      sndAlm();
+      const listed=newObl.slice(0,3).join(', ')+(newObl.length>3?' та ще '+(newObl.length-3):'');
+      showAlert('🚨 ПОВІТРЯНА ТРИВОГА', listed);
+    } else if(totalNew>totalOld && totalNew>0){
       const sample=[...oblasts][0]||[...rayons][0]||'';
       showAlert('⚠️ ПОВІТРЯНА ТРИВОГА', sample?(sample+(totalNew>1?' та ін.':'')):totalNew+' регіонів');
     }
@@ -1236,6 +1245,54 @@ function toggleRng(){
     rangeCircle=L.circle(userPos,{radius:40000,color:'rgba(232,255,0,.25)',weight:1,fill:false,dashArray:'5,8',interactive:false}).addTo(map);
   }else if(rangeCircle){map.removeLayer(rangeCircle);rangeCircle=null;}
 }
+
+// ── КООРДИНАТНА СІТКА ────────────────────────────────────────
+let gridMarkers=[];
+function drawGrid(){
+  clearGrid();
+  const bounds=map.getBounds();
+  const step=getLat()>8?2:1; // крок залежно від зуму
+  const minLat=Math.floor(bounds.getSouth()/step)*step;
+  const maxLat=Math.ceil(bounds.getNorth()/step)*step;
+  const minLng=Math.floor(bounds.getWest()/step)*step;
+  const maxLng=Math.ceil(bounds.getEast()/step)*step;
+  const lines=[];
+  // Горизонтальні лінії (широта)
+  for(let lat=minLat;lat<=maxLat;lat+=step){
+    lines.push(L.polyline([[lat,minLng-1],[lat,maxLng+1]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
+  }
+  // Вертикальні лінії (довгота)
+  for(let lng=minLng;lng<=maxLng;lng+=step){
+    lines.push(L.polyline([[minLat-1,lng],[maxLat+1,lng]],{color:'rgba(57,255,140,.12)',weight:.6,dashArray:'4,8',interactive:false,renderer:cvs}));
+  }
+  // Підписи на перетинах
+  for(let lat=minLat;lat<=maxLat;lat+=step){
+    for(let lng=minLng;lng<=maxLng;lng+=step){
+      if(lat>=44&&lat<=53&&lng>=22&&lng<=40){
+        const m=L.marker([lat,lng],{
+          icon:L.divIcon({className:'',html:`<div class="grid-lbl">${lat}°N ${lng}°E</div>`,iconSize:[80,12],iconAnchor:[0,6]}),
+          interactive:false
+        });
+        gridMarkers.push(m);
+      }
+    }
+  }
+  lines.forEach(l=>{l.addTo(map);gridMarkers.push(l);});
+  gridMarkers.forEach(m=>{if(m instanceof L.Marker)m.addTo(map);});
+}
+function getLat(){return map.getZoom();}
+function clearGrid(){
+  gridMarkers.forEach(m=>map.removeLayer(m));
+  gridMarkers=[];
+}
+function toggleGrid(){
+  const on=document.getElementById('togGrid')?.checked;
+  if(on) drawGrid(); else clearGrid();
+}
+// Перемальовуємо сітку при зміні виду
+map.on('moveend zoomend',()=>{
+  if(document.getElementById('togGrid')?.checked) drawGrid();
+});
 
 // ═══════════════════════════
 // ALERT COLOR
@@ -1359,8 +1416,11 @@ function toast(t,d=1500){const el=document.getElementById('toast');el.textConten
 // Alert banner
 function showAlert(title,sub){
   const el=document.getElementById('alertBanner');
-  document.getElementById('abTitle').textContent=title;document.getElementById('abSub').textContent=sub;
-  el.style.display='flex';clearTimeout(alertTimer);alertTimer=setTimeout(closeAlert,6000);
+  document.getElementById('abTitle').textContent=title;
+  document.getElementById('abSub').textContent=sub;
+  const t=document.getElementById('abTime');
+  if(t) t.textContent=new Date().toLocaleTimeString('uk-UA',{hour12:false});
+  el.style.display='flex';clearTimeout(alertTimer);alertTimer=setTimeout(closeAlert,8000);
 }
 function closeAlert(){document.getElementById('alertBanner').style.display='none';}
 
@@ -1612,8 +1672,9 @@ function doSync(id,d){
   } else {
     sndNew();
     const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
-    showAlert(`NEW TARGET · ${typName}`,`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)} · ${Math.round(ang)}° ${dir(ang)}`);
-    sendPush('SKY DEFENSE',`${typName} · ${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`);
+    const cityName=latLngToCity(d.lat,d.lng);
+    showAlert(`🎯 НОВА ЦІЛЬ · ${typName}`,`${cityName} · ${Math.round(ang)}° ${dir(ang)}`);
+    sendPush('SKY DEFENSE',`${typName} · ${cityName}`);
     logHistory(id,d);
     const c=getC(d.type);
     const cirOn=document.getElementById('togCir')?.checked;
@@ -1674,7 +1735,7 @@ function showTrack(id,d){
   }
 
   // Статистика
-  document.getElementById('tpPos').textContent=`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
+  const _city=latLngToCity(d.lat,d.lng); document.getElementById('tpPos').textContent=_city!==`${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`?_city:`${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}`;
   document.getElementById('tpAng').textContent=`${Math.round(ang)}° ${dir(ang)}`;
   document.getElementById('tpSpd').textContent=info.speed||`${spd} км/г`;
   document.getElementById('tpRange').textContent=info.range||'--';
