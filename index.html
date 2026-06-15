@@ -410,6 +410,38 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   padding:1px 4px;border-radius:4px;
   background:rgba(0,0,0,.35);
 }
+
+/* ═══════ COORDINATE GRID ═══════ */
+.grid-lbl{
+  font-family:'Orbitron';font-size:7.5px;letter-spacing:.05em;
+  color:rgba(57,255,140,.55);
+  text-shadow:0 0 4px #000,0 0 4px #000;
+  pointer-events:none;white-space:nowrap;
+}
+
+/* ═══════ CITY / REGION INFO PANEL ═══════ */
+#cityPnl{
+  position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:340px;
+  z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);
+  border:1px solid var(--brd);border-radius:16px;padding:0;
+  display:none;box-shadow:var(--sh);overflow:hidden;animation:fadeUp .25s ease;
+}
+#cityPnl.on{display:block;}
+.cp-head{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 14px;border-bottom:1px solid var(--brd2);
+}
+.cp-title{font-family:'Orbitron';font-size:11px;color:#fff;letter-spacing:.08em;font-weight:600;}
+.cp-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:.04em;}
+.cp-x{background:none;border:none;color:rgba(255,255,255,.25);font-size:16px;cursor:pointer;}
+.cp-body{padding:12px 14px;}
+.cp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.cp-row:last-child{border-bottom:none;}
+.cp-row span:first-child{font-size:10px;color:rgba(255,255,255,.4);}
+.cp-row b{font-family:'Orbitron';font-size:10px;color:#fff;}
+.cp-row b.alert{color:var(--red);}
+.cp-row b.ok{color:var(--ok);}
+.cp-wx{font-size:22px;}
 /* ═══════ NO CONNECTION BANNER ═══════ */
 #noConnBanner{
   position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -745,6 +777,22 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   <div class="lp-body" id="listBody"></div>
 </div>
 
+<!-- CITY / REGION INFO -->
+<div id="cityPnl">
+  <div class="cp-head">
+    <div>
+      <div class="cp-title" id="cpTitle">--</div>
+      <div class="cp-sub" id="cpSub">--</div>
+    </div>
+    <button class="cp-x" onclick="cls('cityPnl')">×</button>
+  </div>
+  <div class="cp-body">
+    <div class="cp-row"><span>Статус тривоги</span><b id="cpAlert">--</b></div>
+    <div class="cp-row"><span>Цілей у районі</span><b id="cpTargets">--</b></div>
+    <div class="cp-row"><span>Погода</span><span style="display:flex;align-items:center;gap:8px"><span class="cp-wx" id="cpWxIco">--</span><b id="cpWx">--</b></span></div>
+  </div>
+</div>
+
 <!-- WEEKLY STATS PANEL -->
 <div id="weekPnl">
   <div class="wp-head">
@@ -820,6 +868,8 @@ const FB2  = 'https://cdn-icons-png.flaticon.com/512/2503/2503508.png';
 const SPD  = {'shahed-vp-standart':185,'shahed-238-jet':550,'kalibr-cruise':880,'tu-95ms-strat':750};
 const DIRS = ['ПН','ПН-СХ','СХ','ПД-СХ','ПД','ПД-ЗХ','ЗХ','ПН-ЗХ'];
 const SWATCHES = ['#e8ff00','#ff4444','#ff9900','#4fc3f7','#39ff8c','#cc44ff','#ffffff'];
+const WMO_ICO = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
+const WMO_TXT = {0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
 
 const TINFO = {
   'shahed-vp-standart':{name:'Shahed-136/131',emoji:'🚁',speed:'185 км/г',range:'2500 км',warhead:'40 кг HE',desc:'Барражуючий боєприпас. GPS+INS. Малі висоти.',threat:'СЕРЕДНЯ'},
@@ -851,7 +901,7 @@ let typeColors={'shahed-vp-standart':'#ff9900','shahed-238-jet':'#ff4444','kalib
 let soundOn=true, vol=0.6, pushEnabled=false;
 let userPos=null, uMark=null, selId=null;
 let obs={};
-let oblastLayer=null, rayonLayer=null, rangeCircle=null, heatLayer=null;
+let oblastLayer=null, rayonLayer=null, rangeCircle=null, heatLayer=null, gridLayer=null;
 let radarOpen=false, radarAngle=0, radarRAF=null;
 let alertTimer=null;
 let pendingSync=new Map(), rafPending=false;
@@ -950,7 +1000,7 @@ function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
   return isAlert
     ? {color:hexA(alertColor,.3),weight:.8,fill:true,fillColor:alertColor,fillOpacity:.15,dashArray:null}
-    : {color:'rgba(255,255,255,.15)',weight:.8,fill:false,dashArray:'3,7'};
+    : {color:'rgba(255,255,255,.15)',weight:.8,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'3,7'};
 }
 
 function rayonStyleFn(name){
@@ -958,10 +1008,10 @@ function rayonStyleFn(name){
   // Якщо вся область вже підсвічена — не малюємо район окремо
   const oblast=RAYON_TO_OBLAST[name];
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
-  if(oblastActive) return {color:'rgba(255,255,255,.08)',weight:.5,fill:false,dashArray:'2,6'};
+  if(oblastActive) return {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
   return isAlert
     ? {color:hexA(alertColor,.3),weight:.8,fill:true,fillColor:alertColor,fillOpacity:.15,dashArray:null}
-    : {color:'rgba(255,255,255,.08)',weight:.5,fill:false,dashArray:'2,6'};
+    : {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
 }
 
 // Конвертація HEX → rgba з заданою альфою
@@ -984,10 +1034,11 @@ async function loadOblast(){
       const d=await rObl.json();
       oblastLayer=L.geoJSON(d,{
         style:f=>oblStyleFn(f.properties?.region||''),
-        interactive:false,
+        interactive:true,
         onEachFeature:(f,l)=>{
           const name=f.properties?.region||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
+          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
           oblFeatures[name]=l;
         }
       });
@@ -998,10 +1049,11 @@ async function loadOblast(){
       const d=await rRay.json();
       rayonLayer=L.geoJSON(d,{
         style:f=>rayonStyleFn(f.properties?.rayon||''),
-        interactive:false,
+        interactive:true,
         onEachFeature:(f,l)=>{
           const name=f.properties?.rayon||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
+          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
           rayonFeatures[name]=l;
         }
       });
@@ -1339,19 +1391,27 @@ async function fetchWX(lat,lng){
   try{
     const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,apparent_temperature,visibility&timezone=auto`);
     const d=await r.json();const cw=d.current_weather;const h=d.hourly;
-    const wmo={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
-    const wmoD={0:'Ясно',1:'Переважно ясно',2:'Хмарно',3:'Хмарно',45:'Туман',51:'Дощ',61:'Дощ',71:'Сніг',80:'Злива',95:'Гроза'};
     document.getElementById('wxT').textContent=`${Math.round(cw.temperature)}°`;
-    document.getElementById('wxIco').textContent=wmo[cw.weathercode]||'🌡';
+    document.getElementById('wxIco').textContent=WMO_ICO[cw.weathercode]||'🌡';
     document.getElementById('wx1').textContent=`${Math.round(cw.temperature)}°C`;
     document.getElementById('wx2').textContent=h?.apparent_temperature?`${Math.round(h.apparent_temperature[0])}°C`:'--';
     document.getElementById('wx3').textContent=h?.relativehumidity_2m?`${h.relativehumidity_2m[0]}%`:'--';
     document.getElementById('wx4').textContent=`${Math.round(cw.windspeed)} км/г`;
     document.getElementById('wx5').textContent=h?.visibility?`${(h.visibility[0]/1000).toFixed(1)} км`:'--';
-    document.getElementById('wx6').textContent=wmoD[cw.weathercode]||'--';
+    document.getElementById('wx6').textContent=WMO_TXT[cw.weathercode]||'--';
   }catch{}
 }
 function toggleWX(){const p=document.getElementById('wxPnl');p.style.display=p.style.display==='block'?'none':'block';}
+
+// Спрощений запит погоди — повертає {ico,txt,temp} або null
+async function fetchWXSimple(lat,lng){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&timezone=auto`);
+    const d=await r.json();const cw=d.current_weather;
+    if(!cw)return null;
+    return{ico:WMO_ICO[cw.weathercode]||'🌡',txt:WMO_TXT[cw.weathercode]||'--',temp:Math.round(cw.temperature)};
+  }catch{return null;}
+}
 
 // ═══════════════════════════
 // HELPERS
