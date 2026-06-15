@@ -1188,7 +1188,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.region||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
+          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
           oblFeatures[name]=l;
           oblGeoms[name]=f.geometry;
         }
@@ -1204,7 +1204,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.rayon||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
+          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
           rayonFeatures[name]=l;
         }
       });
@@ -1863,6 +1863,7 @@ function updateSwarms(){
       const [, lead]=group[0];
       const swarmMarker=L.marker([lat,lng],{icon:mkSwarmIcon(dA.type,group.length,ang)}).addTo(map);
       swarmMarker.on('click',e=>{
+        if(measureMode){handleMeasureClick(e);return;}
         L.DomEvent.stopPropagation(e);
         toast(`Рій · ${group.length} цілей · ${(TINFO[dA.type]||{}).name||dA.type}`);
         selId=group[0][0];showTrack(group[0][0],group[0][1].data);
@@ -2014,7 +2015,7 @@ function doSync(id,d){
     const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
-    marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
+    marker.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
     obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null};
     renderForecast(id,d);
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
