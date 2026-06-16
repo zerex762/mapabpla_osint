@@ -30,7 +30,7 @@
 }
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
-#map{position:absolute;inset:0;z-index:1;background:#000;}
+#map{position:absolute;inset:0;z-index:1;background:#000;transition:transform .6s ease,perspective .6s ease;transform-style:preserve-3d;}
 .leaflet-tile-pane{will-change:transform;}
 .leaflet-control-attribution{display:none!important;}
 
@@ -114,14 +114,14 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .bn-item{
   flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;padding:8px 10px;border-radius:14px;cursor:pointer;
-  transition:background .18s,color .18s;
+  transition:background .18s,color .18s,box-shadow .18s;
   color:rgba(255,255,255,.35);font-size:8.5px;
   font-family:'Orbitron';letter-spacing:.04em;
   border:none;background:transparent;
   text-decoration:none;
   min-width:52px;min-height:48px;
 }
-.bn-item i{font-size:18px;transition:color .18s;}
+.bn-item i{font-size:18px;transition:color .18s,text-shadow .18s;}
 @media(max-width:480px){
   .bn-item{padding:9px 11px;min-width:54px;min-height:52px;}
   .bn-item i{font-size:20px;}
@@ -138,16 +138,18 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .bn-item.on:hover{background:rgba(255,68,68,.18);color:#ff6666;}
 .bn-item.on:hover i{color:#ff6666;}
 .bn-sep{width:1px;height:28px;background:var(--brd);flex-shrink:0;margin:0 2px;}
-.bn-tg{color:rgba(41,182,246,.5);}
-.bn-tg i{color:#29b6f6;}
-.bn-tg.on,.bn-tg:hover{background:rgba(255,68,68,.12);color:#ff6666;}
-.bn-tg.on i,.bn-tg:hover i{color:#ff6666;}
-.bn-tt{color:rgba(255,255,255,.35);}
-.bn-tt i{color:rgba(255,255,255,.6);}
-.bn-tt.on,.bn-tt:hover{background:rgba(255,68,68,.12);color:#ff6666;}
-.bn-tt.on i,.bn-tt:hover i{color:#ff6666;}
-.bn-support:hover{background:rgba(255,68,68,.12);color:#ff6666;}
-.bn-support:hover i{color:#ff6666;}
+.bn-tg{color:var(--blue);}
+.bn-tg i{color:var(--blue);text-shadow:0 0 6px rgba(79,195,247,.55);}
+.bn-tg.on,.bn-tg:hover{background:rgba(41,182,246,.18);color:var(--blue);box-shadow:0 0 14px rgba(79,195,247,.55),inset 0 0 8px rgba(79,195,247,.15);}
+.bn-tg.on i,.bn-tg:hover i{color:var(--blue);text-shadow:0 0 10px var(--blue),0 0 18px rgba(79,195,247,.7);}
+.bn-tt{color:#fff;}
+.bn-tt i{color:#fff;text-shadow:0 0 6px rgba(255,255,255,.55);}
+.bn-tt.on,.bn-tt:hover{background:rgba(255,255,255,.18);color:#fff;box-shadow:0 0 14px rgba(255,255,255,.55),inset 0 0 8px rgba(255,255,255,.15);}
+.bn-tt.on i,.bn-tt:hover i{color:#fff;text-shadow:0 0 10px #fff,0 0 18px rgba(255,255,255,.7);}
+.bn-support{color:var(--a);}
+.bn-support i{color:var(--a);text-shadow:0 0 6px rgba(232,255,0,.55);}
+.bn-support:hover{background:rgba(232,255,0,.18);color:var(--a);box-shadow:0 0 14px rgba(232,255,0,.55),inset 0 0 8px rgba(232,255,0,.15);}
+.bn-support:hover i{color:var(--a);text-shadow:0 0 10px var(--a),0 0 18px rgba(232,255,0,.7);}
 
 /* ─── Toggle (collapse) arrow button ─── */
 #bnavToggle{
@@ -639,42 +641,10 @@ body.observer-mode #obsExit{display:block;}
         </div>
 
         <div class="ss-card">
-          <div class="ss-card-h"><i class="fa-solid fa-map-pin"></i> Регіон перегляду</div>
-          <div class="ss-row" style="margin-bottom:0"><span>Тільки мій регіон</span><label class="tog"><input type="checkbox" id="togRegion" onchange="toggleRegionMode()"><span class="tog-sl"></span></label></div>
-          <select id="regionSel" class="ss-select" onchange="setRegionFilter(this.value)" disabled>
-            <option value="">— Обрати область —</option>
-            <option value="Автономна Республіка Крим">АР Крим</option>
-            <option value="Вінницька область">Вінницька область</option>
-            <option value="Волинська область">Волинська область</option>
-            <option value="Дніпропетровська область">Дніпропетровська область</option>
-            <option value="Донецька область">Донецька область</option>
-            <option value="Житомирська область">Житомирська область</option>
-            <option value="Закарпатська область">Закарпатська область</option>
-            <option value="Запорізька область">Запорізька область</option>
-            <option value="Івано-Франківська область">Івано-Франківська область</option>
-            <option value="Київська область">Київська область</option>
-            <option value="Кіровоградська область">Кіровоградська область</option>
-            <option value="Луганська область">Луганська область</option>
-            <option value="Львівська область">Львівська область</option>
-            <option value="Миколаївська область">Миколаївська область</option>
-            <option value="Одеська область">Одеська область</option>
-            <option value="Полтавська область">Полтавська область</option>
-            <option value="Рівненська область">Рівненська область</option>
-            <option value="Сумська область">Сумська область</option>
-            <option value="Тернопільська область">Тернопільська область</option>
-            <option value="Харківська область">Харківська область</option>
-            <option value="Херсонська область">Херсонська область</option>
-            <option value="Хмельницька область">Хмельницька область</option>
-            <option value="Черкаська область">Черкаська область</option>
-            <option value="Чернівецька область">Чернівецька область</option>
-            <option value="Чернігівська область">Чернігівська область</option>
-          </select>
-        </div>
-
-        <div class="ss-card">
           <div class="ss-card-h"><i class="fa-solid fa-eye-slash"></i> Спеціальні режими</div>
           <div class="ss-row"><span>Режим спостереження (тільки карта)</span><label class="tog"><input type="checkbox" id="togObserver" onchange="toggleObserver()"><span class="tog-sl"></span></label></div>
-          <div class="ss-row" style="margin-bottom:0"><span>Офлайн-кеш останніх даних</span><label class="tog"><input type="checkbox" id="togOffline" checked onchange="toggleOfflineCache()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row"><span>Офлайн-кеш останніх даних</span><label class="tog"><input type="checkbox" id="togOffline" checked onchange="toggleOfflineCache()"><span class="tog-sl"></span></label></div>
+          <div class="ss-row" style="margin-bottom:0"><span>3D-нахил при наближенні до цілі</span><label class="tog"><input type="checkbox" id="tog3D" onchange="toggle3DTilt()"><span class="tog-sl"></span></label></div>
         </div>
 
         <div class="ss-card">
@@ -1088,6 +1058,7 @@ let swarmMode=false;
 let measureMode=false, measurePts=[], measureMarkers=[], measureLine=null, measureLbl=null;
 let observerMode=false;
 let offlineCacheOn=true;
+let tilt3DOn=false;
 const OFFLINE_KEY='sd_offline_cache';
 
 
@@ -1222,7 +1193,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.region||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
+          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
           oblFeatures[name]=l;
           oblGeoms[name]=f.geometry;
         }
@@ -1238,7 +1209,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.rayon||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
+          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
           rayonFeatures[name]=l;
         }
       });
@@ -1401,7 +1372,8 @@ function isInSelectedRegion(lat,lng){
 }
 function toggleRegionMode(){
   regionMode=document.getElementById('togRegion')?.checked;
-  document.getElementById('regionSel').disabled=!regionMode;
+  const sel=document.getElementById('regionSel');
+  if(sel)sel.disabled=!regionMode;
   if(regionMode&&!regionFilter){
     toast('Оберіть область зі списку');
   }
@@ -1503,7 +1475,42 @@ function toggleGrid(){
 // Перемальовуємо сітку при зміні виду
 map.on('moveend zoomend',()=>{
   if(document.getElementById('togGrid')?.checked) drawGrid();
+  if(tilt3DOn) applyDynamicTilt();
 });
+
+// ═══════════════════════════
+// DYNAMIC 3D TILT — нахил камери при наближенні до цілі
+// ═══════════════════════════
+function toggle3DTilt(){
+  tilt3DOn=document.getElementById('tog3D')?.checked;
+  if(tilt3DOn){
+    applyDynamicTilt();
+    toast('3D-нахил увімкнено');
+  }else{
+    resetTilt();
+    toast('3D-нахил вимкнено');
+  }
+}
+// Нахил пропорційний рівню наближення: на огляді — плоска карта,
+// при наближенні до цілі (zoom 11+) — поступовий перспективний нахил
+function applyDynamicTilt(){
+  const mapEl=document.getElementById('map');
+  const z=map.getZoom();
+  const Z_START=9, Z_MAX=15;
+  const t=Math.max(0,Math.min(1,(z-Z_START)/(Z_MAX-Z_START)));
+  if(t<=0){resetTilt();return;}
+  const angle=(t*32).toFixed(1);          // до 32°
+  const scale=(1+t*0.12).toFixed(3);      // легке збільшення для компенсації
+  const persp=Math.round(1200-t*500);     // глибина перспективи
+  mapEl.style.perspective=`${persp}px`;
+  mapEl.style.transform=`rotateX(${angle}deg) scale(${scale})`;
+  mapEl.style.transformOrigin='center 65%';
+}
+function resetTilt(){
+  const mapEl=document.getElementById('map');
+  mapEl.style.perspective='';
+  mapEl.style.transform='';
+}
 
 // ═══════════════════════════
 // ALERT COLOR
@@ -1896,6 +1903,7 @@ function updateSwarms(){
       const [, lead]=group[0];
       const swarmMarker=L.marker([lat,lng],{icon:mkSwarmIcon(dA.type,group.length,ang)}).addTo(map);
       swarmMarker.on('click',e=>{
+        if(measureMode){handleMeasureClick(e);return;}
         L.DomEvent.stopPropagation(e);
         toast(`Рій · ${group.length} цілей · ${(TINFO[dA.type]||{}).name||dA.type}`);
         selId=group[0][0];showTrack(group[0][0],group[0][1].data);
@@ -2047,7 +2055,7 @@ function doSync(id,d){
     const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
-    marker.on('click',e=>{L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
+    marker.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
     obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null};
     renderForecast(id,d);
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
