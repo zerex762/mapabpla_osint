@@ -399,26 +399,9 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   .bn-item{min-width:60px;}
 }
 /* LEAFLET TOOLTIP */
-.leaflet-tooltip.ob-tt{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-family:'Orbitron';font-size:8px;padding:3px 6px;}
+.leaflet-tooltip.ob-tt{background:rgba(10,14,16,.88);backdrop-filter:blur(8px);border:1px solid rgba(120,210,255,.35);color:#eaf7ff;font-family:'Orbitron';font-size:9px;letter-spacing:.05em;padding:5px 10px;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.5),0 0 12px rgba(120,210,255,.15);}
+.leaflet-tooltip.ob-tt::before{display:none;}
 
-/* ═══════ THREAT PULSE RINGS ═══════ */
-.tgt-pulse{
-  position:absolute;left:50%;top:50%;
-  border-radius:50%;
-  border:1.5px solid currentColor;
-  pointer-events:none;
-  transform:translate(-50%,-50%);
-  opacity:0;
-}
-.tgt-pulse.p1{animation:pulseRing 2.6s ease-out infinite;}
-.tgt-pulse.p2{animation:pulseRing 1.6s ease-out infinite;}
-.tgt-pulse.p3{animation:pulseRing .9s ease-out infinite;}
-.tgt-pulse.p2-d{animation-delay:.55s;}
-.tgt-pulse.p3-d{animation-delay:.3s;}
-@keyframes pulseRing{
-  0%{width:100%;height:100%;opacity:.65;}
-  100%{width:340%;height:340%;opacity:0;}
-}
 
 /* ═══════ GHOST TRAIL FORECAST ═══════ */
 .gt-tick{
@@ -676,7 +659,6 @@ body.observer-mode #obsExit{display:block;}
           <div class="ss-card-h"><i class="fa-solid fa-layer-group"></i> Шари карти</div>
           <div class="ss-row"><span>Межі областей</span><label class="tog"><input type="checkbox" id="togObl" checked onchange="toggleObl()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Координатна сітка</span><label class="tog"><input type="checkbox" id="togGrid" onchange="toggleGrid()"><span class="tog-sl"></span></label></div>
-          <div class="ss-row"><span>Зона невизначеності</span><label class="tog"><input type="checkbox" id="togCir" onchange="toggleCircles()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>40 км кільце</span><label class="tog"><input type="checkbox" id="togRng" onchange="toggleRng()"><span class="tog-sl"></span></label></div>
         </div>
 
@@ -1253,8 +1235,8 @@ function normName(s){
 function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
   return isAlert
-    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null}
-    : {color:'rgba(255,255,255,.15)',weight:.8,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'3,7'};
+    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null,lineJoin:'round',lineCap:'round'}
+    : {color:'rgba(120,210,255,.4)',weight:1,fill:true,fillColor:'#4fc3f7',fillOpacity:.025,dashArray:null,lineJoin:'round',lineCap:'round'};
 }
 
 function rayonStyleFn(name){
@@ -1262,10 +1244,10 @@ function rayonStyleFn(name){
   // Якщо вся область вже підсвічена — не малюємо район окремо
   const oblast=RAYON_TO_OBLAST[name];
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
-  if(oblastActive) return {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
+  if(oblastActive) return {color:'rgba(255,255,255,.06)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:null,lineJoin:'round',lineCap:'round'};
   return isAlert
-    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null}
-    : {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
+    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null,lineJoin:'round',lineCap:'round'}
+    : {color:'rgba(120,210,255,.16)',weight:.6,fill:true,fillColor:'#4fc3f7',fillOpacity:.008,dashArray:null,lineJoin:'round',lineCap:'round'};
 }
 
 // Конвертація HEX → rgba з заданою альфою
@@ -1289,10 +1271,13 @@ async function loadOblast(){
       oblastLayer=L.geoJSON(d,{
         style:f=>oblStyleFn(f.properties?.region||''),
         interactive:true,
+        smoothFactor:1.2,
         onEachFeature:(f,l)=>{
           const name=f.properties?.region||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
           l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
+          l.on('mouseover',()=>{if(!activeAlertNames.has(normName(name)))l.setStyle({color:'rgba(120,210,255,.85)',weight:1.6,fillOpacity:.09});});
+          l.on('mouseout',()=>{l.setStyle(oblStyleFn(name));});
           oblFeatures[name]=l;
           oblGeoms[name]=f.geometry;
         }
@@ -1305,6 +1290,7 @@ async function loadOblast(){
       rayonLayer=L.geoJSON(d,{
         style:f=>rayonStyleFn(f.properties?.rayon||''),
         interactive:true,
+        smoothFactor:1.2,
         onEachFeature:(f,l)=>{
           const name=f.properties?.rayon||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
@@ -1702,15 +1688,10 @@ function redrawAll(){
   Object.entries(obs).forEach(([id,o])=>{
     o.marker.setIcon(mkIcon(o.data));
     const c=getC(o.data.type);
-    if(o.circle)o.circle.setStyle({color:c,fillColor:c});
     if(o.line)o.line.setStyle({color:c});
     if(o.trail)o.trail.setStyle({color:c});
     renderForecast(id,o.data);
   });
-}
-function toggleCircles(){
-  const on=document.getElementById('togCir')?.checked;
-  Object.values(obs).forEach(o=>{if(!o.circle)return;on?o.circle.addTo(map):map.removeLayer(o.circle);});
 }
 
 // Heatmap
@@ -1953,24 +1934,12 @@ function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;ret
 // Just drone image with tiny course dot + threat pulse ring
 // ═══════════════════════════
 function mkIcon(d){
-  const ang=+d.angle||0, sz=ISZ, c=getC(d.type);
+  const ang=+d.angle||0, sz=ISZ;
   const showCrs=document.getElementById('togCrs')?.checked!==false;
-  const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:${c};white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
-
-  // Рівень загрози → інтенсивність/швидкість пульсації
-  const threat=(TINFO[d.type]||{}).threat;
-  let pulseHtml='';
-  if(threat==='КРИТИЧНА'){
-    pulseHtml=`<div class="tgt-pulse p3" style="color:${c}"></div><div class="tgt-pulse p3 p3-d" style="color:${c}"></div>`;
-  }else if(threat==='ВИСОКА'){
-    pulseHtml=`<div class="tgt-pulse p2" style="color:${c}"></div><div class="tgt-pulse p2 p2-d" style="color:${c}"></div>`;
-  }else{
-    pulseHtml=`<div class="tgt-pulse p1" style="color:${c}"></div>`;
-  }
+  const cLbl=showCrs?`<div style="position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:6px;color:#fff;white-space:nowrap;text-shadow:1px 1px 3px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
 
   const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
-    ${pulseHtml}
-    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:drop-shadow(0 0 3px ${c}) brightness(1.1);will-change:transform;">
+    <img src="${d.type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:brightness(0) invert(1) drop-shadow(0 0 3px rgba(0,0,0,.75));will-change:transform;">
     ${cLbl}
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+11],iconAnchor:[sz/2,sz/2]});
@@ -1980,9 +1949,9 @@ function mkIcon(d){
 // SWARM GROUPING — групування цілей, що летять разом
 // ═══════════════════════════
 function mkSwarmIcon(type,count,ang){
-  const sz=ISZ+6, c=getC(type);
+  const sz=ISZ+6;
   const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
-    <img src="${type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:drop-shadow(0 0 4px ${c}) brightness(1.1);">
+    <img src="${type}.png" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:brightness(0) invert(1) drop-shadow(0 0 3px rgba(0,0,0,.75));">
     <div class="swarm-badge">×${count}</div>
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
@@ -2156,11 +2125,9 @@ function doSync(id,d){
   const ang=+d.angle||0;
   const rad=(ang+180-90)*Math.PI/180;
   const tail=[d.lat+Math.cos(rad)*.022,d.lng+Math.sin(rad)*.022];
-  const errR=d.accuracy||5000;
   updateTrail(id,d.lat,d.lng);
   if(obs[id]){
     obs[id].marker.setLatLng([d.lat,d.lng]);obs[id].marker.setIcon(mkIcon(d));
-    if(obs[id].circle&&document.getElementById('togCir')?.checked)obs[id].circle.setLatLng([d.lat,d.lng]).setRadius(errR);
     if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
     obs[id].data=d;if(selId===id)showTrack(id,d);
     renderForecast(id,d);
@@ -2174,8 +2141,7 @@ function doSync(id,d){
       logHistory(id,d);
     }
     const c=getC(d.type);
-    const cirOn=document.getElementById('togCir')?.checked;
-    const circle=cirOn?L.circle([d.lat,d.lng],{renderer:cvs,radius:errR,color:c,weight:1,fillColor:c,fillOpacity:.05,dashArray:'3,8',interactive:false}).addTo(map):null;
+    const circle=null;
     const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
