@@ -19,7 +19,7 @@
 /* ═══════ BASE ═══════ */
 :root{
   --a:#e8ff00; --ar:rgba(232,255,0,.15); --a2:rgba(232,255,0,.06);
-  --ok:#39ff8c; --red:#ff4444; --blue:#4fc3f7;
+  --ok:#39ff8c; --red:#ff1a1a; --red-glow:#ff3b3b; --blue:#4fc3f7;
   --glass:rgba(8,10,8,.82); --glass2:rgba(12,14,12,.92);
   --brd:rgba(255,255,255,.07); --brd2:rgba(255,255,255,.04);
   --sh:0 12px 40px rgba(0,0,0,.7);
@@ -62,6 +62,9 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .pill-y{color:var(--a);font-family:'Orbitron';font-size:10px;}
 .pill-g{color:var(--ok);}
 #actPill{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:20px;padding:5px 13px;display:flex;align-items:center;gap:7px;font-size:10px;box-shadow:var(--sh);}
+#alarmPill.active{border-color:rgba(255,30,30,.7)!important;animation:alarmPillGlow 1.3s ease-in-out infinite;}
+#alarmPill.active #alarmC{text-shadow:0 0 10px var(--red-glow),0 0 18px rgba(255,20,20,.7);}
+@keyframes alarmPillGlow{0%,100%{box-shadow:var(--sh),0 0 10px rgba(255,20,20,.35);}50%{box-shadow:var(--sh),0 0 20px rgba(255,20,20,.75);}}
 .act-n{font-family:'Orbitron';color:var(--a);font-size:16px;line-height:1;text-shadow:0 0 10px var(--a);}
 .wx-pill{cursor:pointer;}
 
@@ -203,13 +206,14 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 #toast{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3000;background:var(--a);color:#000;padding:5px 16px;border-radius:20px;font-size:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;font-family:'Orbitron';letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 20px rgba(232,255,0,.4);}
 
 /* ═══════ ALERT BANNER ═══════ */
-#alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(6,5,4,.97);border:1px solid rgba(255,60,60,.5);border-radius:14px;padding:11px 16px;box-shadow:0 0 32px rgba(255,50,50,.35),0 0 0 1px rgba(255,60,60,.1);min-width:260px;max-width:94vw;animation:fadeUp .28s ease;}
-.ab-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);flex-shrink:0;animation:abpulse 1.2s infinite;}
-@keyframes abpulse{0%,100%{opacity:1}50%{opacity:.3}}
+#alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(18,4,4,.97);border:1.5px solid rgba(255,40,40,.85);border-radius:14px;padding:11px 16px;box-shadow:0 0 45px rgba(255,20,20,.65),0 0 90px rgba(255,20,20,.25),0 0 0 1px rgba(255,60,60,.25);min-width:260px;max-width:94vw;animation:fadeUp .28s ease,abGlow 1.6s ease-in-out infinite;}
+@keyframes abGlow{0%,100%{box-shadow:0 0 45px rgba(255,20,20,.65),0 0 90px rgba(255,20,20,.25),0 0 0 1px rgba(255,60,60,.25);border-color:rgba(255,40,40,.85);}50%{box-shadow:0 0 65px rgba(255,30,30,.95),0 0 120px rgba(255,30,30,.4),0 0 0 1px rgba(255,80,80,.4);border-color:rgba(255,90,90,1);}}
+.ab-dot{width:10px;height:10px;border-radius:50%;background:var(--red-glow);box-shadow:0 0 14px 3px var(--red-glow);flex-shrink:0;animation:abpulse 1s infinite;}
+@keyframes abpulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
 .ab-body{flex:1;}
-.ab-title{font-family:'Orbitron';font-size:9px;color:var(--red);letter-spacing:.12em;margin-bottom:2px;}
-.ab-sub{font-size:10px;color:rgba(255,255,255,.55);}
-.ab-close{background:none;border:none;color:rgba(255,255,255,.25);font-size:15px;cursor:pointer;padding:0;line-height:1;}
+.ab-title{font-family:'Orbitron';font-size:9.5px;color:#fff;letter-spacing:.12em;margin-bottom:2px;font-weight:700;text-shadow:0 0 10px var(--red-glow),0 0 20px rgba(255,30,30,.6);}
+.ab-sub{font-size:10.5px;color:rgba(255,255,255,.75);}
+.ab-close{background:none;border:none;color:rgba(255,255,255,.35);font-size:15px;cursor:pointer;padding:0;line-height:1;}
 
 /* ═══════ TRACK PANEL ═══════ */
 #trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:400px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;max-height:80vh;overflow-y:auto;}
@@ -550,17 +554,17 @@ body.observer-mode #obsExit{display:block;}
 .alp-stat .vl.wht{color:rgba(255,255,255,.7);}
 .alp-body{overflow-y:auto;padding:8px;}
 .al-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:4px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);transition:background .15s;}
-.al-item.active{background:rgba(255,68,68,.06);border-color:rgba(255,68,68,.18);}
+.al-item.active{background:rgba(255,30,30,.12);border-color:rgba(255,40,40,.4);}
 .al-item.cleared{background:rgba(57,255,140,.03);border-color:rgba(57,255,140,.1);}
 .al-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-.al-dot.red{background:var(--red);box-shadow:0 0 6px var(--red);animation:abpulse 1.4s infinite;}
+.al-dot.red{background:var(--red-glow);box-shadow:0 0 10px 2px var(--red-glow);animation:abpulse 1.2s infinite;}
 .al-dot.grn{background:var(--ok);box-shadow:0 0 6px var(--ok);}
 .al-body{flex:1;min-width:0;}
 .al-name{font-family:'Orbitron';font-size:10px;color:#fff;font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .al-type{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.06em;margin-bottom:2px;}
 .al-time{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.25);}
 .al-status{font-family:'Orbitron';font-size:9px;white-space:nowrap;flex-shrink:0;padding:2px 7px;border-radius:10px;}
-.al-status.red{color:#ff6666;background:rgba(255,68,68,.15);border:1px solid rgba(255,68,68,.3);}
+.al-status.red{color:#fff;background:rgba(255,20,20,.35);border:1px solid rgba(255,60,60,.6);text-shadow:0 0 6px rgba(255,60,60,.8);}
 .al-status.grn{color:var(--ok);background:rgba(57,255,140,.1);border:1px solid rgba(57,255,140,.2);}
 .alp-empty{text-align:center;font-size:9px;color:rgba(255,255,255,.2);padding:24px;font-family:'Orbitron';}
 
@@ -1128,9 +1132,33 @@ let offlineCacheOn=true;
 let tilt3DOn=false;
 const OFFLINE_KEY='sd_offline_cache';
 // Alert log
+const ALERT_LOG_KEY='sd_alert_log_v1';
 let alertLog=[]; // [{name, type:'oblast'|'rayon', status:'active'|'cleared', ts, clearedTs}]
 let alertLogFilter='all';
 let alertLogOpen=false;
+
+// Завантажуємо збережений журнал тривог з localStorage,
+// щоб він не зникав при закритті сайту / перезавантаженні сторінки
+function loadAlertLogFromStorage(){
+  try{
+    const raw=localStorage.getItem(ALERT_LOG_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(Array.isArray(parsed)) alertLog=parsed;
+    }
+  }catch(e){
+    console.warn('alertLog load error',e);
+    alertLog=[];
+  }
+}
+function saveAlertLog(){
+  try{
+    localStorage.setItem(ALERT_LOG_KEY,JSON.stringify(alertLog));
+  }catch(e){
+    console.warn('alertLog save error',e);
+  }
+}
+loadAlertLogFromStorage();
 
 
 // ═══════════════════════════
@@ -1225,7 +1253,7 @@ function normName(s){
 function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
   return isAlert
-    ? {color:hexA(alertColor,.3),weight:.8,fill:true,fillColor:alertColor,fillOpacity:.15,dashArray:null}
+    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null}
     : {color:'rgba(255,255,255,.15)',weight:.8,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'3,7'};
 }
 
@@ -1236,7 +1264,7 @@ function rayonStyleFn(name){
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
   if(oblastActive) return {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
   return isAlert
-    ? {color:hexA(alertColor,.3),weight:.8,fill:true,fillColor:alertColor,fillOpacity:.15,dashArray:null}
+    ? {color:hexA(alertColor,.95),weight:2,fill:true,fillColor:alertColor,fillOpacity:.38,dashArray:null}
     : {color:'rgba(255,255,255,.08)',weight:.5,fill:true,fillColor:'#000',fillOpacity:.001,dashArray:'2,6'};
 }
 
@@ -1392,6 +1420,7 @@ async function fetchAlerts(retry=true){
     });
     // Keep max 200 entries
     if(alertLog.length>200) alertLog=alertLog.slice(0,200);
+    saveAlertLog();
     if(alertLogOpen) renderAlertLog();
     // Застосовуємо стилі тільки якщо шари вже завантажені
     if(Object.keys(oblFeatures).length>0||Object.keys(rayonFeatures).length>0){
@@ -1412,6 +1441,8 @@ function applyAlertStyles(){
 function updateAlertCounter(n){
   const el=document.getElementById('alarmC');
   if(el)el.textContent=n;
+  const pill=document.getElementById('alarmPill');
+  if(pill)pill.classList.toggle('active',n>0);
 }
 
 function startAlertsPolling(){
