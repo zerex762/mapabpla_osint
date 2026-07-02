@@ -218,6 +218,29 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 /* ═══════ TOAST ═══════ */
 #toast{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3000;background:var(--a);color:#000;padding:5px 16px;border-radius:20px;font-size:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;font-family:'Orbitron';letter-spacing:.1em;white-space:nowrap;box-shadow:0 4px 20px rgba(232,255,0,.4);}
 
+/* ═══════ CITY SEARCH PANEL ═══════ */
+#searchPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:400px;z-index:2100;background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:16px;padding:14px 16px 8px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;max-height:70vh;overflow:hidden;flex-direction:column;}
+#searchPnl.on{display:flex;}
+.sr-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sr-title{font-family:'Orbitron';font-size:11px;color:#fff;letter-spacing:.1em;font-weight:600;}
+.sr-x{background:none;border:none;color:rgba(255,255,255,.25);font-size:17px;cursor:pointer;}
+.sr-inp-wrap{position:relative;margin-bottom:10px;flex-shrink:0;}
+.sr-inp-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.3);font-size:12px;}
+#srInput{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--brd);border-radius:12px;padding:10px 36px 10px 34px;color:#fff;font-size:12px;font-family:'Inter';outline:none;transition:border-color .18s;}
+#srInput::placeholder{color:rgba(255,255,255,.25);}
+#srInput:focus{border-color:var(--a);}
+.sr-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.3);font-size:15px;cursor:pointer;padding:4px;display:none;}
+.sr-clear.show{display:block;}
+.sr-list{overflow-y:auto;flex:1;min-height:0;}
+.sr-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px;cursor:pointer;transition:background .15s;}
+.sr-row:hover{background:rgba(232,255,0,.07);}
+.sr-row i{color:var(--a);font-size:13px;flex-shrink:0;width:16px;text-align:center;}
+.sr-row-body{flex:1;min-width:0;}
+.sr-row-name{font-size:11.5px;color:#fff;font-weight:500;}
+.sr-row-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sr-empty{text-align:center;padding:24px 10px;font-size:10.5px;color:rgba(255,255,255,.3);line-height:1.6;}
+.sr-loading{text-align:center;padding:16px;font-size:10px;color:rgba(255,255,255,.3);font-family:'Orbitron';letter-spacing:.08em;}
+
 /* ═══════ ALERT BANNER ═══════ */
 #alertBanner{position:absolute;top:calc(var(--st)+56px);left:50%;transform:translateX(-50%);z-index:3500;display:none;align-items:center;gap:10px;background:rgba(18,4,4,.97);border:1.5px solid rgba(255,40,40,.85);border-radius:14px;padding:11px 16px;box-shadow:0 0 45px rgba(255,20,20,.65),0 0 90px rgba(255,20,20,.25),0 0 0 1px rgba(255,60,60,.25);min-width:260px;max-width:94vw;animation:fadeUp .28s ease,abGlow 1.6s ease-in-out infinite;}
 @keyframes abGlow{0%,100%{box-shadow:0 0 45px rgba(255,20,20,.65),0 0 90px rgba(255,20,20,.25),0 0 0 1px rgba(255,60,60,.25);border-color:rgba(255,40,40,.85);}50%{box-shadow:0 0 65px rgba(255,30,30,.95),0 0 120px rgba(255,30,30,.4),0 0 0 1px rgba(255,80,80,.4);border-color:rgba(255,90,90,1);}}
@@ -833,6 +856,22 @@ body.observer-mode #obsExit{display:block;}
   <button class="ab-close" onclick="closeAlert()">×</button>
 </div>
 
+<!-- CITY SEARCH PANEL -->
+<div id="searchPnl">
+  <div class="sr-head">
+    <div class="sr-title">ПОШУК МІСТА</div>
+    <button class="sr-x" onclick="closeSearch()">×</button>
+  </div>
+  <div class="sr-inp-wrap">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="srInput" placeholder="Введіть назву міста, села, смт..." autocomplete="off" oninput="onSearchInput()">
+    <button class="sr-clear" id="srClear" onclick="clearSearch()">×</button>
+  </div>
+  <div class="sr-list" id="srList">
+    <div class="sr-empty">Почніть вводити назву населеного пункту — навіть маленького.</div>
+  </div>
+</div>
+
 <!-- TOP BAR -->
 <div id="topBar">
   <div id="clockWidget">
@@ -993,6 +1032,9 @@ body.observer-mode #obsExit{display:block;}
   <div class="bn-sep"></div>
   <button class="bn-item" onclick="opn('themeSh')" title="Теми">
     <i class="fa-solid fa-layer-group"></i><span>КАРТА</span>
+  </button>
+  <button class="bn-item" id="bnSearch" onclick="toggleSearch()">
+    <i class="fa-solid fa-magnifying-glass-location"></i><span>МІСТО</span>
   </button>
   <button class="bn-item" id="bnList" onclick="toggleList()">
     <i class="fa-solid fa-list"></i><span>СТРІЧКА</span>
@@ -2723,7 +2765,117 @@ async function takeScreenshot(){
   }
 }
 
+// ═══════════════════════════
+// CITY SEARCH — знаходить будь-який населений пункт (навіть маленький)
+// та показує його на карті
+// ═══════════════════════════
+let searchOpen=false;
+let searchTimer=null;
+let searchMarker=null;
+let searchAbort=null;
+
+function toggleSearch(){
+  searchOpen=!searchOpen;
+  document.getElementById('searchPnl').classList.toggle('on',searchOpen);
+  document.getElementById('bnSearch').classList.toggle('on',searchOpen);
+  if(searchOpen)setTimeout(()=>document.getElementById('srInput')?.focus(),150);
+}
+function closeSearch(){
+  searchOpen=false;
+  document.getElementById('searchPnl').classList.remove('on');
+  document.getElementById('bnSearch').classList.remove('on');
+}
+function clearSearch(){
+  const inp=document.getElementById('srInput');
+  inp.value='';
+  document.getElementById('srClear').classList.remove('show');
+  document.getElementById('srList').innerHTML='<div class="sr-empty">Почніть вводити назву населеного пункту — навіть маленького.</div>';
+  inp.focus();
+}
+function onSearchInput(){
+  const q=document.getElementById('srInput').value.trim();
+  document.getElementById('srClear').classList.toggle('show',q.length>0);
+  clearTimeout(searchTimer);
+  if(q.length<2){
+    document.getElementById('srList').innerHTML='<div class="sr-empty">Почніть вводити назву населеного пункту — навіть маленького.</div>';
+    return;
+  }
+  document.getElementById('srList').innerHTML='<div class="sr-loading">ПОШУК...</div>';
+  searchTimer=setTimeout(()=>performCitySearch(q),450);
+}
+async function performCitySearch(q){
+  if(searchAbort)searchAbort.abort();
+  searchAbort=new AbortController();
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=ua&accept-language=uk&q=${encodeURIComponent(q)}`;
+    const res=await fetch(url,{signal:searchAbort.signal,headers:{'Accept':'application/json'}});
+    const data=await res.json();
+    renderSearchResults(data||[]);
+  }catch(e){
+    if(e.name==='AbortError')return;
+    console.warn('search error',e);
+    document.getElementById('srList').innerHTML='<div class="sr-empty">Помилка пошуку. Перевірте інтернет-з\'єднання.</div>';
+  }
+}
+function fmtPlaceName(item){
+  const a=item.address||{};
+  const main=a.city||a.town||a.village||a.hamlet||a.municipality||item.name||item.display_name.split(',')[0];
+  return main;
+}
+function fmtPlaceSub(item){
+  const a=item.address||{};
+  const parts=[a.state,a.county].filter((v,i,arr)=>v&&arr.indexOf(v)===i);
+  return parts.join(', ')||item.display_name;
+}
+function renderSearchResults(list){
+  const el=document.getElementById('srList');
+  if(!list.length){
+    el.innerHTML='<div class="sr-empty">Нічого не знайдено.<br>Спробуйте іншу назву.</div>';
+    return;
+  }
+  el.innerHTML=list.map((item,i)=>{
+    const name=fmtPlaceName(item);
+    const sub=fmtPlaceSub(item);
+    return `<div class="sr-row" onclick="selectSearchResult(${item.lat},${item.lon},'${name.replace(/'/g,"\\'")}')">
+      <i class="fa-solid fa-location-dot"></i>
+      <div class="sr-row-body">
+        <div class="sr-row-name">${name}</div>
+        <div class="sr-row-sub">${sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function mkSearchIcon(){
+  return L.divIcon({
+    className:'',
+    html:`<div style="position:relative;width:36px;height:46px;">
+      <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:16px;height:16px;border-radius:50% 50% 50% 0;background:var(--a);box-shadow:0 0 16px rgba(232,255,0,.85),0 3px 8px rgba(0,0,0,.55);transform:translateX(-50%) rotate(-45deg);"></div>
+      <div style="position:absolute;left:50%;top:8px;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#000;"></div>
+      <div style="position:absolute;left:50%;bottom:2px;transform:translateX(-50%);width:10px;height:4px;border-radius:50%;background:rgba(0,0,0,.4);filter:blur(1px);"></div>
+    </div>`,
+    iconSize:[36,46],
+    iconAnchor:[18,42]
+  });
+}
+function selectSearchResult(lat,lon,name){
+  lat=+lat;lon=+lon;
+  if(searchMarker){map.removeLayer(searchMarker);searchMarker=null;}
+  searchMarker=L.marker([lat,lon],{icon:mkSearchIcon(),zIndexOffset:2000}).addTo(map);
+  searchMarker.bindTooltip(name,{permanent:true,direction:'top',offset:[0,-38],className:'ob-tt'}).openTooltip();
+  map.flyTo([lat,lon],13,{duration:1.1});
+  toast('📍 '+name.toUpperCase());
+  closeSearch();
+}
+document.getElementById('srInput')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const first=document.querySelector('#srList .sr-row');
+    if(first)first.click();
+  }
+});
+
 function clearDrones(){if(confirm('Purge?'))db.remove().then(()=>toast('PURGED'));}
+
+
 </script>
 </body>
 </html>
