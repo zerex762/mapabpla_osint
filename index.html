@@ -62,6 +62,19 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .pill-y{color:var(--a);font-family:'Orbitron';font-size:10px;}
 .pill-g{color:var(--ok);}
 #actPill{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:20px;padding:5px 13px;display:flex;align-items:center;gap:7px;font-size:10px;box-shadow:var(--sh);}
+
+/* ═══════ CLOCK WIDGET ═══════ */
+#clockWidget{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:1900;pointer-events:none;display:flex;flex-direction:column;align-items:center;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:16px;padding:6px 20px 8px;box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.04);}
+.cw-time{font-family:'Orbitron';font-weight:600;font-size:16px;color:#fff;letter-spacing:.06em;line-height:1;text-shadow:0 0 14px rgba(232,255,0,.4);white-space:nowrap;}
+.cw-colon{color:var(--a);animation:cwBlink 1s step-start infinite;margin:0 1px;}
+.cw-sec{font-size:10px;color:rgba(255,255,255,.4);margin-left:2px;font-weight:500;}
+@keyframes cwBlink{50%{opacity:.15;}}
+.cw-date{font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.13em;text-transform:uppercase;margin-top:3px;white-space:nowrap;}
+@media(max-width:480px){
+  #clockWidget{padding:5px 14px 6px;border-radius:14px;}
+  .cw-time{font-size:14px;}
+  .cw-date{font-size:7px;}
+}
 #alarmPill.active{border-color:rgba(255,30,30,.7)!important;animation:alarmPillGlow 1.3s ease-in-out infinite;}
 #alarmPill.active #alarmC{text-shadow:0 0 10px var(--red-glow),0 0 18px rgba(255,20,20,.7);}
 @keyframes alarmPillGlow{0%,100%{box-shadow:var(--sh),0 0 10px rgba(255,20,20,.35);}50%{box-shadow:var(--sh),0 0 20px rgba(255,20,20,.75);}}
@@ -822,8 +835,11 @@ body.observer-mode #obsExit{display:block;}
 
 <!-- TOP BAR -->
 <div id="topBar">
+  <div id="clockWidget">
+    <div class="cw-time"><span id="cwH">00</span><span class="cw-colon">:</span><span id="cwM">00</span><span class="cw-sec">:<span id="cwS">00</span></span></div>
+    <div class="cw-date" id="cwDate">--</div>
+  </div>
   <div class="tb-l">
-    <div class="pill"><i class="fa-solid fa-clock" style="font-size:8px;opacity:.4"></i><span class="pill-v" id="sysTm">00:00:00</span></div>
     <div class="pill">
       <i class="fa-solid fa-users" style="font-size:8px;opacity:.4"></i><span class="pill-y" id="onlC">1</span>
       <span style="opacity:.15">·</span>
@@ -2382,10 +2398,24 @@ setInterval(()=>{if(radarOpen)buildRdList();},5000);
 // ═══════════════════════════
 // CLOCK
 // ═══════════════════════════
-setInterval(()=>{
-  document.getElementById('sysTm').textContent=new Date().toLocaleTimeString('uk-UA',{hour12:false});
+let _cwDay=null;
+function tickClock(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  document.getElementById('cwH').textContent=pad(d.getHours());
+  document.getElementById('cwM').textContent=pad(d.getMinutes());
+  document.getElementById('cwS').textContent=pad(d.getSeconds());
+  const dayKey=d.toDateString();
+  if(dayKey!==_cwDay){
+    _cwDay=dayKey;
+    let dateStr=d.toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+    dateStr=dateStr.charAt(0).toUpperCase()+dateStr.slice(1);
+    document.getElementById('cwDate').textContent=dateStr;
+  }
   if(selId&&obs[selId])document.getElementById('tpAge').textContent=age(obs[selId].data.timestamp);
-},1000);
+}
+tickClock();
+setInterval(tickClock,1000);
 
 // ═══════════════════════════
 // FIREBASE LISTENERS
