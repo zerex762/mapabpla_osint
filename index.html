@@ -25,11 +25,11 @@
   --sh:0 12px 40px rgba(0,0,0,.7);
   --isz:22px;
   --sb:env(safe-area-inset-bottom,0px);
-  --st:env(safe-area-inset-top,0px);
+  --st:max(env(safe-area-inset-top,0px),12px);
   --alert-c:#ff4444;
 }
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
-html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
+html,body{width:100%;height:100%;height:100dvh;background:#050505;font-family:'Inter',sans-serif;overflow:hidden;color:#fff;}
 #map{position:absolute;inset:0;z-index:1;background:#000;transition:transform .6s ease,perspective .6s ease;transform-style:preserve-3d;}
 .leaflet-tile-pane{will-change:transform;}
 .leaflet-control-attribution{display:none!important;}
@@ -54,7 +54,7 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
 .pv-ok:hover{opacity:.9;}
 
 /* ═══════ TOP STATUS ═══════ */
-#topBar{position:absolute;top:calc(var(--st)+12px);left:12px;right:12px;z-index:2000;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
+#topBar{position:absolute;top:calc(var(--st)+18px);left:12px;right:12px;z-index:2600;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
 .tb-l{display:flex;flex-direction:column;gap:5px;pointer-events:auto;}
 .tb-r{pointer-events:auto;}
 .pill{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--brd);border-radius:20px;padding:5px 11px;font-size:10px;font-weight:500;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--sh);white-space:nowrap;}
@@ -75,11 +75,24 @@ html,body{width:100%;height:100%;background:#050505;font-family:'Inter',sans-ser
   .cw-time{font-size:14px;}
   .cw-date{font-size:7px;}
 }
+@media(max-height:420px){
+  #topBar{top:calc(var(--st)+6px);}
+  #clockWidget{padding:3px 12px 4px;border-radius:12px;}
+  .cw-time{font-size:12px;}
+  .cw-date{font-size:6px;margin-top:1px;}
+  .pill{padding:3px 8px;font-size:9px;}
+  #bnavWrap{bottom:calc(var(--sb)+4px);}
+  .bn-item{padding:5px 8px;min-width:42px;min-height:36px;}
+  .bn-item i{font-size:14px;}
+  .bn-item span{font-size:6.5px;}
+}
 #alarmPill.active{border-color:rgba(255,30,30,.7)!important;animation:alarmPillGlow 1.3s ease-in-out infinite;}
 #alarmPill.active #alarmC{text-shadow:0 0 10px var(--red-glow),0 0 18px rgba(255,20,20,.7);}
 @keyframes alarmPillGlow{0%,100%{box-shadow:var(--sh),0 0 10px rgba(255,20,20,.35);}50%{box-shadow:var(--sh),0 0 20px rgba(255,20,20,.75);}}
 .act-n{font-family:'Orbitron';color:var(--a);font-size:16px;line-height:1;text-shadow:0 0 10px var(--a);}
 .wx-pill{cursor:pointer;}
+#tgTopPill{box-shadow:var(--sh),0 0 10px rgba(41,182,246,.25);animation:tgPillGlow 2.4s ease-in-out infinite;}
+@keyframes tgPillGlow{0%,100%{box-shadow:var(--sh),0 0 8px rgba(41,182,246,.2);}50%{box-shadow:var(--sh),0 0 16px rgba(41,182,246,.55);}}
 
 /* ═══════ RETICLE ═══════ */
 #reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1500;pointer-events:none;width:40px;height:40px;opacity:.35;}
@@ -879,6 +892,9 @@ body.observer-mode #obsExit{display:block;}
     <div class="cw-date" id="cwDate">--</div>
   </div>
   <div class="tb-l">
+    <a href="https://t.me/odessa_osint26" target="_blank" class="pill" id="tgTopPill" style="border-color:rgba(41,182,246,.55);text-decoration:none;">
+      <i class="fa-brands fa-telegram" style="font-size:11px;color:#29b6f6"></i><span class="pill-v" style="color:#4fc3f7">@odessa_osint26</span>
+    </a>
     <div class="pill">
       <i class="fa-solid fa-users" style="font-size:8px;opacity:.4"></i><span class="pill-y" id="onlC">1</span>
       <span style="opacity:.15">·</span>
