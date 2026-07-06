@@ -38,32 +38,28 @@ body{background:#0a0a0c;}
 #mapHud{display:none!important;}
 #reticle{display:none!important;}
 
-/* ═══════ SPLASH ═══════ */
-#splash{position:fixed;inset:0;background:#04070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;
-  background-image:linear-gradient(rgba(0,231,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,231,255,.05) 1px,transparent 1px);background-size:100% 38px,38px 100%;}
-.sp-radar{width:76px;height:76px;margin-bottom:22px;filter:drop-shadow(0 0 10px rgba(0,231,255,.4));}
-.sp-radar svg{width:100%;height:100%;overflow:visible;}
-.sp-ring{fill:none;stroke:rgba(0,231,255,.28);stroke-width:1;}
-.sp-ring-2{stroke:rgba(0,231,255,.4);}
-.sp-ring-3{stroke:rgba(0,231,255,.55);}
-.sp-sweep{stroke:var(--a);stroke-width:1.4;transform-origin:50px 50px;animation:spRadarSweep 1.8s linear infinite;filter:drop-shadow(0 0 6px var(--a));}
-@keyframes spRadarSweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-.sp-logo{font-family:'Orbitron';font-size:clamp(24px,6vw,38px);color:#fff;letter-spacing:.24em;margin-bottom:5px;font-weight:700;text-shadow:0 0 22px rgba(0,231,255,.5),0 0 60px rgba(0,231,255,.15);position:relative;}
-.sp-logo::before,.sp-logo::after{content:'';position:absolute;top:50%;width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--a));}
-.sp-logo::before{right:calc(100% + 14px);}
-.sp-logo::after{left:calc(100% + 14px);transform:scaleX(-1);}
-.sp-sub{font-family:'Rajdhani';font-weight:500;font-size:9.5px;color:rgba(0,231,255,.4);letter-spacing:.35em;margin-bottom:44px;text-transform:uppercase;}
-.sp-bar{width:200px;height:2px;background:rgba(0,231,255,.08);overflow:hidden;position:relative;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%,0 6px);}
-.sp-fill{height:100%;background:linear-gradient(90deg,var(--a),#7dfcff);width:0;animation:spload 2.2s cubic-bezier(.4,0,.2,1) forwards;box-shadow:0 0 14px var(--a);}
+/* ═══════ SPLASH — minimal ═══════ */
+#splash{position:fixed;inset:0;background:#050709;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s;}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:var(--a);margin-bottom:26px;box-shadow:0 0 0 0 rgba(0,231,255,.5);animation:spPulse 1.6s ease-out infinite;}
+@keyframes spPulse{
+  0%{box-shadow:0 0 0 0 rgba(0,231,255,.45);}
+  70%{box-shadow:0 0 0 14px rgba(0,231,255,0);}
+  100%{box-shadow:0 0 0 0 rgba(0,231,255,0);}
+}
+.sp-logo{font-family:'Orbitron';font-size:clamp(19px,4.4vw,26px);color:#fff;letter-spacing:.32em;margin-bottom:28px;font-weight:600;padding-left:.32em;}
+.sp-bar{width:120px;height:1px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;}
+.sp-fill{height:100%;background:var(--a);width:0;animation:spload 1.6s cubic-bezier(.4,0,.2,1) forwards;}
 @keyframes spload{to{width:100%}}
-.sp-txt{font-family:'Orbitron';font-size:8px;color:rgba(0,231,255,.45);letter-spacing:.18em;margin-top:12px;text-transform:uppercase;}
+.sp-txt{font-family:'Rajdhani';font-weight:500;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:.22em;margin-top:14px;text-transform:uppercase;}
 
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
 .pv-box{background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);padding:26px;border-radius:4px;max-width:420px;width:100%;animation:fadeUp .3s ease;box-shadow:var(--sh);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .pv-box h2{font-family:'Orbitron';color:#fff;font-size:13px;margin-bottom:14px;letter-spacing:.14em;font-weight:600;}
-.pv-body{font-family:'Rajdhani';font-weight:500;font-size:12px;line-height:1.7;color:rgba(255,255,255,.55);max-height:140px;overflow-y:auto;margin-bottom:18px;padding:13px;background:rgba(0,0,0,.35);border-radius:4px;border-left:2px solid var(--brd);}
+.pv-body{font-family:'Rajdhani';font-weight:500;font-size:12px;line-height:1.6;color:rgba(255,255,255,.55);max-height:min(46vh,320px);overflow-y:auto;margin-bottom:18px;padding:13px;background:rgba(0,0,0,.35);border-radius:4px;border-left:2px solid var(--brd);}
+.pv-body p{margin-bottom:10px;}
+.pv-body p:last-child{margin-bottom:0;}
 .pv-body strong{color:var(--a);}
 .pv-ok{width:100%;padding:13px;background:var(--a);border:none;color:#000;font-family:'Orbitron';font-size:10px;letter-spacing:.14em;cursor:pointer;border-radius:2px;font-weight:700;transition:.2s;clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut));}
 .pv-ok:hover{background:#7dfcff;}
@@ -79,32 +75,33 @@ body{background:#0a0a0c;}
 #actPill{background:var(--glass);border:1px solid var(--brd);border-radius:3px;padding:5px 14px;display:flex;align-items:center;gap:7px;font-size:10px;box-shadow:var(--sh);clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);}
 
 /* ═══════ CLOCK WIDGET ═══════ */
-#clockWidget{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:1900;pointer-events:none;display:flex;flex-direction:column;align-items:center;background:var(--glass);border:1px solid var(--brd);border-top:none;border-radius:0 0 10px 10px;padding:7px 22px 9px;box-shadow:var(--sh),inset 0 1px 0 rgba(0,231,255,.06);}
-#clockWidget::before,#clockWidget::after{content:'';position:absolute;bottom:3px;width:6px;height:6px;border-bottom:1.5px solid var(--a);opacity:.7;}
-#clockWidget::before{left:5px;border-left:1.5px solid var(--a);}
-#clockWidget::after{right:5px;border-right:1.5px solid var(--a);}
-.cw-time{font-family:'Orbitron';font-weight:600;font-size:16px;color:#fff;letter-spacing:.06em;line-height:1;text-shadow:0 0 14px rgba(0,231,255,.45);white-space:nowrap;}
-.cw-colon{color:var(--a);animation:cwBlink 1s step-start infinite;margin:0 1px;}
-.cw-sec{font-size:10px;color:rgba(255,255,255,.4);margin-left:2px;font-weight:500;}
+#clockWidget{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:1900;pointer-events:none;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,rgba(10,18,24,.9),rgba(6,12,17,.82));border:1px solid var(--brd);border-top:none;border-radius:0 0 14px 14px;padding:9px 26px 10px;box-shadow:var(--sh),inset 0 1px 0 rgba(0,231,255,.08);}
+#clockWidget::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:34px;height:2px;background:linear-gradient(90deg,transparent,var(--a),transparent);opacity:.8;}
+.cw-time{font-family:'Orbitron';font-weight:600;font-size:19px;color:#fff;letter-spacing:.08em;line-height:1;text-shadow:0 0 16px rgba(0,231,255,.5);white-space:nowrap;}
+.cw-colon{color:var(--a);animation:cwBlink 1s step-start infinite;margin:0 2px;}
+.cw-sec{font-size:11px;color:rgba(255,255,255,.4);margin-left:3px;font-weight:500;}
 @keyframes cwBlink{50%{opacity:.15;}}
-.cw-date{font-family:'Orbitron';font-size:8px;color:rgba(0,231,255,.5);letter-spacing:.14em;text-transform:uppercase;margin-top:4px;white-space:nowrap;display:flex;align-items:center;gap:5px;justify-content:center;}
+.cw-date{font-family:'Rajdhani';font-weight:600;font-size:9px;color:rgba(0,231,255,.55);letter-spacing:.12em;text-transform:uppercase;margin-top:5px;white-space:nowrap;display:flex;align-items:center;gap:6px;justify-content:center;}
 #connDot{width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:abpulse 2s infinite;flex-shrink:0;}
 @media(max-width:480px){
-  #clockWidget{padding:5px 16px 7px;}
-  .cw-time{font-size:14px;}
-  .cw-date{font-size:7px;}
+  #clockWidget{padding:7px 18px 8px;}
+  .cw-time{font-size:16px;}
+  .cw-date{font-size:8px;}
 }
 @media(max-height:420px){
   #topBar{top:calc(var(--st)+6px);}
-  #clockWidget{padding:3px 12px 4px;}
-  .cw-time{font-size:12px;}
-  .cw-date{font-size:6px;margin-top:1px;}
+  #clockWidget{padding:4px 14px 5px;}
+  .cw-time{font-size:13px;}
+  .cw-date{font-size:7px;margin-top:2px;}
   .pill{padding:3px 8px;font-size:9px;}
   #bnavWrap{bottom:calc(var(--sb)+4px);}
   .bn-item{padding:5px 8px;min-width:42px;min-height:36px;}
   .bn-item i{font-size:14px;}
   .bn-item span{font-size:6.5px;}
 }
+#setFab{position:absolute;top:var(--st);right:12px;z-index:2600;width:34px;height:34px;border-radius:50%;background:var(--glass);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;}
+#setFab i{font-size:13px;color:var(--a);}
+@media(max-height:420px){#setFab{width:28px;height:28px;top:calc(var(--st) + 2px);}#setFab i{font-size:11px;}}
 #alarmPill.active{border-color:rgba(255,36,71,.75)!important;animation:alarmPillGlow 1.3s ease-in-out infinite;}
 #alarmPill.active #alarmC{text-shadow:0 0 10px var(--red-glow),0 0 18px rgba(255,36,71,.7);}
 @keyframes alarmPillGlow{0%,100%{box-shadow:var(--sh),0 0 10px rgba(255,36,71,.4);}50%{box-shadow:var(--sh),0 0 22px rgba(255,36,71,.8);}}
@@ -661,9 +658,12 @@ body.observer-mode #obsExit{display:block;}
 #scrFlash{position:fixed;inset:0;background:#fff;z-index:99999;opacity:0;pointer-events:none;transition:opacity .15s;}
 #scrLoading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99998;background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);border-radius:6px;padding:14px 22px;font-family:'Orbitron';font-size:10px;color:var(--a);letter-spacing:.1em;display:none;box-shadow:var(--sh);}
 /* ═══════ SUPPORT BUTTON + PANEL ═══════ */
-.bn-support-big{flex:1;min-width:0!important;flex-direction:row!important;gap:9px!important;padding:12px 10px!important;background:linear-gradient(90deg,rgba(255,36,71,.14),rgba(0,231,255,.08))!important;}
-.bn-support-big i{font-size:19px!important;color:var(--red-glow);}
-.bn-support-big span{font-size:11px!important;letter-spacing:.08em;}
+#bnavWrap{display:none!important;}
+#supFab{position:absolute;left:12px;bottom:calc(var(--sb)+14px);z-index:2600;display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--brd);border-radius:22px;padding:10px 16px;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;}
+#supFab i{font-size:15px;color:var(--red-glow);}
+#supFab span{font-family:'Orbitron';font-size:9.5px;letter-spacing:.08em;color:#fff;}
+#supFab:hover{background:rgba(255,36,71,.1);}
+@media(max-height:420px){#supFab{padding:7px 12px;bottom:calc(var(--sb)+6px);}#supFab i{font-size:13px;}#supFab span{font-size:8px;}}
 #supportPnl{position:fixed;inset:0;background:rgba(2,4,6,.88);z-index:8000;display:none;align-items:center;justify-content:center;padding:16px;}
 #supportPnl.show{display:flex;}
 .sup-box{position:relative;background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);padding:26px 20px 20px;border-radius:8px;max-width:380px;width:100%;box-shadow:var(--sh);animation:fadeUp .25s ease;}
@@ -675,13 +675,6 @@ body.observer-mode #obsExit{display:block;}
 /* ═══════ CLEANUP: hide cluttered top-bar pills, keep only clock ═══════ */
 .tb-l,.tb-r{display:none!important;}
 
-/* ═══════ FULL-WIDTH SUPPORT BUTTON ═══════ */
-#bnavWrap{left:0!important;right:0!important;bottom:0!important;gap:0!important;}
-#bnav{border-radius:0!important;border-left:none!important;border-right:none!important;border-bottom:none!important;padding:0!important;}
-.bn-support-big{padding:16px 10px calc(16px + var(--sb))!important;border-radius:0!important;}
-.bn-support-big i{font-size:22px!important;}
-.bn-support-big span{font-size:13px!important;}
-#bnavToggle{display:none!important;}
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -694,18 +687,10 @@ body.observer-mode #obsExit{display:block;}
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="sp-radar">
-    <svg viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="46" class="sp-ring sp-ring-1"/>
-      <circle cx="50" cy="50" r="32" class="sp-ring sp-ring-2"/>
-      <circle cx="50" cy="50" r="18" class="sp-ring sp-ring-3"/>
-      <line x1="50" y1="50" x2="50" y2="4" class="sp-sweep"/>
-    </svg>
-  </div>
+  <div class="sp-dot"></div>
   <div class="sp-logo">SKY DEFENSE</div>
-  <div class="sp-sub">Strategic Monitor · Ukraine</div>
   <div class="sp-bar"><div class="sp-fill"></div></div>
-  <div class="sp-txt" id="spTxt">Initializing...</div>
+  <div class="sp-txt" id="spTxt">Завантаження</div>
 </div>
 
 <!-- PRIVACY -->
@@ -713,12 +698,43 @@ body.observer-mode #obsExit{display:block;}
   <div class="pv-box">
     <h2>ПРОТОКОЛ БЕЗПЕКИ</h2>
     <div class="pv-body">
-      <p><strong>1. ГЕОПОЗИЦІЯ:</strong> Для ETA та радару. Зберігається локально.</p>
-      <p><strong>2. ПРИВАТНІСТЬ:</strong> Без передачі на сервери.</p>
-      <p><strong>3. ДЖЕРЕЛА:</strong> OSINT — можлива похибка.</p>
-      <p><strong>4. УВАГА:</strong> Не офіційна тривога. Слухайте ПС ЗСУ.</p>
+      <p><strong>1. ЗАГАЛЬНІ ПОЛОЖЕННЯ</strong><br>
+      SKY DEFENSE — незалежний OSINT-моніторинг повітряної обстановки, створений ентузіастами поза структурами ЗСУ, ДСНС чи інших офіційних органів. Використовуючи застосунок, ви погоджуєтесь із цією політикою.</p>
+
+      <p><strong>2. ЯКІ ДАНІ МИ ОБРОБЛЯЄМО</strong><br>
+      • Геопозиція пристрою — лише для розрахунку відстані/ETA до цілей та центрування карти.<br>
+      • Технічні дані сесії (тип браузера, приблизний регіон за IP) — для стабільності роботи сервісу.<br>
+      • Налаштування інтерфейсу (кольори, звук, шари карти) — зберігаються локально у вашому браузері (localStorage).<br>
+      • Push-підписка (якщо ввімкнена) — анонімний токен для доставки сповіщень, без прив'язки до особи.</p>
+
+      <p><strong>3. ЩО МИ НЕ ЗБИРАЄМО</strong><br>
+      Застосунок не запитує ім'я, телефон, e-mail чи інші персональні ідентифікатори. Ми не ведемо профілів користувачів і не продаємо та не передаємо дані третім особам у рекламних цілях.</p>
+
+      <p><strong>4. ЗБЕРІГАННЯ ГЕОПОЗИЦІЇ</strong><br>
+      Координати обробляються локально на пристрої в реальному часі та не надсилаються на наші сервери й не зберігаються після закриття вкладки. Доступ до геолокації можна будь-коли відкликати в налаштуваннях браузера.</p>
+
+      <p><strong>5. ДЖЕРЕЛА ДАНИХ ПРО ЦІЛІ</strong><br>
+      Інформація про повітряні цілі формується на основі відкритих OSINT-джерел, публічних Telegram-каналів моніторингу та повідомлень користувачів. Дані можуть містити затримку, неточність координат або помилкову класифікацію типу цілі.</p>
+
+      <p><strong>6. ВАЖЛИВЕ ПОПЕРЕДЖЕННЯ</strong><br>
+      SKY DEFENSE НЕ Є офіційним джерелом сигналів повітряної тривоги і не замінює систему оповіщення ЦЗ. Рішення про укриття приймайте виключно на основі офіційної сирени та повідомлень ДСНС/ПС ЗСУ. Автори не несуть відповідальності за наслідки дій, вжитих на основі даних застосунку.</p>
+
+      <p><strong>7. COOKIES ТА ЛОКАЛЬНЕ СХОВИЩЕ</strong><br>
+      Ми використовуємо localStorage для збереження факту прийняття цієї політики та ваших налаштувань інтерфейсу. Ці дані не покидають ваш пристрій і видаляються при очищенні даних сайту.</p>
+
+      <p><strong>8. СТОРОННІ СЕРВІСИ</strong><br>
+      Для відображення карти використовується OpenStreetMap/Leaflet, для прогнозу погоди — Open-Meteo, для синхронізації цілей — Firebase (Google). Ці сервіси можуть отримувати технічні дані запиту (IP-адресу) згідно з власними політиками конфіденційності.</p>
+
+      <p><strong>9. ДІТИ</strong><br>
+      Застосунок не орієнтований на осіб віком до 13 років і не призначений для цілеспрямованого збору даних неповнолітніх.</p>
+
+      <p><strong>10. ЗМІНИ ДО ПОЛІТИКИ</strong><br>
+      Ми можемо оновлювати цю політику з розвитком функціоналу. Актуальна версія завжди доступна в застосунку через розділ «Підтримка».</p>
+
+      <p><strong>11. КОНТАКТ</strong><br>
+      Питання щодо конфіденційності — через Telegram-канал проєкту, посилання на який доступне в розділі «Підтримка».</p>
     </div>
-    <button class="pv-ok" onclick="acceptP()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
+    <button class="pv-ok" id="privBtn" onclick="acceptP()">ПРИЙНЯТИ ТА ЗАПУСТИТИ</button>
   </div>
 </div>
 
@@ -981,10 +997,15 @@ body.observer-mode #obsExit{display:block;}
 </div>
 
 <!-- TOP BAR -->
+
+<button id="setFab" onclick="opn('setSh')" title="Налаштування">
+  <i class="fa-solid fa-sliders"></i>
+</button>
+
 <div id="topBar">
   <div id="clockWidget">
     <div class="cw-time"><span id="cwH">00</span><span class="cw-colon">:</span><span id="cwM">00</span><span class="cw-sec">:<span id="cwS">00</span></span></div>
-    <div class="cw-date" id="cwDate">--<span id="connDot" title="Online"></span></div>
+    <div class="cw-date"><span id="cwDate">--</span><span id="connDot" title="Online"></span></div>
   </div>
   <div class="tb-l">
     <a href="https://t.me/odessa_osint26" target="_blank" class="pill" id="tgTopPill" style="border-color:rgba(41,182,246,.55);text-decoration:none;">
@@ -1125,18 +1146,19 @@ body.observer-mode #obsExit{display:block;}
 <div id="scrFlash"></div>
 <div id="scrLoading">📸 ЗНІМОК...</div>
 
-<!-- BOTTOM NAV WRAPPER (toggle + nav) -->
+<!-- BOTTOM NAV WRAPPER (legacy, hidden) -->
 <div id="bnavWrap">
-<div id="bnav">
-  <button class="bn-item bn-support-big" onclick="toggleSupport()">
-    <i class="fa-solid fa-hand-holding-heart"></i>
-    <span>ПІДТРИМКА</span>
-  </button>
-</div>
+<div id="bnav"></div>
 <div id="bnavToggle" onclick="toggleBnav()" title="Згорнути/розгорнути">
   <i class="fa-solid fa-chevron-down"></i>
 </div>
 </div>
+
+<!-- PROJECT / SUPPORT BUTTON -->
+<button id="supFab" onclick="toggleSupport()">
+  <i class="fa-solid fa-hand-holding-heart"></i>
+  <span>ПРОЄКТ</span>
+</button>
 
 <!-- SUPPORT / DONATE / SOCIAL / PRIVACY -->
 <div id="supportPnl">
@@ -1149,13 +1171,16 @@ body.observer-mode #obsExit{display:block;}
     <a class="sup-row" href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank">
       <i class="fa-solid fa-credit-card" style="color:#28ffb0"></i><span>Monobank</span>
     </a>
+    <a class="sup-row" href="https://donatello.to/odessaosint26?g=pidtrimka-proyektu" target="_blank">
+      <i class="fa-solid fa-gift" style="color:#ff9900"></i><span>Donatello</span>
+    </a>
     <a class="sup-row" href="https://t.me/odessa_osint26" target="_blank">
       <i class="fa-brands fa-telegram" style="color:#29b6f6"></i><span>Telegram</span>
     </a>
     <a class="sup-row" href="https://www.tiktok.com/@odessa_osint26" target="_blank">
       <i class="fa-brands fa-tiktok"></i><span>TikTok</span>
     </a>
-    <div class="sup-row" onclick="closeSupport();showPriv()">
+    <div class="sup-row" onclick="closeSupport();showPriv(true)">
       <i class="fa-solid fa-shield-halved" style="color:var(--a)"></i><span>Політика конфіденційності</span>
     </div>
   </div>
@@ -2015,13 +2040,25 @@ function toggleBnav(){
 window.addEventListener('load',()=>{
   initTypeSwatches();
   const sp=document.getElementById('splash'),tx=document.getElementById('spTxt');
-  const msgs=['Loading OSINT feeds...','Calibrating satellite...','Loading oblast borders...','System nominal'];
-  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},700);
-  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},700);},3000);
+  const msgs=['Завантаження','З\'єднання з мережею','Готово'];
+  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},550);
+  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},500);},1650);
 });
 function checkAdm(){document.getElementById('adm').style.display=location.hash==='#admin'?'flex':'none';}
 window.addEventListener('hashchange',checkAdm);
-function showPriv(){document.getElementById('priv').style.display='flex';document.getElementById('map').style.filter='blur(18px) grayscale(1)';}
+function showPriv(viewOnly){
+  const m=document.getElementById('priv');
+  m.style.opacity='';m.style.display='flex';
+  document.getElementById('map').style.filter='blur(18px) grayscale(1)';
+  const btn=document.getElementById('privBtn');
+  if(viewOnly){btn.textContent='ЗАКРИТИ';btn.onclick=closePrivView;}
+  else{btn.textContent='ПРИЙНЯТИ ТА ЗАПУСТИТИ';btn.onclick=acceptP;}
+}
+function closePrivView(){
+  const m=document.getElementById('priv');
+  m.style.opacity='0';m.style.transition='opacity .3s';
+  setTimeout(()=>{m.style.display='none';m.style.transition='';document.getElementById('map').style.filter='';},300);
+}
 function toggleSupport(){document.getElementById('supportPnl').classList.toggle('show');}
 function closeSupport(){document.getElementById('supportPnl').classList.remove('show');}
 function acceptP(){localStorage.setItem('sdOK','1');const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);}
@@ -2324,7 +2361,6 @@ function doSync(id,d){
     renderForecast(id,d);
   } else {
     if(!d._offline){
-      sndNew();
       const info=TINFO[d.type]||{};const typName=(info.name||d.type||'?').split(' ').slice(0,2).join(' ');
       const cityName=latLngToCity(d.lat,d.lng);
       showAlert(`🎯 НОВА ЦІЛЬ · ${typName}`,`${cityName} · ${Math.round(ang)}° ${dir(ang)}`);
