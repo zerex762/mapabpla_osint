@@ -181,7 +181,17 @@ body{background:#0a0a0c;}
   #clockWidget{padding:4px 10px 5px;}
   .cw-time{font-size:13px;}
   .cw-date{font-size:6.5px;}
-  #trackPnl{left:8px!important;right:8px!important;width:auto!important;max-width:100%!important;}
+  #trackPnl{left:8px!important;right:8px!important;width:auto!important;max-width:100%!important;max-height:min(50vh,calc(100dvh - var(--st) - 170px))!important;}
+  .tp-head{padding:9px 8px 9px 12px!important;}
+  .tp-type{font-size:10px!important;}
+  .tp-scroll{padding:9px 12px 12px!important;}
+  .tp-photo{height:88px!important;}
+  .tp-stats{gap:4px!important;}
+  .tp-stat{padding:5px 6px!important;}
+  .tp-stat .lb{font-size:6.5px!important;}
+  .tp-stat .vl{font-size:10px!important;}
+  .tp-txt{font-size:10px!important;}
+  .tp-vec{font-size:7px!important;padding:5px 7px!important;}
   #listPnl{left:8px!important;right:8px!important;width:auto!important;}
   #radarPnl{left:8px!important;right:8px!important;width:auto!important;}
   #weekPnl{left:8px!important;right:8px!important;width:auto!important;}
@@ -305,11 +315,13 @@ body{background:#0a0a0c;}
 @keyframes abProgRun{from{transform:scaleX(1);}to{transform:scaleX(0);}}
 
 /* ═══════ TRACK PANEL ═══════ */
-#trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:400px;z-index:2100;background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);border-radius:8px;padding:14px 16px;display:none;box-shadow:var(--sh);animation:fadeUp .25s ease;max-height:80vh;overflow-y:auto;}
-#trackPnl.on{display:block;}
-.tp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;font-weight:600;text-shadow:0 0 8px rgba(0,231,255,.4);}
-.tp-x{background:none;border:none;color:rgba(255,255,255,.3);font-size:17px;cursor:pointer;}
+#trackPnl{position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:400px;z-index:2100;background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);border-radius:8px;padding:0;display:none;flex-direction:column;box-shadow:var(--sh);animation:fadeUp .25s ease;max-height:min(58vh,calc(100dvh - var(--st) - 190px));overflow:hidden;}
+#trackPnl.on{display:flex;}
+.tp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0;padding:12px 10px 12px 16px;border-bottom:1px solid var(--brd2);background:var(--glass2);border-radius:8px 8px 0 0;}
+.tp-type{font-family:'Orbitron';font-size:11px;color:var(--a);letter-spacing:.1em;font-weight:600;text-shadow:0 0 8px rgba(0,231,255,.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;}
+.tp-x{background:rgba(255,255,255,.05);border:none;border-radius:6px;color:rgba(255,255,255,.65);font-size:15px;cursor:pointer;flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.tp-x:active{background:rgba(255,255,255,.15);}
+.tp-scroll{overflow-y:auto;padding:12px 16px 16px;min-height:0;flex:1 1 auto;}
 .tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;}
 .tp-cell .lb{font-size:8px;color:rgba(255,255,255,.32);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;font-family:'Orbitron';}
 .tp-cell .vl{font-family:'Rajdhani';font-weight:600;font-size:12.5px;color:#fff;}
@@ -331,7 +343,7 @@ body{background:#0a0a0c;}
 .tp-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;}
 .tp-stat{background:rgba(0,231,255,.03);border:1px solid var(--brd2);border-radius:5px;padding:6px 8px;}
 .tp-stat .lb{font-size:7px;color:rgba(255,255,255,.32);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;font-family:'Orbitron';}
-.tp-stat .vl{font-family:'Rajdhani';font-weight:600;font-size:11px;color:#fff;}
+.tp-stat .vl{font-family:'Rajdhani';font-weight:600;font-size:11px;color:#fff;word-break:break-word;}
 .tp-intercept{margin-top:6px;padding:6px 9px;background:rgba(40,255,176,.05);border:1px solid rgba(40,255,176,.15);border-radius:4px;font-family:'Rajdhani';font-weight:500;font-size:10px;color:rgba(255,255,255,.5);line-height:1.5;}
 .tp-intercept b{color:var(--ok);}
 
@@ -659,7 +671,8 @@ body.observer-mode #obsExit{display:block;}
 #scrLoading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99998;background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);border-radius:6px;padding:14px 22px;font-family:'Orbitron';font-size:10px;color:var(--a);letter-spacing:.1em;display:none;box-shadow:var(--sh);}
 /* ═══════ SUPPORT BUTTON + PANEL ═══════ */
 #bnavWrap{display:none!important;}
-#supFab{position:absolute;left:12px;bottom:calc(var(--sb)+14px);z-index:2600;display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--brd);border-radius:22px;padding:10px 16px;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;}
+#supFab{position:absolute;left:12px;bottom:calc(var(--sb)+14px);z-index:2600;display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--brd);border-radius:22px;padding:10px 16px;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;transition:opacity .2s,transform .2s;}
+body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) scale(.9);}
 #supFab i{font-size:15px;color:var(--red-glow);}
 #supFab span{font-family:'Orbitron';font-size:9.5px;letter-spacing:.08em;color:#fff;}
 #supFab:hover{background:rgba(255,36,71,.1);}
@@ -1051,24 +1064,29 @@ body.observer-mode #obsExit{display:block;}
 
 <!-- TRACK PANEL -->
 <div id="trackPnl">
-  <div class="tp-head"><div class="tp-type" id="tpType">--</div><button class="tp-x" onclick="closeTrack()">×</button></div>
-  <!-- ФОТО + BADGE -->
-  <div class="tp-photo-wrap" id="tpPhotoWrap" style="display:none">
-    <img id="tpPhoto" class="tp-photo" src="" alt="">
-    <span class="tp-photo-badge" id="tpThreatBadge"></span>
+  <div class="tp-head">
+    <div class="tp-type" id="tpType">--</div>
+    <button class="tp-x" onclick="closeTrack()" aria-label="Закрити"><i class="fa-solid fa-xmark"></i></button>
   </div>
-  <!-- СТАТИСТИКА -->
-  <div class="tp-stats">
-    <div class="tp-stat"><div class="lb">Позиція</div><div class="vl y" id="tpPos">--</div></div>
-    <div class="tp-stat"><div class="lb">Курс</div><div class="vl" id="tpAng">--</div></div>
-    <div class="tp-stat"><div class="lb">Швидкість</div><div class="vl" id="tpSpd">--</div></div>
-    <div class="tp-stat"><div class="lb">Дальність</div><div class="vl" id="tpRange">--</div></div>
-    <div class="tp-stat"><div class="lb">Час виявл.</div><div class="vl g" id="tpAge">--</div></div>
-    <div class="tp-stat"><div class="lb">ETA до вас</div><div class="vl y" id="tpETA">--</div></div>
+  <div class="tp-scroll">
+    <!-- ФОТО + BADGE -->
+    <div class="tp-photo-wrap" id="tpPhotoWrap" style="display:none">
+      <img id="tpPhoto" class="tp-photo" src="" alt="">
+      <span class="tp-photo-badge" id="tpThreatBadge"></span>
+    </div>
+    <!-- СТАТИСТИКА -->
+    <div class="tp-stats">
+      <div class="tp-stat"><div class="lb">Позиція</div><div class="vl y" id="tpPos">--</div></div>
+      <div class="tp-stat"><div class="lb">Курс</div><div class="vl" id="tpAng">--</div></div>
+      <div class="tp-stat"><div class="lb">Швидкість</div><div class="vl" id="tpSpd">--</div></div>
+      <div class="tp-stat"><div class="lb">Дальність</div><div class="vl" id="tpRange">--</div></div>
+      <div class="tp-stat"><div class="lb">Час виявл.</div><div class="vl g" id="tpAge">--</div></div>
+      <div class="tp-stat"><div class="lb">ETA до вас</div><div class="vl y" id="tpETA">--</div></div>
+    </div>
+    <div class="tp-info" id="tpInfo"></div>
+    <div class="tp-intercept" id="tpIntercept" style="display:none"><b>⚔️ Перехват:</b> <span id="tpInterceptTxt"></span></div>
+    <div class="tp-vec" id="tpVec">--</div>
   </div>
-  <div class="tp-info" id="tpInfo"></div>
-  <div class="tp-intercept" id="tpIntercept" style="display:none"><b>⚔️ Перехват:</b> <span id="tpInterceptTxt"></span></div>
-  <div class="tp-vec" id="tpVec">--</div>
 </div>
 
 <!-- RADAR -->
@@ -2153,7 +2171,7 @@ async function fetchWXSimple(lat,lng){
 // HELPERS
 // ═══════════════════════════
 function dir(d){return DIRS[Math.round((+d)/45)%8]||'--';}
-function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);return`${Math.floor(s/60)}хв ${s%60}с`;}
+function age(ts){if(!ts)return '--';const s=Math.floor((Date.now()-ts)/1000);const hh=String(new Date(ts).getHours()).padStart(2,'0'),mm=String(new Date(ts).getMinutes()).padStart(2,'0'),ss=String(new Date(ts).getSeconds()).padStart(2,'0');return`${Math.floor(s/60)}хв ${s%60}с · ${hh}:${mm}:${ss}`;}
 function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;return{lat:lat+dist/R*Math.cos(ar)*180/Math.PI,lng:lng+dist/(R*Math.cos(lat*Math.PI/180))*Math.sin(ar)*180/Math.PI,dist};}
 
 // ═══════════════════════════
@@ -2408,6 +2426,7 @@ function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs
 // ═══════════════════════════
 function showTrack(id,d){
   document.getElementById('trackPnl').classList.add('on');
+  document.body.classList.add('panel-open');
   const spd=SPD[d.type]||200, ang=+d.angle||0, info=TINFO[d.type]||{};
 
   // Заголовок
@@ -2470,7 +2489,7 @@ function showTrack(id,d){
     intEl.style.display='none';
   }
 }
-function closeTrack(){document.getElementById('trackPnl').classList.remove('on');selId=null;}
+function closeTrack(){document.getElementById('trackPnl').classList.remove('on');document.body.classList.remove('panel-open');selId=null;}
 map.on('click',e=>{
   if(measureMode){handleMeasureClick(e);return;}
   closeTrack();
