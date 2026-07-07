@@ -38,19 +38,41 @@ body{background:#0a0a0c;}
 #mapHud{display:none!important;}
 #reticle{display:none!important;}
 
-/* ═══════ SPLASH — minimal ═══════ */
-#splash{position:fixed;inset:0;background:#050709;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s;}
-.sp-dot{width:6px;height:6px;border-radius:50%;background:var(--a);margin-bottom:26px;box-shadow:0 0 0 0 rgba(0,231,255,.5);animation:spPulse 1.6s ease-out infinite;}
+/* ═══════ SPLASH — tactical boot sequence ═══════ */
+#splash{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 42%,#0b171d 0%,#050709 68%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .55s ease;overflow:hidden;}
+#splash::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,231,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,231,255,.055) 1px,transparent 1px);background-size:34px 34px;-webkit-mask-image:radial-gradient(ellipse at 50% 45%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 45%,#000 0%,transparent 70%);}
+#splash::after{content:'';position:absolute;left:0;right:0;height:120px;background:linear-gradient(180deg,transparent,rgba(0,231,255,.05),transparent);animation:spScan 3.2s linear infinite;pointer-events:none;}
+@keyframes spScan{0%{top:-140px;}100%{top:100%;}}
+.sp-radar{position:relative;width:92px;height:92px;margin-bottom:22px;}
+.sp-radar svg{width:100%;height:100%;overflow:visible;}
+.sp-ring{fill:none;stroke:rgba(0,231,255,.2);stroke-width:.7;}
+.sp-ring2{stroke:rgba(0,231,255,.14);}
+.sp-ring3{stroke:rgba(0,231,255,.26);}
+.sp-radar::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(0,231,255,.4),transparent 28%,transparent 100%);animation:spSweep 2.1s linear infinite;mix-blend-mode:screen;opacity:.6;-webkit-mask-image:radial-gradient(circle,#000 96%,transparent 100%);mask-image:radial-gradient(circle,#000 96%,transparent 100%);}
+@keyframes spSweep{to{transform:rotate(360deg);}}
+.sp-dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--a);box-shadow:0 0 0 0 rgba(0,231,255,.5),0 0 10px var(--a);animation:spPulse 1.6s ease-out infinite;}
 @keyframes spPulse{
-  0%{box-shadow:0 0 0 0 rgba(0,231,255,.45);}
-  70%{box-shadow:0 0 0 14px rgba(0,231,255,0);}
-  100%{box-shadow:0 0 0 0 rgba(0,231,255,0);}
+  0%{box-shadow:0 0 0 0 rgba(0,231,255,.45),0 0 10px var(--a);}
+  70%{box-shadow:0 0 0 16px rgba(0,231,255,0),0 0 10px var(--a);}
+  100%{box-shadow:0 0 0 0 rgba(0,231,255,0),0 0 10px var(--a);}
 }
-.sp-logo{font-family:'Orbitron';font-size:clamp(19px,4.4vw,26px);color:#fff;letter-spacing:.32em;margin-bottom:28px;font-weight:600;padding-left:.32em;}
-.sp-bar{width:120px;height:1px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;}
-.sp-fill{height:100%;background:var(--a);width:0;animation:spload 1.6s cubic-bezier(.4,0,.2,1) forwards;}
-@keyframes spload{to{width:100%}}
-.sp-txt{font-family:'Rajdhani';font-weight:500;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:.22em;margin-top:14px;text-transform:uppercase;}
+.sp-logo{font-family:'Orbitron';font-size:clamp(19px,4.4vw,27px);color:#fff;letter-spacing:.3em;margin-bottom:7px;font-weight:700;padding-left:.3em;text-shadow:0 0 20px rgba(0,231,255,.22);}
+.sp-logo span{color:var(--a);text-shadow:0 0 18px rgba(0,231,255,.65);}
+.sp-status{font-family:'Rajdhani';font-weight:600;font-size:9.5px;letter-spacing:.2em;color:rgba(255,255,255,.32);text-transform:uppercase;margin-bottom:24px;transition:color .3s;}
+.sp-bar-wrap{display:flex;align-items:center;gap:10px;width:186px;}
+.sp-bar{flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;}
+.sp-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--a),#7dfcff);box-shadow:0 0 8px rgba(0,231,255,.6);transition:width .45s cubic-bezier(.4,0,.2,1);}
+.sp-pct{font-family:'Orbitron';font-size:10px;color:var(--a);min-width:34px;text-align:right;text-shadow:0 0 8px rgba(0,231,255,.4);}
+.sp-txt{font-family:'Rajdhani';font-weight:500;font-size:9px;color:rgba(255,255,255,.28);letter-spacing:.16em;margin-top:13px;text-transform:uppercase;min-height:12px;text-align:center;}
+
+/* ═══════ UI ENTRANCE — staggered reveal after boot ═══════ */
+#topBar,#statusBar{opacity:0;transform:translateY(-10px);transition:opacity .55s ease,transform .55s ease;}
+#topBar.ui-in{opacity:1;transform:none;}
+#statusBar.ui-in{opacity:1;transform:none;transition-delay:.08s;}
+#bnavWrap{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease;}
+#bnavWrap.ui-in{opacity:1;transform:none;transition-delay:.16s;}
+body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
+#map{transition:filter .85s ease,transform .85s ease;}
 
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -740,7 +762,7 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 
 </style>
 </head>
-<body oncontextmenu="return false;">
+<body oncontextmenu="return false;" class="pre-boot">
 <!-- NO CONNECTION BANNER -->
 <div id="noConnBanner">
   <i class="fa-solid fa-wifi" style="opacity:.8;font-size:14px"></i>
@@ -750,10 +772,21 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="sp-dot"></div>
-  <div class="sp-logo">SKY DEFENSE</div>
-  <div class="sp-bar"><div class="sp-fill"></div></div>
-  <div class="sp-txt" id="spTxt">Завантаження</div>
+  <div class="sp-radar">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="47" class="sp-ring sp-ring1"/>
+      <circle cx="50" cy="50" r="33" class="sp-ring sp-ring2"/>
+      <circle cx="50" cy="50" r="19" class="sp-ring sp-ring3"/>
+    </svg>
+    <div class="sp-dot"></div>
+  </div>
+  <div class="sp-logo">SKY<span>DEFENSE</span></div>
+  <div class="sp-status" id="spSub">ІНІЦІАЛІЗАЦІЯ СИСТЕМИ</div>
+  <div class="sp-bar-wrap">
+    <div class="sp-bar"><div class="sp-fill" id="spFill"></div></div>
+    <div class="sp-pct" id="spPct">0%</div>
+  </div>
+  <div class="sp-txt" id="spTxt">З'єднання з мережею…</div>
 </div>
 
 <!-- PRIVACY -->
@@ -1402,6 +1435,61 @@ loadAlertLogFromStorage();
 // ═══════════════════════════
 const map=L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5,preferCanvas:true}).setView([48.4,32.5],6);
 const cvs=L.canvas({padding:.5});
+
+// ═══════════════════════════
+// BOOT PROGRESS — реальний прогрес завантаження даних карти
+// (замість фейкового таймера — стежимо за фактичними fetch-запитами)
+// ═══════════════════════════
+const LOAD_STEPS={obl:false,ray:false,alerts:false};
+let bootDone=false;
+function updateLoadUI(label){
+  const total=Object.keys(LOAD_STEPS).length;
+  const done=Object.values(LOAD_STEPS).filter(Boolean).length;
+  const pct=Math.min(100,Math.round(done/total*100));
+  const fill=document.getElementById('spFill');
+  const pctEl=document.getElementById('spPct');
+  const txt=document.getElementById('spTxt');
+  if(fill)fill.style.width=pct+'%';
+  if(pctEl)pctEl.textContent=pct+'%';
+  if(txt&&label)txt.textContent=label;
+  if(done>=total)finishBoot();
+}
+function bumpLoad(step,label){
+  if(LOAD_STEPS[step])return;
+  LOAD_STEPS[step]=true;
+  updateLoadUI(label);
+}
+function forceFinishLoad(){
+  if(bootDone)return;
+  Object.keys(LOAD_STEPS).forEach(s=>LOAD_STEPS[s]=true);
+  updateLoadUI('Готово');
+}
+function finishBoot(){
+  if(bootDone)return;
+  bootDone=true;
+  const sp=document.getElementById('splash');
+  const sub=document.getElementById('spSub');
+  if(sub)sub.textContent='СИСТЕМА ГОТОВА';
+  setTimeout(()=>{
+    sp.style.opacity='0';
+    sp.style.pointerEvents='none';
+    setTimeout(()=>{
+      sp.style.display='none';
+      revealUI();
+    },560);
+  },320);
+}
+function revealUI(){
+  document.body.classList.remove('pre-boot');
+  const bnav=document.getElementById('bnavWrap');
+  if(bnav)bnav.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.getElementById('topBar')?.classList.add('ui-in');
+    document.getElementById('statusBar')?.classList.add('ui-in');
+    bnav?.classList.add('ui-in');
+  }));
+  toast('SYSTEM READY');
+}
 let curTheme=1;
 let tLayer=L.tileLayer(TURLS[curTheme],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
 setTimeout(()=>{applyBrt(65);applyThemeFilter(curTheme);applyMapTilt(curTheme);},600);
@@ -1576,6 +1664,7 @@ async function loadOblast(){
       });
       if(document.getElementById('togObl')?.checked)oblastLayer.addTo(map);
     }
+    bumpLoad('obl','Межі областей завантажено');
 
     if(rRay.ok){
       const d=await rRay.json();
@@ -1592,7 +1681,12 @@ async function loadOblast(){
       });
       if(document.getElementById('togObl')?.checked)rayonLayer.addTo(map);
     }
-  }catch(e){console.warn('GeoJSON load error',e);}
+    bumpLoad('ray','Межі районів завантажено');
+  }catch(e){
+    console.warn('GeoJSON load error',e);
+    bumpLoad('obl','Дані меж недоступні');
+    bumpLoad('ray','Дані меж недоступні');
+  }
   // Якщо тривоги вже завантажились раніше — одразу малюємо
   if(activeAlertNames.size>0||activeRayonNames.size>0) applyAlertStyles();
   startAlertsPolling();
@@ -1608,6 +1702,7 @@ async function fetchAlerts(retry=true){
     const alerts=data.alerts||data;
     if(!Array.isArray(alerts)||alerts.length===0){
       console.warn('Alerts: empty response, keeping previous state');
+      bumpLoad('alerts','Дані про тривоги отримано');
       if(retry)setTimeout(()=>fetchAlerts(false),60000);
       return;
     }
@@ -1713,7 +1808,11 @@ async function fetchAlerts(retry=true){
     if(Object.keys(oblFeatures).length>0||Object.keys(rayonFeatures).length>0){
       applyAlertStyles();
     }
-  }catch(e){console.warn('Alerts fetch error',e);}
+    bumpLoad('alerts','Дані про тривоги отримано');
+  }catch(e){
+    console.warn('Alerts fetch error',e);
+    bumpLoad('alerts','Дані про тривоги недоступні');
+  }
 }
 
 function applyAlertStyles(){
@@ -2148,10 +2247,20 @@ function toggleBnav(){
 // ═══════════════════════════
 window.addEventListener('load',()=>{
   initTypeSwatches();
-  const sp=document.getElementById('splash'),tx=document.getElementById('spTxt');
-  const msgs=['Завантаження','З\'єднання з мережею','Готово'];
-  let i=0;const iv=setInterval(()=>{if(i<msgs.length)tx.textContent=msgs[i++];else clearInterval(iv);},550);
-  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';if(!localStorage.getItem('sdOK'))showPriv();else launch();checkAdm();},500);},1650);
+  checkAdm();
+  if(!localStorage.getItem('sdOK')){
+    // Перший запуск: короткий вступ, далі — протокол безпеки
+    const sp=document.getElementById('splash');
+    setTimeout(()=>{
+      sp.style.opacity='0';
+      setTimeout(()=>{sp.style.display='none';showPriv();},550);
+    },1300);
+  }else{
+    // Повторний запуск: заставка лишається видимою, доки не завантажяться
+    // реальні дані карти (області/райони/тривоги) — прогрес-бар реальний
+    launch();
+    setTimeout(forceFinishLoad,8000); // запобіжник, якщо мережа "зависла"
+  }
 });
 function checkAdm(){document.getElementById('adm').style.display=location.hash==='#admin'?'flex':'none';}
 window.addEventListener('hashchange',checkAdm);
@@ -2170,8 +2279,23 @@ function closePrivView(){
 }
 function toggleSupport(){document.getElementById('supportPnl').classList.toggle('show');}
 function closeSupport(){document.getElementById('supportPnl').classList.remove('show');}
-function acceptP(){localStorage.setItem('sdOK','1');const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);}
-function launch(){document.getElementById('bnavWrap').style.display='flex';locateMe();fetchAlerts();loadOblast();loadHistoryStats();renderCityLabels();renderLiveTicker();toast('SYSTEM READY');}
+function acceptP(){
+  localStorage.setItem('sdOK','1');
+  const m=document.getElementById('priv');
+  m.style.opacity='0';m.style.transition='opacity .3s';
+  setTimeout(()=>{
+    m.style.display='none';
+    document.getElementById('map').style.filter='';
+    const sp=document.getElementById('splash'),sub=document.getElementById('spSub');
+    if(sub)sub.textContent='ЗАВАНТАЖЕННЯ ДАНИХ КАРТИ';
+    sp.style.display='flex';
+    sp.style.pointerEvents='';
+    sp.style.opacity='1';
+    launch();
+    setTimeout(forceFinishLoad,8000);
+  },300);
+}
+function launch(){locateMe();fetchAlerts();loadOblast();loadHistoryStats();renderCityLabels();renderLiveTicker();}
 
 // ═══════════════════════════
 // FIREBASE
