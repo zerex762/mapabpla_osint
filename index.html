@@ -688,6 +688,41 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 /* ═══════ CLEANUP: hide cluttered top-bar pills, keep only clock ═══════ */
 .tb-l,.tb-r{display:none!important;}
 
+/* ═══════ LIVE TICKER ═══════ */
+#liveTicker{
+  position:absolute;left:12px;right:12px;
+  bottom:calc(var(--sb) + 70px);
+  z-index:1800;max-width:420px;
+  background:var(--glass2);border:1px solid var(--brd);border-left:2px solid var(--a);
+  border-radius:6px;padding:8px 12px;
+  font-family:'Rajdhani';font-size:11px;color:rgba(255,255,255,.75);
+  box-shadow:var(--sh);pointer-events:none;
+  display:flex;flex-direction:column;gap:5px;
+  max-height:120px;overflow:hidden;
+}
+.lt-tick-row{display:flex;align-items:center;gap:7px;opacity:0;animation:ltFade .4s forwards;}
+@keyframes ltFade{to{opacity:1;}}
+.lt-tick-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.lt-tick-dot.red{background:var(--red-glow);box-shadow:0 0 6px var(--red-glow);}
+.lt-tick-dot.green{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.lt-tick-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.lt-tick-time{font-family:'Orbitron';font-size:8.5px;color:rgba(255,255,255,.3);flex-shrink:0;}
+@media(max-width:480px){#liveTicker{left:8px;right:8px;bottom:calc(var(--sb) + 60px);font-size:10px;}}
+
+/* ═══════ LIVE STATS BAR ═══════ */
+#liveStats{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--sb)+14px);z-index:2600;
+  display:flex;gap:18px;background:var(--glass2);border:1px solid var(--brd);
+  border-radius:22px;padding:9px 22px;box-shadow:var(--sh);pointer-events:none;
+}
+.ls-item{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.ls-lb{font-family:'Orbitron';font-size:7.5px;color:rgba(255,255,255,.35);letter-spacing:.1em;}
+.ls-vl{font-family:'Orbitron';font-size:15px;font-weight:700;color:var(--a);text-shadow:0 0 8px rgba(0,231,255,.5);}
+.ls-vl.red{color:var(--red);text-shadow:0 0 8px var(--red);}
+.ls-vl.grn{color:var(--ok);text-shadow:0 0 8px var(--ok);}
+@media(max-width:480px){#liveStats{gap:12px;padding:7px 14px;}.ls-vl{font-size:13px;}}
+
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -779,7 +814,7 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
     <div class="th-title">MAP LAYER</div>
     <div class="th-grid">
       <div class="th-card" id="tc0" onclick="selTh(0)"><div class="th-prev pv0"></div><div class="th-name">ULTRA DARK</div></div>
-      <div class="th-card" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
+      <div class="th-card sel" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
       <div class="th-card" id="tc2" onclick="selTh(2)"><div class="th-prev pv2"></div><div class="th-name">NIGHT BLUE</div></div>
       <div class="th-card" id="tc3" onclick="selTh(3)"><div class="th-prev pv3"></div><div class="th-name">TOPO</div></div>
       <div class="th-card" id="tc4" onclick="selTh(4)"><div class="th-prev pv4"><span class="th-badge" style="color:#4fc3f7;text-shadow:0 0 8px #4fc3f7">3D</span></div><div class="th-name">3D RELIEF</div></div>
@@ -790,7 +825,7 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
       <div class="th-card" id="tc9" onclick="selTh(9)"><div class="th-prev pv9"><span class="th-badge" style="color:#9c88ff;font-size:9px">NAVY</span></div><div class="th-name">NAVY BLUE</div></div>
       <div class="th-card" id="tc10" onclick="selTh(10)"><div class="th-prev pv10"></div><div class="th-name">MILITARY</div></div>
       <div class="th-card" id="tc11" onclick="selTh(11)"><div class="th-prev pv11"></div><div class="th-name">MINIMAL</div></div>
-      <div class="th-card sel" id="tc12" onclick="selTh(12)"><div class="th-prev pv12"><span class="th-badge" style="color:var(--a);font-size:9px;text-shadow:0 0 8px var(--a)">HUD</span></div><div class="th-name">AEGIS CYAN</div></div>
+      <div class="th-card" id="tc12" onclick="selTh(12)"><div class="th-prev pv12"><span class="th-badge" style="color:var(--a);font-size:9px;text-shadow:0 0 8px var(--a)">HUD</span></div><div class="th-name">AEGIS CYAN</div></div>
     </div>
     <div class="br-row">
       <label>BRIGHTNESS</label>
@@ -973,6 +1008,7 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 </div>
 
 <div id="toast"></div>
+<div id="liveTicker"></div>
 
 <!-- MEASURE MODE HINT -->
 <div id="measureHint">📏 Виберіть першу точку</div>
@@ -1173,6 +1209,12 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 </div>
 
 <!-- PROJECT / SUPPORT BUTTON -->
+<div id="liveStats">
+  <div class="ls-item"><span class="ls-lb">ТРИВОГИ</span><span class="ls-vl red" id="lsAlarms">0</span></div>
+  <div class="ls-item"><span class="ls-lb">ЦІЛІ</span><span class="ls-vl" id="lsTargets">0</span></div>
+  <div class="ls-item"><span class="ls-lb">ОНЛАЙН</span><span class="ls-vl grn" id="lsOnline">0</span></div>
+</div>
+
 <button id="supFab" onclick="toggleSupport()">
   <i class="fa-solid fa-hand-holding-heart"></i>
   <span>ПРОЄКТ</span>
@@ -1339,9 +1381,34 @@ loadAlertLogFromStorage();
 // ═══════════════════════════
 const map=L.map('map',{zoomControl:false,attributionControl:false,maxBounds:[[43,21],[53,41]],minZoom:5,preferCanvas:true}).setView([48.4,32.5],6);
 const cvs=L.canvas({padding:.5});
-let curTheme=12;
+let curTheme=1;
 let tLayer=L.tileLayer(TURLS[curTheme],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
 setTimeout(()=>{applyBrt(65);applyThemeFilter(curTheme);applyMapTilt(curTheme);},600);
+
+// ═══════════════════════════
+// ЗАВЖДИ ВИДИМІ ПІДПИСИ МІСТ
+// ═══════════════════════════
+map.createPane('labelsPane');
+map.getPane('labelsPane').style.zIndex = 650;
+map.getPane('labelsPane').style.pointerEvents = 'none';
+let majorCityLabels = [];
+function renderCityLabels(){
+  majorCityLabels.forEach(m=>map.removeLayer(m));
+  majorCityLabels=[];
+  if(typeof CITY_ZONES==='undefined')return;
+  CITY_ZONES.forEach(c=>{
+    const m=L.marker([c.lat,c.lng],{
+      icon:L.divIcon({
+        className:'',
+        html:`<div style="font-family:Orbitron;font-size:10px;color:#fff;text-shadow:0 0 6px #000,0 0 6px #000,0 0 3px #000;white-space:nowrap;letter-spacing:.03em;font-weight:600">${c.name}</div>`,
+        iconSize:[110,14],iconAnchor:[55,7]
+      }),
+      interactive:false,pane:'labelsPane'
+    });
+    majorCityLabels.push(m);
+  });
+  majorCityLabels.forEach(m=>m.addTo(map));
+}
 
 function applyBrt(v){
   document.querySelectorAll('.leaflet-tile-pane').forEach(el=>{
@@ -1620,6 +1687,7 @@ async function fetchAlerts(retry=true){
     if(alertLog.length>200) alertLog=alertLog.slice(0,200);
     saveAlertLog();
     if(alertLogOpen) renderAlertLog();
+    renderLiveTicker();
     // Застосовуємо стилі тільки якщо шари вже завантажені
     if(Object.keys(oblFeatures).length>0||Object.keys(rayonFeatures).length>0){
       applyAlertStyles();
@@ -1641,6 +1709,8 @@ function updateAlertCounter(n){
   if(el)el.textContent=n;
   const pill=document.getElementById('alarmPill');
   if(pill)pill.classList.toggle('active',n>0);
+  const ls=document.getElementById('lsAlarms');
+  if(ls)ls.textContent=n;
 }
 
 function startAlertsPolling(){
@@ -2080,7 +2150,7 @@ function closePrivView(){
 function toggleSupport(){document.getElementById('supportPnl').classList.toggle('show');}
 function closeSupport(){document.getElementById('supportPnl').classList.remove('show');}
 function acceptP(){localStorage.setItem('sdOK','1');const m=document.getElementById('priv');m.style.opacity='0';m.style.transition='opacity .3s';setTimeout(()=>{m.style.display='none';document.getElementById('map').style.filter='';launch();},300);}
-function launch(){document.getElementById('bnavWrap').style.display='flex';locateMe();fetchAlerts();loadOblast();loadHistoryStats();toast('SYSTEM READY');}
+function launch(){document.getElementById('bnavWrap').style.display='flex';locateMe();fetchAlerts();loadOblast();loadHistoryStats();renderCityLabels();renderLiveTicker();toast('SYSTEM READY');}
 
 // ═══════════════════════════
 // FIREBASE
@@ -2124,7 +2194,7 @@ setInterval(() => {
 // Слухаємо кількість
 presDb.on('value', snap => {
   const n = snap.numChildren() || 0;
-  const els = document.querySelectorAll('#onlC, #weekOnlC');
+  const els = document.querySelectorAll('#onlC, #weekOnlC, #lsOnline');
   els.forEach(el => { if(el) el.textContent = n; });
 });
 
@@ -2419,7 +2489,11 @@ setInterval(()=>{
     if(ts && (now-ts)/60000>45) remove(id);
   });
 },60000);
-function updCounts(){document.getElementById('uavC').textContent=Object.keys(obs).length;}
+function updCounts(){
+  document.getElementById('uavC').textContent=Object.keys(obs).length;
+  const ls=document.getElementById('lsTargets');
+  if(ls)ls.textContent=Object.keys(obs).length;
+}
 
 // ═══════════════════════════
 // TRACK PANEL
@@ -2895,6 +2969,21 @@ function fmtDuration(ms){
   if(mm>0) return `${mm} хв ${ss} с`;
   return `${ss} с`;
 }
+function renderLiveTicker(){
+  const el=document.getElementById('liveTicker');
+  if(!el)return;
+  const last=alertLog.slice(0,4);
+  if(!last.length){el.innerHTML='';return;}
+  el.innerHTML=last.map(e=>{
+    const isAct=e.status==='active';
+    const mins=Math.round((Date.now()-(isAct?e.ts:e.clearedTs||e.ts))/60000);
+    const timeTxt=mins<1?'щойно':`${mins} хв тому`;
+    const label=isAct?`🚨 ТРИВОГА · ${e.name}`:`✅ ВІДБІЙ · ${e.name}`;
+    return `<div class="lt-tick-row"><span class="lt-tick-dot ${isAct?'red':'green'}"></span><span class="lt-tick-txt">${label}</span><span class="lt-tick-time">${timeTxt}</span></div>`;
+  }).join('');
+}
+setInterval(renderLiveTicker,10000);
+
 function renderAlertLog(){
   const body=document.getElementById('alpBody');
   const active=alertLog.filter(e=>e.status==='active');
