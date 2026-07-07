@@ -84,14 +84,23 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .zone-idle{transition:fill-opacity .2s,stroke-opacity .2s;}
 
 /* ═══════ LAUNCH PIN — красива іконка місця пуску (Shahed/ракети) ═══════ */
-.lp-wrap{position:relative;width:44px;height:56px;pointer-events:auto;}
-.lp-ring{position:absolute;left:50%;top:20px;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;border:1.5px solid rgba(255,90,60,.55);animation:lpPing 2.2s cubic-bezier(.2,.6,.4,1) infinite;}
+.lp-wrap{position:relative;width:50px;height:64px;pointer-events:auto;cursor:pointer;transition:transform .15s ease;}
+.lp-wrap:active{transform:scale(.92);}
+.lp-ring{position:absolute;left:50%;top:22px;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:1.5px solid rgba(255,110,60,.6);animation:lpPing 2.2s cubic-bezier(.2,.6,.4,1) infinite;}
 .lp-ring.d2{animation-delay:.7s;}
-@keyframes lpPing{0%{transform:scale(.35);opacity:.9;}80%{opacity:0;}100%{transform:scale(1.15);opacity:0;}}
-.lp-core{position:absolute;left:50%;top:20px;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,120,70,.9),rgba(120,10,0,.85) 70%);box-shadow:0 0 14px rgba(255,70,40,.85),0 3px 10px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,200,150,.4);display:flex;align-items:center;justify-content:center;}
-.lp-core img{width:20px;height:20px;object-fit:contain;filter:brightness(0) invert(1) drop-shadow(0 0 2px rgba(0,0,0,.8));}
-.lp-badge{position:absolute;right:-2px;top:12px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--red);color:#fff;font-family:'Orbitron';font-size:8.5px;line-height:15px;text-align:center;box-shadow:0 0 6px rgba(255,36,71,.8);}
-.lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-family:'Orbitron';font-size:7px;letter-spacing:.06em;color:#ffcdb8;background:rgba(20,4,2,.72);border:1px solid rgba(255,90,60,.4);border-radius:3px;padding:1px 5px;text-shadow:0 0 6px rgba(255,70,40,.8);}
+@keyframes lpPing{0%{transform:scale(.32);opacity:.95;}80%{opacity:0;}100%{transform:scale(1.25);opacity:0;}}
+/* обертове пунктирне кільце "захоплення цілі" */
+.lp-lock{position:absolute;left:50%;top:22px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
+  border:1px dashed rgba(255,170,120,.4);animation:lpSpin 7s linear infinite;}
+@keyframes lpSpin{to{transform:rotate(360deg);}}
+.lp-core{position:absolute;left:50%;top:22px;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#ff9a5a 0%,#ff5722 38%,#a10f00 78%,#5c0800 100%);
+  box-shadow:0 0 4px rgba(255,255,255,.4) inset,0 0 0 1px rgba(255,190,140,.5) inset,0 0 16px rgba(255,80,30,.9),0 3px 10px rgba(0,0,0,.65);
+  display:flex;align-items:center;justify-content:center;}
+.lp-core::before{content:'';position:absolute;inset:2px;border-radius:50%;background:linear-gradient(160deg,rgba(255,255,255,.28),transparent 55%);pointer-events:none;}
+.lp-core svg{width:19px;height:19px;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.75));}
+.lp-badge{position:absolute;right:-3px;top:13px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:linear-gradient(160deg,#ff5a6e,var(--red));color:#fff;font-family:'Orbitron';font-size:8.5px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 7px rgba(255,36,71,.9),0 0 0 2px rgba(8,4,4,.8);}
+.lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-family:'Orbitron';font-size:7.5px;font-weight:600;letter-spacing:.06em;color:#ffd9c4;background:linear-gradient(160deg,rgba(35,8,4,.92),rgba(18,4,2,.92));border:1px solid rgba(255,120,70,.45);border-radius:3px;padding:2px 6px;text-shadow:0 0 6px rgba(255,90,40,.7);box-shadow:0 2px 8px rgba(0,0,0,.5);}
 
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -244,6 +253,12 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
   .cw-time{font-size:13px;}
   .cw-date{font-size:6.5px;}
   #trackPnl{left:8px!important;right:8px!important;width:auto!important;max-width:100%!important;max-height:min(50vh,calc(100dvh - var(--st) - 170px))!important;}
+  #launchPnl{left:8px!important;right:8px!important;max-width:100%!important;max-height:min(52vh,calc(100dvh - var(--st) - 170px))!important;}
+  .lnp-head{padding:10px 10px 10px 12px!important;}
+  .lnp-title{font-size:10px!important;}
+  .lnp-row{padding:7px 12px!important;gap:8px!important;}
+  .lnp-city .nm{font-size:11.5px!important;}
+  .lnp-eta{font-size:11.5px!important;}
   .tp-head{padding:9px 8px 9px 12px!important;}
   .tp-type{font-size:10px!important;}
   .tp-scroll{padding:9px 12px 12px!important;}
@@ -621,6 +636,36 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .cp-row b.alert{color:var(--red);}
 .cp-row b.ok{color:var(--ok);}
 .cp-wx{font-size:22px;}
+
+/* ═══════ LAUNCH INFO PANEL — час підльоту до міст від точки пуску ═══════ */
+#launchPnl{
+  position:absolute;bottom:calc(var(--sb)+90px);left:12px;right:12px;max-width:380px;
+  z-index:2150;background:var(--glass2);
+  border:1px solid var(--brd);border-top:2px solid #ff5722;border-radius:8px;padding:0;
+  display:none;flex-direction:column;box-shadow:var(--sh);overflow:hidden;animation:fadeUp .25s ease;
+  max-height:min(64vh,calc(100dvh - var(--st) - 170px));
+}
+#launchPnl.on{display:flex;}
+.lnp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--brd2);flex-shrink:0;background:linear-gradient(180deg,rgba(255,87,34,.08),transparent);}
+.lnp-title{font-family:'Orbitron';font-size:11.5px;color:#ffb28a;letter-spacing:.08em;font-weight:700;text-shadow:0 0 10px rgba(255,87,34,.5);display:flex;align-items:center;gap:7px;}
+.lnp-title i{font-size:10px;color:#ff7a45;}
+.lnp-sub{font-family:'Rajdhani';font-weight:600;font-size:10px;color:rgba(255,255,255,.42);margin-top:4px;letter-spacing:.03em;}
+.lnp-x{background:rgba(255,255,255,.05);border:none;border-radius:6px;color:rgba(255,255,255,.6);font-size:15px;cursor:pointer;flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;}
+.lnp-x:active{background:rgba(255,255,255,.15);}
+.lnp-scroll{overflow-y:auto;padding:6px 0;}
+.lnp-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);}
+.lnp-row:last-child{border-bottom:none;}
+.lnp-rank{font-family:'Orbitron';font-size:9px;color:rgba(255,255,255,.28);width:14px;flex-shrink:0;}
+.lnp-city{flex:1;min-width:0;}
+.lnp-city .nm{font-family:'Rajdhani';font-weight:700;font-size:12.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lnp-bar{position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:5px;overflow:hidden;}
+.lnp-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,#ff5722,#ffb28a);}
+.lnp-vals{flex-shrink:0;text-align:right;}
+.lnp-eta{font-family:'Orbitron';font-size:12.5px;color:#ff9d6e;text-shadow:0 0 8px rgba(255,87,34,.4);}
+.lnp-km{font-family:'Rajdhani';font-weight:600;font-size:9px;color:rgba(255,255,255,.38);margin-top:2px;letter-spacing:.02em;}
+.lnp-foot{padding:9px 14px;border-top:1px solid var(--brd2);font-family:'Rajdhani';font-weight:500;font-size:9.5px;color:rgba(255,255,255,.35);letter-spacing:.02em;line-height:1.5;flex-shrink:0;}
+.lnp-foot b{color:rgba(255,255,255,.55);}
+
 /* ═══════ NO CONNECTION BANNER ═══════ */
 #noConnBanner{
   position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -1235,6 +1280,19 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
     <div class="cp-row"><span>Цілей у районі</span><b id="cpTargets">--</b></div>
     <div class="cp-row"><span>Погода</span><span style="display:flex;align-items:center;gap:8px"><span class="cp-wx" id="cpWxIco">--</span><b id="cpWx">--</b></span></div>
   </div>
+</div>
+
+<!-- LAUNCH INFO — час підльоту до міст від точки пуску -->
+<div id="launchPnl">
+  <div class="lnp-head">
+    <div>
+      <div class="lnp-title"><i class="fa-solid fa-location-crosshairs"></i><span id="lnpTitle">ТОЧКА ПУСКУ</span></div>
+      <div class="lnp-sub" id="lnpSub">--</div>
+    </div>
+    <button class="lnp-x" onclick="cls('launchPnl')"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="lnp-scroll" id="lnpBody"></div>
+  <div class="lnp-foot" id="lnpFoot">Розрахунок орієнтовний, за прямою лінією та середньою швидкістю цілі. Реальна траєкторія та ПШО можуть змінити час підльоту.</div>
 </div>
 
 <!-- WEEKLY STATS PANEL -->
@@ -2225,7 +2283,7 @@ function toggleObserver(){
   if(cb)cb.checked=observerMode;
   if(observerMode){
     // Закриваємо всі відкриті панелі
-    ['setSh','themeSh','listPnl','radarPnl','weekPnl','alertLogPnl','cityPnl','trackPnl'].forEach(id=>cls(id));
+    ['setSh','themeSh','listPnl','radarPnl','weekPnl','alertLogPnl','cityPnl','trackPnl','launchPnl'].forEach(id=>cls(id));
     toast('SPECTATOR MODE · карта без керування');
   }else{
     toast('Звичайний режим');
@@ -2801,37 +2859,98 @@ const LAUNCH_TTL_MS=90*60*1000; // маркер зникає з карти че�
 let launchMarkers={};   // {key: {marker, data}}
 let launchCache=[];     // плаский кеш для таблиці "пуски за годину"
 
-function mkLaunchIcon(count){
+// Компактна векторна іконка (замість розмитого растру) — стилізована
+// зірка-приціл "точки пуску", завжди чітка на будь-якому масштабі.
+const ICON_LAUNCH_SVG='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.5 L14.7 9.1 L22.5 12 L14.7 14.9 L12 22.5 L9.3 14.9 L1.5 12 L9.3 9.1 Z" fill="#fff"/><circle cx="12" cy="12" r="2.1" fill="#3a0a00"/></svg>';
+
+function mkLaunchIcon(count,cityName){
   const badge=count>1?`<div class="lp-badge">×${count}</div>`:'';
+  const label=cityName?`<div class="lp-label">${cityName.toUpperCase()}</div>`:'';
   const html=`<div class="lp-wrap">
     <div class="lp-ring"></div>
     <div class="lp-ring d2"></div>
-    <div class="lp-core"><img src="${ICON_LAUNCH}"></div>
+    <div class="lp-lock"></div>
+    <div class="lp-core">${ICON_LAUNCH_SVG}</div>
     ${badge}
+    ${label}
   </div>`;
-  return L.divIcon({className:'',html,iconSize:[44,56],iconAnchor:[22,38]});
+  return L.divIcon({className:'',html,iconSize:[50,64],iconAnchor:[25,44]});
 }
 
 function addLaunchMarker(key,d){
   if(!d||!d.lat||!d.lng)return;
+  const cityName=d.city||latLngToCity(d.lat,d.lng);
   if(launchMarkers[key]){ // вже є — просто оновлюємо лічильник/іконку
     launchMarkers[key].data=d;
-    launchMarkers[key].marker.setIcon(mkLaunchIcon(d.count||1));
+    launchMarkers[key].marker.setIcon(mkLaunchIcon(d.count||1,cityName));
     return;
   }
-  const marker=L.marker([d.lat,d.lng],{icon:mkLaunchIcon(d.count||1),zIndexOffset:1500}).addTo(map);
+  const marker=L.marker([d.lat,d.lng],{icon:mkLaunchIcon(d.count||1,cityName),zIndexOffset:1500}).addTo(map);
   const typeName=(TINFO[d.type]&&TINFO[d.type].name)||TYPE_NAME_FALLBACK[d.type]||d.type||'Ціль';
-  const cityName=d.city||latLngToCity(d.lat,d.lng);
   marker.bindTooltip(
-    `<b>ПУСК · ${cityName.toUpperCase()}</b><br>${typeName}${d.count>1?` ×${d.count}`:''}<br>${age(d.ts)}`,
-    {direction:'top',offset:[0,-40],className:'ob-tt'}
+    `<b>ПУСК · ${cityName.toUpperCase()}</b><br>${typeName}${d.count>1?` ×${d.count}`:''}<br>${age(d.ts)}<br><i class="fa-solid fa-hand-pointer"></i> Натисніть — час підльоту до міст`,
+    {direction:'top',offset:[0,-46],className:'ob-tt'}
   );
+  marker.on('click',()=>openLaunchPanel(key));
   launchMarkers[key]={marker,data:d};
 }
 function removeLaunchMarker(key){
   if(!launchMarkers[key])return;
   map.removeLayer(launchMarkers[key].marker);
   delete launchMarkers[key];
+  if(lnpOpenKey===key)cls('launchPnl');
+}
+
+// ── Панель "час підльоту до міст" від обраної точки пуску ──────────
+// Рахуємо дальність по прямій (haversine) та ділимо на середню
+// швидкість типу цілі (SPD), щоб дати орієнтовний ETA по кожному місту.
+let lnpOpenKey=null;
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371,toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.asin(Math.sqrt(a));
+}
+function fmtEta(hours){
+  const totalMin=Math.max(1,Math.round(hours*60));
+  const h=Math.floor(totalMin/60),m=totalMin%60;
+  return h>0?`${h} год ${String(m).padStart(2,'0')} хв`:`${m} хв`;
+}
+function openLaunchPanel(key){
+  const o=launchMarkers[key];
+  if(!o)return;
+  const d=o.data;
+  lnpOpenKey=key;
+  const typeName=(TINFO[d.type]&&TINFO[d.type].name)||TYPE_NAME_FALLBACK[d.type]||d.type||'Невідомий тип';
+  const spd=SPD[d.type]||185; // за замовчуванням — швидкість Shahed-136
+  const cityName=d.city||latLngToCity(d.lat,d.lng);
+  document.getElementById('lnpTitle').textContent=`ПУСК · ${cityName.toUpperCase()}`;
+  document.getElementById('lnpSub').textContent=`${typeName} · ~${spd} км/г · ${age(d.ts)}`;
+
+  const withDist=CITY_ZONES.map(z=>({
+    name:z.name,
+    km:haversineKm(d.lat,d.lng,z.lat,z.lng)
+  })).sort((a,b)=>a.km-b.km).slice(0,10);
+  const maxKm=Math.max(...withDist.map(c=>c.km),1);
+
+  const body=document.getElementById('lnpBody');
+  body.innerHTML=withDist.map((c,i)=>{
+    const hrs=c.km/spd;
+    const pct=Math.max(6,Math.round((c.km/maxKm)*100));
+    return `<div class="lnp-row">
+      <div class="lnp-rank">${i+1}</div>
+      <div class="lnp-city">
+        <div class="nm">${c.name}</div>
+        <div class="lnp-bar"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="lnp-vals">
+        <div class="lnp-eta">${fmtEta(hrs)}</div>
+        <div class="lnp-km">${Math.round(c.km)} км</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('launchPnl').classList.add('on');
 }
 // Прибираємо застарілі пуски з карти (старші LAUNCH_TTL_MS), кожну хвилину
 setInterval(()=>{
@@ -3608,6 +3727,7 @@ document.addEventListener('keydown',e=>{
   if(radarOpen)toggleRadar();
   closeSupport();
   cls('cityPnl');
+  cls('launchPnl');
 });
 
 
