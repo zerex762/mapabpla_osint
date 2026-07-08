@@ -83,24 +83,35 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 }
 .zone-idle{transition:fill-opacity .2s,stroke-opacity .2s;}
 
-/* ═══════ LAUNCH PIN — красива іконка місця пуску (Shahed/ракети) ═══════ */
-.lp-wrap{position:relative;width:50px;height:64px;pointer-events:auto;cursor:pointer;transition:transform .15s ease;}
+/* ═══════ LAUNCH PIN v2 — оновлений дизайн точки пуску ═══════ */
+.lp-wrap{position:relative;width:56px;height:70px;pointer-events:auto;cursor:pointer;transition:transform .15s ease;}
 .lp-wrap:active{transform:scale(.92);}
-.lp-ring{position:absolute;left:50%;top:22px;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:1.5px solid rgba(255,110,60,.6);animation:lpPing 2.2s cubic-bezier(.2,.6,.4,1) infinite;}
+/* м'який зовнішній ореол під усім маркером */
+.lp-halo{position:absolute;left:50%;top:24px;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,90,30,.35) 0%,rgba(255,90,30,0) 72%);pointer-events:none;}
+.lp-ring{position:absolute;left:50%;top:24px;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;border:1.5px solid rgba(255,130,70,.65);animation:lpPing 2.2s cubic-bezier(.2,.6,.4,1) infinite;}
 .lp-ring.d2{animation-delay:.7s;}
-@keyframes lpPing{0%{transform:scale(.32);opacity:.95;}80%{opacity:0;}100%{transform:scale(1.25);opacity:0;}}
+@keyframes lpPing{0%{transform:scale(.3);opacity:.95;}80%{opacity:0;}100%{transform:scale(1.3);opacity:0;}}
 /* обертове пунктирне кільце "захоплення цілі" */
-.lp-lock{position:absolute;left:50%;top:22px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
-  border:1px dashed rgba(255,170,120,.4);animation:lpSpin 7s linear infinite;}
+.lp-lock{position:absolute;left:50%;top:24px;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;
+  border:1px dashed rgba(255,180,130,.45);animation:lpSpin 7s linear infinite;}
 @keyframes lpSpin{to{transform:rotate(360deg);}}
-.lp-core{position:absolute;left:50%;top:22px;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;
-  background:radial-gradient(circle at 32% 28%,#ff9a5a 0%,#ff5722 38%,#a10f00 78%,#5c0800 100%);
-  box-shadow:0 0 4px rgba(255,255,255,.4) inset,0 0 0 1px rgba(255,190,140,.5) inset,0 0 16px rgba(255,80,30,.9),0 3px 10px rgba(0,0,0,.65);
+/* тонке внутрішнє кільце-шкала, як приціл */
+.lp-tick{position:absolute;left:50%;top:24px;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
+  background:repeating-conic-gradient(rgba(255,200,160,.55) 0deg 2deg,transparent 2deg 30deg);
+  -webkit-mask-image:radial-gradient(circle,transparent 0 17px,#000 17px 19px,transparent 19px);
+  mask-image:radial-gradient(circle,transparent 0 17px,#000 17px 19px,transparent 19px);
+  opacity:.7;pointer-events:none;}
+.lp-core{position:absolute;left:50%;top:24px;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;
+  background:radial-gradient(circle at 32% 26%,#ffb87a 0%,#ff6a2e 32%,#c21c00 70%,#5c0800 100%);
+  box-shadow:0 0 5px rgba(255,255,255,.45) inset,0 0 0 1px rgba(255,205,165,.55) inset,0 0 18px rgba(255,90,30,.95),0 3px 10px rgba(0,0,0,.65);
   display:flex;align-items:center;justify-content:center;}
-.lp-core::before{content:'';position:absolute;inset:2px;border-radius:50%;background:linear-gradient(160deg,rgba(255,255,255,.28),transparent 55%);pointer-events:none;}
-.lp-core svg{width:19px;height:19px;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.75));}
-.lp-badge{position:absolute;right:-3px;top:13px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:linear-gradient(160deg,#ff5a6e,var(--red));color:#fff;font-family:'Orbitron';font-size:8.5px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 7px rgba(255,36,71,.9),0 0 0 2px rgba(8,4,4,.8);}
-.lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-family:'Orbitron';font-size:7.5px;font-weight:600;letter-spacing:.06em;color:#ffd9c4;background:linear-gradient(160deg,rgba(35,8,4,.92),rgba(18,4,2,.92));border:1px solid rgba(255,120,70,.45);border-radius:3px;padding:2px 6px;text-shadow:0 0 6px rgba(255,90,40,.7);box-shadow:0 2px 8px rgba(0,0,0,.5);}
+.lp-core::before{content:'';position:absolute;inset:2px;border-radius:50%;background:linear-gradient(160deg,rgba(255,255,255,.32),transparent 55%);pointer-events:none;}
+.lp-core::after{content:'';position:absolute;inset:0;border-radius:50%;border:1px solid rgba(255,255,255,.15);pointer-events:none;}
+.lp-core svg{width:20px;height:20px;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));}
+.lp-badge{position:absolute;right:-2px;top:15px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:linear-gradient(160deg,#ff5a6e,var(--red));color:#fff;font-family:'Orbitron';font-size:8.5px;font-weight:700;line-height:17px;text-align:center;box-shadow:0 0 8px rgba(255,36,71,.95),0 0 0 2px rgba(8,4,4,.85);}
+.lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:7.5px;font-weight:600;letter-spacing:.06em;color:#ffe2cc;background:linear-gradient(160deg,rgba(40,10,4,.94),rgba(18,4,2,.94));border:1px solid rgba(255,140,80,.5);border-radius:3px;padding:2px 7px;text-shadow:0 0 6px rgba(255,100,45,.75);box-shadow:0 2px 9px rgba(0,0,0,.55);}
+.lp-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--red-glow);box-shadow:0 0 5px var(--red-glow);flex-shrink:0;}
 
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -2859,22 +2870,24 @@ const LAUNCH_TTL_MS=90*60*1000; // маркер зникає з карти че�
 let launchMarkers={};   // {key: {marker, data}}
 let launchCache=[];     // плаский кеш для таблиці "пуски за годину"
 
-// Компактна векторна іконка (замість розмитого растру) — стилізована
-// зірка-приціл "точки пуску", завжди чітка на будь-якому масштабі.
-const ICON_LAUNCH_SVG='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.5 L14.7 9.1 L22.5 12 L14.7 14.9 L12 22.5 L9.3 14.9 L1.5 12 L9.3 9.1 Z" fill="#fff"/><circle cx="12" cy="12" r="2.1" fill="#3a0a00"/></svg>';
+// Компактна векторна іконка (замість розмитого растру) — стилізований
+// силует дрона-камікадзе (дельтоподібне крило), завжди чітка на будь-якому масштабі.
+const ICON_LAUNCH_SVG='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L21 20 L12 16.3 L3 20 Z" fill="#fff"/><path d="M12 2 L12 16.3" stroke="#5c0800" stroke-width=".9" stroke-linecap="round"/></svg>';
 
 function mkLaunchIcon(count,cityName){
   const badge=count>1?`<div class="lp-badge">×${count}</div>`:'';
   const label=cityName?`<div class="lp-label">${cityName.toUpperCase()}</div>`:'';
   const html=`<div class="lp-wrap">
+    <div class="lp-halo"></div>
     <div class="lp-ring"></div>
     <div class="lp-ring d2"></div>
     <div class="lp-lock"></div>
+    <div class="lp-tick"></div>
     <div class="lp-core">${ICON_LAUNCH_SVG}</div>
     ${badge}
     ${label}
   </div>`;
-  return L.divIcon({className:'',html,iconSize:[50,64],iconAnchor:[25,44]});
+  return L.divIcon({className:'',html,iconSize:[56,70],iconAnchor:[28,48]});
 }
 
 function addLaunchMarker(key,d){
