@@ -843,6 +843,56 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 .ls-vl.grn{color:var(--ok);text-shadow:0 0 8px var(--ok);}
 @media(max-width:480px){#liveStats{gap:12px;padding:7px 14px;}.ls-vl{font-size:13px;}}
 
+/* ═══════ DRAW TOOLS — режим малювання на карті ═══════ */
+#drawFab{
+  position:absolute;right:12px;bottom:calc(var(--sb) + 96px);z-index:5200;
+  width:46px;height:46px;border-radius:50%;
+  background:var(--glass2);border:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.7);font-size:17px;cursor:pointer;
+  box-shadow:var(--sh);transition:background .18s,color .18s,transform .12s,border-color .18s;
+}
+#drawFab:active{transform:scale(.92);}
+#drawFab.on{background:var(--ar);color:var(--a);border-color:var(--a);box-shadow:0 0 14px rgba(0,231,255,.5),var(--sh);}
+@media(max-width:480px){#drawFab{right:8px;bottom:calc(var(--sb) + 84px);width:42px;height:42px;font-size:15px;}}
+
+#drawBar{
+  position:absolute;right:12px;bottom:calc(var(--sb) + 150px);z-index:5200;
+  display:none;flex-direction:column;gap:8px;
+  background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);
+  border-radius:10px;padding:10px;box-shadow:var(--sh);
+  width:168px;animation:fadeUp .22s ease;
+}
+#drawBar.on{display:flex;}
+.dw-title{font-family:'Orbitron';font-size:8.5px;letter-spacing:.14em;color:rgba(255,255,255,.4);text-transform:uppercase;padding:0 2px 2px;}
+.dw-tools{display:flex;gap:6px;}
+.dw-tool{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.65);
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;font-size:8px;letter-spacing:.03em;}
+.dw-tool i{font-size:14px;}
+.dw-tool.on{background:var(--ar);color:var(--a);border-color:var(--a);}
+.dw-colors{display:flex;gap:6px;justify-content:space-between;padding:2px 2px 0;}
+.dw-color{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;flex-shrink:0;transition:border-color .15s,transform .12s;}
+.dw-color.on{border-color:#fff;transform:scale(1.12);}
+.dw-actions{display:flex;gap:6px;}
+.dw-act{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 4px;border-radius:6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.65);
+  cursor:pointer;font-size:9px;letter-spacing:.03em;transition:background .15s,color .15s;}
+.dw-act i{font-size:11px;}
+.dw-act:active{transform:scale(.94);}
+.dw-act.clear:hover,.dw-act.clear:active{background:rgba(255,36,71,.18);color:#ff6b7d;border-color:rgba(255,36,71,.4);}
+.dw-act.done{background:var(--ar);color:var(--a);border-color:var(--a);}
+@media(max-width:480px){#drawBar{right:8px;bottom:calc(var(--sb) + 134px);width:150px;}}
+
+#drawHint{
+  position:absolute;top:calc(var(--st) + 60px);left:50%;transform:translateX(-50%);z-index:5100;
+  display:none;background:var(--glass2);border:1px solid var(--a);border-radius:20px;
+  padding:6px 16px;font-family:'Orbitron';font-size:9.5px;letter-spacing:.08em;color:var(--a);
+  box-shadow:0 0 14px rgba(0,231,255,.35),var(--sh);white-space:nowrap;pointer-events:none;
+}
+#drawHint.on{display:block;}
+body.draw-mode #map{cursor:crosshair;}
+
 </style>
 </head>
 <body oncontextmenu="return false;" class="pre-boot">
@@ -1354,6 +1404,38 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 <!-- SCREENSHOT FLASH + LOADING -->
 <div id="scrFlash"></div>
 <div id="scrLoading">📸 ЗНІМОК...</div>
+
+<!-- DRAW HINT -->
+<div id="drawHint">✏️ ТОРКНІТЬСЯ КАРТИ, ЩОБ МАЛЮВАТИ</div>
+
+<!-- DRAW FAB (кнопка відкриття інструментів малювання) -->
+<div id="drawFab" onclick="toggleDrawBar()" title="Малювання на карті">
+  <i class="fa-solid fa-pencil"></i>
+</div>
+
+<!-- DRAW TOOLBAR -->
+<div id="drawBar">
+  <div class="dw-title">Малювання</div>
+  <div class="dw-tools">
+    <div class="dw-tool on" id="dwArrow" onclick="setDrawTool('arrow')"><i class="fa-solid fa-arrow-right-long"></i><span>СТРІЛКА</span></div>
+    <div class="dw-tool" id="dwPencil" onclick="setDrawTool('pencil')"><i class="fa-solid fa-pen"></i><span>ОЛІВЕЦЬ</span></div>
+    <div class="dw-tool" id="dwLine" onclick="setDrawTool('line')"><i class="fa-solid fa-slash"></i><span>ЛІНІЯ</span></div>
+  </div>
+  <div class="dw-colors">
+    <div class="dw-color on" style="background:#ff2447" data-c="#ff2447" onclick="setDrawColor('#ff2447',this)"></div>
+    <div class="dw-color" style="background:#e8ff00" data-c="#e8ff00" onclick="setDrawColor('#e8ff00',this)"></div>
+    <div class="dw-color" style="background:#00e7ff" data-c="#00e7ff" onclick="setDrawColor('#00e7ff',this)"></div>
+    <div class="dw-color" style="background:#28ffb0" data-c="#28ffb0" onclick="setDrawColor('#28ffb0',this)"></div>
+    <div class="dw-color" style="background:#ffffff" data-c="#ffffff" onclick="setDrawColor('#ffffff',this)"></div>
+  </div>
+  <div class="dw-actions">
+    <div class="dw-act" onclick="undoDrawing()"><i class="fa-solid fa-rotate-left"></i>НАЗАД</div>
+    <div class="dw-act clear" onclick="clearDrawings()"><i class="fa-solid fa-trash"></i>ОЧИСТИТИ</div>
+  </div>
+  <div class="dw-actions">
+    <div class="dw-act done" onclick="toggleDrawBar(true)"><i class="fa-solid fa-check"></i>ГОТОВО</div>
+  </div>
+</div>
 
 <!-- BOTTOM NAV WRAPPER (legacy, hidden) -->
 <div id="bnavWrap">
@@ -3741,8 +3823,195 @@ document.addEventListener('keydown',e=>{
   closeSupport();
   cls('cityPnl');
   cls('launchPnl');
+  if(drawMode)toggleDrawBar(true);
 });
 
+// ═══════════════════════════
+// ✏️ DRAW TOOLS — стрілки, лінії, вільне малювання на карті
+// ═══════════════════════════
+let drawMode=false, drawTool='arrow', drawColor='#ff2447';
+let drawLayer=null;      // L.layerGroup з усіма намальованими об'єктами
+let drawHistory=[];      // стек шарів для "НАЗАД"
+let drawActive=false;    // чи триває зараз малювання жесту
+let drawStartLatLng=null, drawTempLine=null, drawTempHead=null;
+let drawFreePts=[], drawFreeLine=null;
+
+function ensureDrawLayer(){
+  if(!drawLayer){
+    drawLayer=L.layerGroup().addTo(map);
+    loadDrawings();
+  }
+}
+
+function toggleDrawBar(forceClose){
+  drawMode = forceClose ? false : !drawMode;
+  document.getElementById('drawBar').classList.toggle('on', drawMode);
+  document.getElementById('drawFab').classList.toggle('on', drawMode);
+  document.getElementById('drawHint').classList.toggle('on', drawMode);
+  document.body.classList.toggle('draw-mode', drawMode);
+  ensureDrawLayer();
+  if(drawMode){
+    map.dragging.disable();
+    map.doubleClickZoom.disable();
+    map.getContainer().addEventListener('pointerdown', drawPointerDown, {passive:false});
+  }else{
+    map.dragging.enable();
+    map.doubleClickZoom.enable();
+    map.getContainer().removeEventListener('pointerdown', drawPointerDown);
+    drawEndGesture();
+  }
+}
+
+function setDrawTool(t){
+  drawTool=t;
+  ['dwArrow','dwPencil','dwLine'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById(t==='arrow'?'dwArrow':t==='pencil'?'dwPencil':'dwLine').classList.add('on');
+}
+function setDrawColor(c,el){
+  drawColor=c;
+  document.querySelectorAll('.dw-color').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function drawPointerDown(e){
+  if(!drawMode)return;
+  // ігноруємо тапи по самій панелі інструментів / кнопці
+  if(e.target.closest('#drawBar')||e.target.closest('#drawFab'))return;
+  e.preventDefault();
+  drawActive=true;
+  const cont=map.mouseEventToContainerPoint(e);
+  drawStartLatLng=map.containerPointToLatLng(cont);
+  if(drawTool==='pencil'){
+    drawFreePts=[drawStartLatLng];
+    drawFreeLine=L.polyline(drawFreePts,{renderer:cvs,color:drawColor,weight:3,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(drawLayer);
+  }
+  map.getContainer().addEventListener('pointermove', drawPointerMove, {passive:false});
+  map.getContainer().addEventListener('pointerup', drawPointerUp, {passive:false});
+  map.getContainer().addEventListener('pointercancel', drawPointerUp, {passive:false});
+}
+function drawPointerMove(e){
+  if(!drawActive)return;
+  e.preventDefault();
+  const cont=map.mouseEventToContainerPoint(e);
+  const ll=map.containerPointToLatLng(cont);
+  if(drawTool==='pencil'){
+    drawFreePts.push(ll);
+    drawFreeLine.setLatLngs(drawFreePts);
+  }else{
+    // прев'ю лінії/стрілки під час перетягування
+    if(drawTempLine){map.removeLayer(drawTempLine);drawTempLine=null;}
+    if(drawTempHead){map.removeLayer(drawTempHead);drawTempHead=null;}
+    drawTempLine=L.polyline([drawStartLatLng,ll],{renderer:cvs,color:drawColor,weight:3,opacity:.75,dashArray:'5,5'}).addTo(map);
+    if(drawTool==='arrow'){
+      drawTempHead=makeArrowHead(drawStartLatLng,ll,drawColor,.75);
+      drawTempHead.addTo(map);
+    }
+  }
+}
+function drawPointerUp(e){
+  if(!drawActive)return;
+  e.preventDefault();
+  const cont=map.mouseEventToContainerPoint(e);
+  const endLL=map.containerPointToLatLng(cont);
+  if(drawTempLine){map.removeLayer(drawTempLine);drawTempLine=null;}
+  if(drawTempHead){map.removeLayer(drawTempHead);drawTempHead=null;}
+
+  if(drawTool==='pencil'){
+    if(drawFreePts.length>1){
+      drawHistory.push(drawFreeLine);
+    }else if(drawFreeLine){
+      drawLayer.removeLayer(drawFreeLine);
+    }
+    drawFreeLine=null; drawFreePts=[];
+  }else{
+    const dist=map.latLngToContainerPoint(drawStartLatLng).distanceTo(map.latLngToContainerPoint(endLL));
+    if(dist>6){
+      const grp=L.layerGroup().addTo(drawLayer);
+      L.polyline([drawStartLatLng,endLL],{renderer:cvs,color:drawColor,weight:3,opacity:.95,lineCap:'round'}).addTo(grp);
+      if(drawTool==='arrow')makeArrowHead(drawStartLatLng,endLL,drawColor,.95).addTo(grp);
+      drawHistory.push(grp);
+    }
+  }
+  saveDrawings();
+  drawEndGesture();
+}
+function drawEndGesture(){
+  drawActive=false;
+  drawStartLatLng=null;
+  map.getContainer().removeEventListener('pointermove', drawPointerMove);
+  map.getContainer().removeEventListener('pointerup', drawPointerUp);
+  map.getContainer().removeEventListener('pointercancel', drawPointerUp);
+}
+
+// будує "голівку" стрілки як L.polyline у координатах карти (px→latlng)
+function makeArrowHead(fromLL,toLL,color,opacity){
+  const p1=map.latLngToContainerPoint(fromLL);
+  const p2=map.latLngToContainerPoint(toLL);
+  const ang=Math.atan2(p2.y-p1.y,p2.x-p1.x);
+  const len=14, spread=0.45;
+  const a1=L.point(p2.x-len*Math.cos(ang-spread), p2.y-len*Math.sin(ang-spread));
+  const a2=L.point(p2.x-len*Math.cos(ang+spread), p2.y-len*Math.sin(ang+spread));
+  const ll1=map.containerPointToLatLng(a1);
+  const ll2=map.containerPointToLatLng(a2);
+  return L.polygon([toLL,ll1,ll2],{renderer:cvs,color:color,fillColor:color,fillOpacity:opacity,opacity:opacity,weight:1});
+}
+
+function undoDrawing(){
+  const last=drawHistory.pop();
+  if(last){drawLayer.removeLayer(last);saveDrawings();}
+}
+function clearDrawings(){
+  if(!drawHistory.length)return;
+  if(!confirm('Очистити всі малюнки на карті?'))return;
+  drawLayer.clearLayers();
+  drawHistory=[];
+  saveDrawings();
+}
+
+// проста локальна персистентність малюнків (GeoJSON у localStorage)
+function saveDrawings(){
+  try{
+    const feats=[];
+    drawHistory.forEach(layer=>{
+      layer.eachLayer ? layer.eachLayer(l=>collectFeature(l,feats)) : collectFeature(layer,feats);
+    });
+    localStorage.setItem('sd_drawings', JSON.stringify(feats));
+  }catch(e){}
+}
+function collectFeature(l,feats){
+  if(l instanceof L.Polygon){
+    feats.push({type:'polygon',latlngs:l.getLatLngs()[0].map(p=>[p.lat,p.lng]),color:l.options.color,fillOpacity:l.options.fillOpacity});
+  }else if(l instanceof L.Polyline){
+    feats.push({type:'polyline',latlngs:l.getLatLngs().map(p=>[p.lat,p.lng]),color:l.options.color,weight:l.options.weight});
+  }
+}
+function loadDrawings(){
+  try{
+    const raw=localStorage.getItem('sd_drawings');
+    if(!raw)return;
+    const feats=JSON.parse(raw);
+    if(!feats||!feats.length)return;
+    // групуємо по 1 або 2 фічі: лінія (+можлива голівка-полігон) = одна дія
+    let i=0;
+    while(i<feats.length){
+      const f=feats[i];
+      if(f.type==='polyline' && feats[i+1] && feats[i+1].type==='polygon'){
+        const grp=L.layerGroup().addTo(drawLayer);
+        L.polyline(f.latlngs,{renderer:cvs,color:f.color,weight:f.weight||3,opacity:.95,lineCap:'round'}).addTo(grp);
+        const p=feats[i+1];
+        L.polygon(p.latlngs,{renderer:cvs,color:p.color,fillColor:p.color,fillOpacity:p.fillOpacity||.95,weight:1}).addTo(grp);
+        drawHistory.push(grp);
+        i+=2;
+      }else if(f.type==='polyline'){
+        const line=L.polyline(f.latlngs,{renderer:cvs,color:f.color,weight:f.weight||3,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(drawLayer);
+        drawHistory.push(line);
+        i+=1;
+      }else{
+        i+=1;
+      }
+    }
+  }catch(e){}
+}
 
 </script>
 </body>
