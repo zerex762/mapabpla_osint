@@ -891,7 +891,8 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
   box-shadow:0 0 14px rgba(0,231,255,.35),var(--sh);white-space:nowrap;pointer-events:none;
 }
 #drawHint.on{display:block;}
-body.draw-mode #map{cursor:crosshair;}
+body.draw-mode #map{cursor:crosshair;touch-action:none;}
+body.draw-mode .leaflet-container{touch-action:none;}
 
 </style>
 </head>
@@ -1882,7 +1883,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.region||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
+          l.on('click',e=>{if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'oblast',l);});
           l.on('mouseover',()=>{if(!activeAlertNames.has(normName(name)))l.setStyle({color:'rgba(255,255,255,.85)',weight:1.6,fillOpacity:.14});});
           l.on('mouseout',()=>{l.setStyle(oblStyleFn(name));});
           oblFeatures[name]=l;
@@ -1902,7 +1903,7 @@ async function loadOblast(){
         onEachFeature:(f,l)=>{
           const name=f.properties?.rayon||'';
           l.bindTooltip(name,{className:'ob-tt',sticky:true});
-          l.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
+          l.on('click',e=>{if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);showCityPanel(name,'rayon',l);});
           rayonFeatures[name]=l;
         }
       });
@@ -2693,7 +2694,7 @@ function _updateSwarmsImpl(){
       const [, lead]=group[0];
       const swarmMarker=L.marker([lat,lng],{icon:mkSwarmIcon(dA.type,group.length,ang)}).addTo(map);
       swarmMarker.on('click',e=>{
-        if(measureMode){handleMeasureClick(e);return;}
+        if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}
         L.DomEvent.stopPropagation(e);
         toast(`Рій · ${group.length} цілей · ${(TINFO[dA.type]||{}).name||dA.type}`);
         selId=group[0][0];showTrack(group[0][0],group[0][1].data);
@@ -2852,7 +2853,7 @@ function doSync(id,d){
     const marker=L.marker([d.lat,d.lng],{icon:mkIcon(d)}).addTo(map);
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
-    marker.on('click',e=>{if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
+    marker.on('click',e=>{if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
     obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null};
     renderForecast(id,d);
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
@@ -3207,7 +3208,7 @@ function showTrack(id,d){
 }
 function closeTrack(){document.getElementById('trackPnl').classList.remove('on');document.body.classList.remove('panel-open');selId=null;}
 map.on('click',e=>{
-  if(measureMode){handleMeasureClick(e);return;}
+  if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}
   closeTrack();
 });
 
@@ -3833,8 +3834,10 @@ let drawMode=false, drawTool='arrow', drawColor='#ff2447';
 let drawLayer=null;      // L.layerGroup з усіма намальованими об'єктами
 let drawHistory=[];      // стек шарів для "НАЗАД"
 let drawActive=false;    // чи триває зараз малювання жесту
+let drawPointerId=null;  // id пальця/курсора, що зараз малює (щоб ігнорувати другий палець)
 let drawStartLatLng=null, drawTempLine=null, drawTempHead=null;
 let drawFreePts=[], drawFreeLine=null;
+let drawMoveRAF=null, drawLastEvt=null;
 
 function ensureDrawLayer(){
   if(!drawLayer){
@@ -3850,14 +3853,20 @@ function toggleDrawBar(forceClose){
   document.getElementById('drawHint').classList.toggle('on', drawMode);
   document.body.classList.toggle('draw-mode', drawMode);
   ensureDrawLayer();
+  const c=map.getContainer();
   if(drawMode){
     map.dragging.disable();
     map.doubleClickZoom.disable();
-    map.getContainer().addEventListener('pointerdown', drawPointerDown, {passive:false});
+    if(map.tap)map.tap.disable();
+    if(map.touchZoom)map.touchZoom.disable(); // щоб pinch не заважав малюванню одним пальцем
+    // capture:true — щоб наш обробник спрацював РАНІШЕ за внутрішні обробники Leaflet
+    c.addEventListener('pointerdown', drawPointerDown, {passive:false,capture:true});
   }else{
     map.dragging.enable();
     map.doubleClickZoom.enable();
-    map.getContainer().removeEventListener('pointerdown', drawPointerDown);
+    if(map.tap)map.tap.enable();
+    if(map.touchZoom)map.touchZoom.enable();
+    c.removeEventListener('pointerdown', drawPointerDown, {capture:true});
     drawEndGesture();
   }
 }
@@ -3877,21 +3886,40 @@ function drawPointerDown(e){
   if(!drawMode)return;
   // ігноруємо тапи по самій панелі інструментів / кнопці
   if(e.target.closest('#drawBar')||e.target.closest('#drawFab'))return;
+  // якщо вже малюємо (перший палець) — ігноруємо будь-які додаткові пальці (pinch тощо)
+  if(drawActive)return;
   e.preventDefault();
+  e.stopPropagation();
   drawActive=true;
+  drawPointerId = e.pointerId!==undefined ? e.pointerId : 'mouse';
   const cont=map.mouseEventToContainerPoint(e);
   drawStartLatLng=map.containerPointToLatLng(cont);
   if(drawTool==='pencil'){
     drawFreePts=[drawStartLatLng];
     drawFreeLine=L.polyline(drawFreePts,{renderer:cvs,color:drawColor,weight:3,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(drawLayer);
   }
-  map.getContainer().addEventListener('pointermove', drawPointerMove, {passive:false});
-  map.getContainer().addEventListener('pointerup', drawPointerUp, {passive:false});
-  map.getContainer().addEventListener('pointercancel', drawPointerUp, {passive:false});
+  const c=map.getContainer();
+  c.addEventListener('pointermove', drawPointerMove, {passive:false,capture:true});
+  c.addEventListener('pointerup', drawPointerUp, {passive:false,capture:true});
+  c.addEventListener('pointercancel', drawPointerUp, {passive:false,capture:true});
+  // якщо браузер підтримує setPointerCapture — прив'язуємо жест до карти навіть якщо палець з'їде за її межі
+  try{ if(e.pointerId!==undefined) c.setPointerCapture(e.pointerId); }catch(err){}
 }
 function drawPointerMove(e){
   if(!drawActive)return;
+  if(drawPointerId!==null && e.pointerId!==undefined && e.pointerId!==drawPointerId)return;
   e.preventDefault();
+  e.stopPropagation();
+  // тротлимо через requestAnimationFrame, щоб не забивати основний потік на слабких телефонах
+  drawLastEvt=e;
+  if(drawMoveRAF)return;
+  drawMoveRAF=requestAnimationFrame(()=>{
+    drawMoveRAF=null;
+    processDrawMove(drawLastEvt);
+  });
+}
+function processDrawMove(e){
+  if(!drawActive||!e)return;
   const cont=map.mouseEventToContainerPoint(e);
   const ll=map.containerPointToLatLng(cont);
   if(drawTool==='pencil'){
@@ -3910,7 +3938,10 @@ function drawPointerMove(e){
 }
 function drawPointerUp(e){
   if(!drawActive)return;
+  if(drawPointerId!==null && e.pointerId!==undefined && e.pointerId!==drawPointerId)return;
   e.preventDefault();
+  e.stopPropagation();
+  if(drawMoveRAF){cancelAnimationFrame(drawMoveRAF);drawMoveRAF=null;}
   const cont=map.mouseEventToContainerPoint(e);
   const endLL=map.containerPointToLatLng(cont);
   if(drawTempLine){map.removeLayer(drawTempLine);drawTempLine=null;}
@@ -3937,10 +3968,13 @@ function drawPointerUp(e){
 }
 function drawEndGesture(){
   drawActive=false;
+  drawPointerId=null;
   drawStartLatLng=null;
-  map.getContainer().removeEventListener('pointermove', drawPointerMove);
-  map.getContainer().removeEventListener('pointerup', drawPointerUp);
-  map.getContainer().removeEventListener('pointercancel', drawPointerUp);
+  if(drawMoveRAF){cancelAnimationFrame(drawMoveRAF);drawMoveRAF=null;}
+  const c=map.getContainer();
+  c.removeEventListener('pointermove', drawPointerMove, {capture:true});
+  c.removeEventListener('pointerup', drawPointerUp, {capture:true});
+  c.removeEventListener('pointercancel', drawPointerUp, {capture:true});
 }
 
 // будує "голівку" стрілки як L.polyline у координатах карти (px→latlng)
