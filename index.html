@@ -1024,7 +1024,7 @@ body.draw-mode .leaflet-container{touch-action:none;}
     <div class="th-grid">
       <div class="th-card" id="tc0" onclick="selTh(0)"><div class="th-prev pv0"></div><div class="th-name">ULTRA DARK</div></div>
       <div class="th-card" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
-      <div class="th-card" id="tc2" onclick="selTh(2)"><div class="th-prev pv2"></div><div class="th-name">NIGHT BLUE</div></div>
+      <div class="th-card sel" id="tc2" onclick="selTh(2)"><div class="th-prev pv2"></div><div class="th-name">NIGHT BLUE</div></div>
       <div class="th-card" id="tc3" onclick="selTh(3)"><div class="th-prev pv3"></div><div class="th-name">TOPO</div></div>
       <div class="th-card" id="tc4" onclick="selTh(4)"><div class="th-prev pv4"><span class="th-badge" style="color:#4fc3f7;text-shadow:0 0 8px #4fc3f7">3D</span></div><div class="th-name">3D RELIEF</div></div>
       <div class="th-card" id="tc5" onclick="selTh(5)"><div class="th-prev pv5"></div><div class="th-name">LIGHT</div></div>
@@ -1034,7 +1034,7 @@ body.draw-mode .leaflet-container{touch-action:none;}
       <div class="th-card" id="tc9" onclick="selTh(9)"><div class="th-prev pv9"><span class="th-badge" style="color:#9c88ff;font-size:9px">NAVY</span></div><div class="th-name">NAVY BLUE</div></div>
       <div class="th-card" id="tc10" onclick="selTh(10)"><div class="th-prev pv10"></div><div class="th-name">MILITARY</div></div>
       <div class="th-card" id="tc11" onclick="selTh(11)"><div class="th-prev pv11"></div><div class="th-name">MINIMAL</div></div>
-      <div class="th-card sel" id="tc12" onclick="selTh(12)"><div class="th-prev pv12"><span class="th-badge" style="color:var(--a);font-size:9px;text-shadow:0 0 8px var(--a)">HUD</span></div><div class="th-name">SIGNAL AMBER</div></div>
+      <div class="th-card" id="tc12" onclick="selTh(12)"><div class="th-prev pv12"><span class="th-badge" style="color:var(--a);font-size:9px;text-shadow:0 0 8px var(--a)">HUD</span></div><div class="th-name">SIGNAL AMBER</div></div>
     </div>
     <div class="br-row">
       <label>BRIGHTNESS</label>
@@ -1491,9 +1491,6 @@ body.draw-mode .leaflet-container{touch-action:none;}
     <button class="sup-x" onclick="closeSupport()">×</button>
     <h2>ПІДТРИМКА ПРОЄКТУ</h2>
     <a class="sup-row" href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank">
-      <i class="fa-solid fa-heart" style="color:var(--red)"></i><span>Донат</span>
-    </a>
-    <a class="sup-row" href="https://send.monobank.ua/jar/94idjRr4CQ" target="_blank">
       <i class="fa-solid fa-credit-card" style="color:#28ffb0"></i><span>Monobank</span>
     </a>
     <a class="sup-row" href="https://donatello.to/odessaosint26?g=pidtrimka-proyektu" target="_blank">
@@ -1575,15 +1572,15 @@ const TINFO = {
 const TURLS = [
   'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',         // 0
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // 1
-  'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', // 2
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',        // 2 NIGHT BLUE (власна синя тема)
   'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                       // 3
   'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                       // 4 3D
   'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',         // 5
   'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',     // 6
   'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',          // 7 NV
   'https://tile.openstreetmap.org/{z}/{x}/{y}.png',                         // 8
-  'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png',   // 9
-  'https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png',         // 10
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',        // 9 NAVY BLUE (власна тема)
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                       // 10 MILITARY (власна тема)
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', // 11
   'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',          // 12 SIGNAL AMBER (own theme, з підписами міст)
 ];
@@ -1740,7 +1737,7 @@ function revealUI(){
   }));
   toast('SYSTEM READY');
 }
-let curTheme=12;
+let curTheme=2;
 let tLayer=L.tileLayer(TURLS[curTheme],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
 setTimeout(()=>{applyBrt(65);applyThemeFilter(curTheme);applyMapTilt(curTheme);},600);
 
@@ -1778,6 +1775,9 @@ function applyThemeFilter(i){
   const tp=document.querySelector('.leaflet-tile-pane');
   if(!tp)return;
   if(i===12){tp.style.filter=`brightness(${brightness}%) grayscale(1) sepia(1) hue-rotate(4deg) saturate(2.6) contrast(1.12)`;}
+  else if(i===2){tp.style.filter=`brightness(${brightness}%) grayscale(1) sepia(1) hue-rotate(180deg) saturate(2.4) contrast(1.15)`;}
+  else if(i===9){tp.style.filter=`brightness(${brightness}%) grayscale(1) sepia(1) hue-rotate(220deg) saturate(2.2) contrast(1.2)`;}
+  else if(i===10){tp.style.filter=`brightness(${brightness}%) grayscale(1) sepia(1) hue-rotate(60deg) saturate(1.8) contrast(1.1)`;}
   else if(i===7){tp.style.filter=`brightness(${brightness}%) sepia(1) hue-rotate(95deg) saturate(4)`;}
   else if(i===1){tp.style.filter=`brightness(${brightness}%) contrast(1.18) saturate(1.3)`;}
   else{tp.style.filter=`brightness(${brightness}%)`;}
