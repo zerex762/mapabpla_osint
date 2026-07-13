@@ -134,6 +134,12 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:8px;font-weight:600;letter-spacing:.06em;color:#ffe2cc;background:linear-gradient(160deg,rgba(40,10,4,.94),rgba(18,4,2,.94));border:1px solid rgba(255,140,80,.5);border-radius:7px;padding:2px 8px;box-shadow:0 2px 9px rgba(0,0,0,.55);}
 .lp-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--red-glow);box-shadow:0 0 5px var(--red-glow);flex-shrink:0;}
 
+
+/* ═══════ FULL TRACK / GHOST TRAIL — повний трек цілі та слід після втрати ═══════ */
+.tp-fulltrack-btn{width:100%;padding:9px;margin-top:8px;background:rgba(90,160,255,.08);border:1px solid rgba(90,160,255,.25);color:#9fd3ff;font-family:'Orbitron';font-size:9px;letter-spacing:.08em;cursor:pointer;border-radius:9px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;}
+.tp-fulltrack-btn.on{background:rgba(90,160,255,.2);color:#fff;}
+.tp-lost-banner{margin-top:8px;padding:8px 10px;background:rgba(255,153,0,.08);border:1px solid rgba(255,153,0,.25);border-radius:9px;font-family:'Rajdhani';font-weight:600;font-size:10.5px;color:#ffcf8a;text-align:center;}
+
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
 .pv-box{background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);padding:26px;border-radius:9px;max-width:420px;width:100%;animation:fadeUp .3s ease;box-shadow:var(--sh);}
@@ -1394,6 +1400,7 @@ body.draw-mode .leaflet-container{touch-action:none;}
     <div class="tp-info" id="tpInfo"></div>
     <div class="tp-intercept" id="tpIntercept" style="display:none"><b>⚔️ Перехват:</b> <span id="tpInterceptTxt"></span></div>
     <div class="tp-vec" id="tpVec">--</div>
+    <button class="tp-fulltrack-btn" id="tpFullTrackBtn" onclick="toggleFullTrail()"><i class="fa-solid fa-route"></i><span>ПОКАЗАТИ ПОВНИЙ ТРЕК</span></button>
   </div>
 </div>
 
@@ -2848,6 +2855,62 @@ function toggleSwarmMode(){
 // TRAIL
 // ═══════════════════════════
 const trailPts={};const TMAX=16;
+
+// ═══════════════════════════
+// FULL TRACK — повний, необрізаний шлях цілі за весь час її життя,
+// + "привид" сліду ще deякий час після того, як ціль пропала з радарів
+// ═══════════════════════════
+const fullTrail={};      // id -> [[lat,lng],...] повний шлях (без обмеження TMAX)
+const fullTrailLine={};  // id -> L.polyline (прихована за замовчуванням)
+const ghostTrails={};    // id -> {line,timeout,type,lastPos,lostAt}
+const GHOST_TTL_MS=10*60*1000; // тримаємо привида 10 хв після втрати цілі
+
+function updateFullTrail(id,lat,lng,type){
+  if(!fullTrail[id]){
+    fullTrail[id]=[];
+    const c=getC(type);
+    fullTrailLine[id]=L.polyline([],{renderer:cvs,color:c,weight:1.6,opacity:0,dashArray:'2,5',interactive:false}).addTo(map);
+  }
+  fullTrail[id].push([lat,lng]);
+  fullTrailLine[id].setLatLngs(fullTrail[id]);
+}
+function toggleFullTrail(){
+  if(!selId||!fullTrailLine[selId])return;
+  const line=fullTrailLine[selId];
+  const showing=line.options.opacity>0;
+  line.setStyle({opacity:showing?0:.85});
+  const btn=document.getElementById('tpFullTrackBtn');
+  if(btn){
+    btn.classList.toggle('on',!showing);
+    btn.querySelector('span').textContent=showing?'ПОКАЗАТИ ПОВНИЙ ТРЕК':'СХОВАТИ ПОВНИЙ ТРЕК';
+  }
+  if(!showing&&fullTrail[selId]&&fullTrail[selId].length>1){
+    map.fitBounds(L.latLngBounds(fullTrail[selId]),{padding:[60,60],maxZoom:11});
+  }
+}
+function spawnGhostTrail(id){
+  const line=fullTrailLine[id];
+  const pts=fullTrail[id];
+  if(!line||!pts||pts.length<2){
+    if(line)map.removeLayer(line);
+    delete fullTrailLine[id];delete fullTrail[id];
+    return;
+  }
+  line.setStyle({opacity:.4,color:'rgba(255,255,255,.5)',dashArray:'1,7'});
+  line.bindPopup(()=>{
+    const g=ghostTrails[id];
+    if(!g)return'';
+    const mins=Math.round((Date.now()-g.lostAt)/60000);
+    return `<div style="font-family:Rajdhani;font-weight:600;font-size:11px;color:#222">
+      📡 Ціль втрачена ${mins} хв тому<br>Останні координати: ${g.lastPos[0].toFixed(3)}, ${g.lastPos[1].toFixed(3)}</div>`;
+  });
+  const timeout=setTimeout(()=>{
+    if(ghostTrails[id]){map.removeLayer(ghostTrails[id].line);delete ghostTrails[id];}
+  },GHOST_TTL_MS);
+  ghostTrails[id]={line,timeout,lastPos:pts[pts.length-1],lostAt:Date.now()};
+  delete fullTrailLine[id];delete fullTrail[id];
+}
+
 function updateTrail(id,lat,lng){
   if(document.getElementById('togTrl')?.checked===false)return;
   if(!trailPts[id])trailPts[id]=[];
@@ -2949,6 +3012,7 @@ function doSync(id,d){
   const rad=(ang+180-90)*Math.PI/180;
   const tail=[d.lat+Math.cos(rad)*.022,d.lng+Math.sin(rad)*.022];
   updateTrail(id,d.lat,d.lng);
+  updateFullTrail(id,d.lat,d.lng,d.type);
   if(obs[id]){
     obs[id].marker.setLatLng([d.lat,d.lng]);obs[id].marker.setIcon(mkIcon(d));
     if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
@@ -2983,6 +3047,7 @@ function remove(id){
   if(obs[id].trail)map.removeLayer(obs[id].trail);
   if(obs[id].swarmMarker)map.removeLayer(obs[id].swarmMarker);
   removeForecast(obs[id]);
+  spawnGhostTrail(id);
   delete trailPts[id];if(selId===id)closeTrack();delete obs[id];
   scheduleRecompute();
   if(swarmMode)updateSwarms();
@@ -3160,6 +3225,7 @@ function haversineKm(lat1,lng1,lat2,lng2){
   const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
   return R*2*Math.asin(Math.sqrt(a));
 }
+
 function fmtEta(hours){
   const totalMin=Math.max(1,Math.round(hours*60));
   const h=Math.floor(totalMin/60),m=totalMin%60;
@@ -3315,6 +3381,12 @@ function showTrack(id,d){
   document.getElementById('trackPnl').classList.add('on');
   document.body.classList.add('panel-open');
   const spd=SPD[d.type]||200, ang=+d.angle||0, info=TINFO[d.type]||{};
+  const ftBtn=document.getElementById('tpFullTrackBtn');
+  if(ftBtn){
+    const showingFull=fullTrailLine[id]&&fullTrailLine[id].options.opacity>0;
+    ftBtn.classList.toggle('on',!!showingFull);
+    ftBtn.querySelector('span').textContent=showingFull?'СХОВАТИ ПОВНИЙ ТРЕК':'ПОКАЗАТИ ПОВНИЙ ТРЕК';
+  }
 
   // Заголовок
   document.getElementById('tpType').textContent=(info.name||d.type||'?').toUpperCase();
