@@ -970,6 +970,22 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
   -webkit-backdrop-filter:blur(18px) saturate(140%);
 }
 
+/* ═══════ МОБІЛЬНА ОПТИМІЗАЦІЯ — backdrop-filter/blur одні з найдорожчих для
+   GPU-композитингу на слабких телефонах, особливо коли застосовані одразу до
+   багатьох елементів (.bn-item — це кожна кнопка нижньої панелі). Зменшуємо
+   радіус розмиття на вузьких екранах, щоб розвантажити рендер ═══════ */
+@media (max-width:768px){
+  #wxPnl,#trackPnl,#radarPnl,#listPnl,#cityPnl,#launchPnl,#weekPnl,#alertLogPnl,
+  #searchPnl,#drawBar,.pv-box,#setSh .ss-body,#themeSh .th-body,#drawFab,#setFab,
+  .bn-item,.pill,#actPill,#measureHint,#drawHint{
+    backdrop-filter:blur(7px) saturate(120%);
+    -webkit-backdrop-filter:blur(7px) saturate(120%);
+  }
+  .pill{backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
+  .sb-chip{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
+  #hud{backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
+}
+
 #drawFab{
   position:absolute;right:12px;bottom:calc(var(--sb) + 96px);z-index:5200;
   width:46px;height:46px;border-radius:50%;
@@ -2833,15 +2849,40 @@ function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;ret
 function mkIcon(d){
   const ang=+d.angle||0, sz=ISZ;
   const showCrs=document.getElementById('togCrs')?.checked!==false;
-  const cLbl=showCrs?`<div style="position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:8px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 4px #000;letter-spacing:.04em">${Math.round(ang)}°</div>`:'';
 
   const isShahed=(d.type||'').indexOf('shahed')===0;
   const imgFilter=isShahed?'drop-shadow(0 0 3px rgba(0,0,0,.75))':'brightness(0) invert(1) drop-shadow(0 0 3px rgba(0,0,0,.75))';
+  // Стабільна розмітка (клас crs-lbl завжди в DOM, лише приховується) —
+  // це дозволяє оновлювати курс/кут БЕЗ повного пересворення іконки (setIcon),
+  // що і є головним джерелом лагів на слабких телефонах при 15-20+ цілях одночасно.
   const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
-    <img src="${TYPE_ICONS[d.type]||(d.type+'.png')}" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:${imgFilter};will-change:transform;">
-    ${cLbl}
+    <img class="drn-img" src="${TYPE_ICONS[d.type]||(d.type+'.png')}" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz}px;height:${sz}px;display:block;transform:rotate(${ang + 90}deg);filter:${imgFilter};">
+    <div class="crs-lbl" style="display:${showCrs?'block':'none'};position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-family:Orbitron;font-size:8px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 4px #000;letter-spacing:.04em">${Math.round(ang)}°</div>
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+14],iconAnchor:[sz/2,sz/2]});
+}
+
+// Легке оновлення "на місці" — міняємо лише transform (кут) і текст курсу
+// напряму в існуючому DOM-вузлі, БЕЗ setIcon()/перестворення HTML і фільтрів.
+// Величезний виграш у продуктивності на телефонах, коли одночасно рухаються
+// 15-20+ цілей: замість 20 повних DOM-переcтворень на кожен тик — 20 дешевих
+// точкових правок style/textContent (композитить GPU, без reflow фільтрів).
+function updateMarkerIconInPlace(marker,d,prevType){
+  const type=d.type||'';
+  if(prevType!==type)return false; // тип змінився (рідкість) — треба повний setIcon
+  const el=marker.getElement && marker.getElement();
+  if(!el)return false;
+  const img=el.querySelector('.drn-img');
+  if(!img)return false;
+  const ang=+d.angle||0;
+  img.style.transform=`rotate(${ang+90}deg)`;
+  const lbl=el.querySelector('.crs-lbl');
+  if(lbl){
+    const showCrs=document.getElementById('togCrs')?.checked!==false;
+    lbl.style.display=showCrs?'block':'none';
+    if(showCrs)lbl.textContent=`${Math.round(ang)}°`;
+  }
+  return true;
 }
 
 // ═══════════════════════════
@@ -3047,7 +3088,9 @@ function doSync(id,d){
   const tail=[d.lat+Math.cos(rad)*.022,d.lng+Math.sin(rad)*.022];
   updateTrail(id,d.lat,d.lng);
   if(obs[id]){
-    obs[id].marker.setLatLng([d.lat,d.lng]);obs[id].marker.setIcon(mkIcon(d));
+    obs[id].marker.setLatLng([d.lat,d.lng]);
+    const okInPlace=updateMarkerIconInPlace(obs[id].marker,d,obs[id].iconType);
+    if(!okInPlace){obs[id].marker.setIcon(mkIcon(d));obs[id].iconType=d.type;}
     if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
     obs[id].data=d;if(selId===id)showTrack(id,d);
     renderForecast(id,d);
@@ -3065,7 +3108,7 @@ function doSync(id,d){
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     const trail=L.polyline(trailPts[id]||[],{renderer:cvs,color:c,weight:1.2,opacity:.4}).addTo(map);
     marker.on('click',e=>{if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}L.DomEvent.stopPropagation(e);selId=id;showTrack(id,d);});
-    obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null};
+    obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null,iconType:d.type};
     renderForecast(id,d);
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
       [marker,circle,line,trail].forEach(l=>{if(l)map.removeLayer(l);});
