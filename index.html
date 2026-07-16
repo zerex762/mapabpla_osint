@@ -3308,6 +3308,10 @@ function fmtEta(hours){
 function openLaunchPanel(key){
   const o=launchMarkers[key];
   if(!o)return;
+  // ФІКС: закриваємо панель цілі, бо вона рендериться в тому самому місці
+  // екрана — без цього обидві панелі накладаються і хрестик перестає
+  // реагувати на дотик (натискання "провалюється" крізь верхню панель).
+  closeTrack();
   const d=o.data;
   lnpOpenKey=key;
   const typeName=(TINFO[d.type]&&TINFO[d.type].name)||TYPE_NAME_FALLBACK[d.type]||d.type||'Невідомий тип';
@@ -3443,6 +3447,11 @@ setInterval(positionStatusBar, 3000);
 // TRACK PANEL
 // ═══════════════════════════
 function showTrack(id,d){
+  // ФІКС: панель цілі й панель "точки пуску" ділять одне й те саме місце
+  // на екрані (той самий bottom/left/right) — якщо не закрити launchPnl,
+  // вони накладаються одна на одну і хрестик закриття стає непроклікуваним.
+  document.getElementById('launchPnl').classList.remove('on');
+  lnpOpenKey=null;
   document.getElementById('trackPnl').classList.add('on');
   document.body.classList.add('panel-open');
   const spd=SPD[d.type]||200, ang=+d.angle||0, info=TINFO[d.type]||{};
