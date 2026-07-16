@@ -121,6 +121,19 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .lp-lock{position:absolute;left:50%;top:24px;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;
   border:1px dashed rgba(130,190,255,.45);animation:lpSpin 7s linear infinite;}
 @keyframes lpSpin{to{transform:rotate(360deg);}}
+/* ═══════ МОБІЛЬНА ОПТИМІЗАЦІЯ — при масованій атаці на карті можуть бути
+   десятки маркерів пуску одночасно, а кожен мав по 5 незалежних безкінечних
+   анімацій (halo/2 кільця-пінг/оберт лок/тік). Саме ця помножена кількість
+   і забиває рендер, через що тапи по кнопках "провисають". На тач-екранах
+   лишаємо тільки один легкий пульс і прибираємо постійний rotate/ping —
+   маркер лишається помітним, але не жере кадри ═══════ */
+@media(pointer:coarse){
+  .lp-ring{animation:none;opacity:.55;transform:scale(1);}
+  .lp-ring.d2{display:none;}
+  .lp-lock{animation:none;}
+  .lp-core{animation:lpCorePulseMobile 2.6s ease-in-out infinite;}
+  @keyframes lpCorePulseMobile{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+}
 /* тонке внутрішнє кільце-шкала, як приціл */
 .lp-tick{position:absolute;left:50%;top:24px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
   background:repeating-conic-gradient(rgba(160,200,255,.55) 0deg 2deg,transparent 2deg 30deg);
@@ -322,6 +335,26 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
   .bn-item{padding:5px 8px;min-width:42px;min-height:36px;}
   .bn-item i{font-size:14px;}
   .bn-item span{font-size:6.5px;}
+}
+/* ═══════ IMMERSIVE MODE — на мобільному другорядний chrome (годинник,
+   статус-чіпи, кнопки малювання/підтримки, водяний знак) приглушається
+   через паузу бездіяльності, щоб карта не здавалась "захаращеною"
+   купою елементів. Дока (нижня навігація) залишається як є — це основна
+   навігація. Будь-який дотик миттєво повертає повну яскравість. ═══════ */
+@media(pointer:coarse){
+  #topBar,#statusBar,#drawFab,#supFab,#mapBrandFrame,#mapWatermark{
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  body.chrome-dim #topBar,
+  body.chrome-dim #statusBar{opacity:.5;}
+  body.chrome-dim #drawFab,
+  body.chrome-dim #supFab{opacity:.4;transform:scale(.94);}
+  body.chrome-dim #mapBrandFrame,
+  body.chrome-dim #mapWatermark{opacity:.25;}
+  /* поки відкрита якась панель або йде малювання — ніколи не приглушувати */
+  body.panel-open.chrome-dim #topBar,
+  body.panel-open.chrome-dim #statusBar,
+  body.drawing.chrome-dim #drawFab{opacity:1;transform:none;}
 }
 #setFab{display:none!important;}
 #setFab i{font-size:13px;color:var(--a);}
@@ -2677,6 +2710,67 @@ function sendPush(title,body){
 function opn(id){document.getElementById(id).classList.add('on');}
 function cls(id){document.getElementById(id).classList.remove('on');}
 function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
+
+// ═══════════════════════════
+// PANEL MANAGER — мобільна оптимізація: не даємо великим панелям
+// відкриватись одночасно й перекривати одна одну/карту. Стежимо через
+// MutationObserver, тож працює незалежно від того, як саме панель була
+// відкрита (opn(), classList.toggle, style.display) — нічого іншого
+// у логіці панелей міняти не треба.
+// ═══════════════════════════
+(function(){
+  const NAV_BTN={listPnl:'bnList',weekPnl:'bnWeek',radarPnl:'bnRadar',alertLogPnl:'bnAlertLog',searchPnl:'bnSearch'};
+  const PANELS=['trackPnl','radarPnl','listPnl','cityPnl','launchPnl','weekPnl','alertLogPnl','searchPnl','setSh','themeSh','supportPnl','wxPnl'];
+  function isOpen(el,id){
+    if(id==='wxPnl')return el.style.display==='block';
+    if(id==='supportPnl')return el.classList.contains('show');
+    return el.classList.contains('on');
+  }
+  function forceClose(el,id){
+    if(id==='wxPnl'){el.style.display='none';return;}
+    if(id==='supportPnl'){el.classList.remove('show');return;}
+    el.classList.remove('on');
+    const b=NAV_BTN[id]&&document.getElementById(NAV_BTN[id]);
+    if(b)b.classList.remove('on');
+  }
+  let guard=false;
+  function onChange(openId){
+    if(guard)return;
+    guard=true;
+    PANELS.forEach(id=>{
+      if(id===openId)return;
+      const el=document.getElementById(id);
+      if(el&&isOpen(el,id))forceClose(el,id);
+    });
+    guard=false;
+  }
+  function watch(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    new MutationObserver(()=>{if(isOpen(el,id))onChange(id);})
+      .observe(el,{attributes:true,attributeFilter:id==='wxPnl'?['style']:['class']});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>PANELS.forEach(watch));
+  else PANELS.forEach(watch);
+})();
+
+// ═══════════════════════════
+// IMMERSIVE MODE (mobile) — прибираємо відчуття захаращеного екрану:
+// другорядний chrome сам притухає через паузу бездіяльності і миттєво
+// повертається на будь-який дотик. Нічого не приховується назавжди.
+// ═══════════════════════════
+(function(){
+  if(!matchMedia('(pointer:coarse)').matches)return;
+  let t=null;
+  function wake(){
+    document.body.classList.remove('chrome-dim');
+    clearTimeout(t);
+    t=setTimeout(()=>{document.body.classList.add('chrome-dim');},4500);
+  }
+  ['pointerdown','touchstart','wheel'].forEach(ev=>
+    document.addEventListener(ev,wake,{passive:true}));
+  wake();
+})();
 
 // ═══════════════════════════
 // OBSERVER MODE — режим спостереження (тільки карта, без UI)
