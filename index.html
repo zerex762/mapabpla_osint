@@ -345,17 +345,22 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
   #topBar,#statusBar,#drawFab,#supFab,#mapBrandFrame,#mapWatermark{
     transition:opacity .5s ease, transform .5s ease;
   }
-  body.chrome-dim #topBar,
-  body.chrome-dim #statusBar{opacity:.5;}
+  body.chrome-dim #topBar{opacity:.5;}
   body.chrome-dim #drawFab,
   body.chrome-dim #supFab{opacity:.4;transform:scale(.94);}
   body.chrome-dim #mapBrandFrame,
   body.chrome-dim #mapWatermark{opacity:.25;}
-  /* поки відкрита якась панель або йде малювання — ніколи не приглушувати */
-  body.panel-open.chrome-dim #topBar,
-  body.panel-open.chrome-dim #statusBar,
-  body.drawing.chrome-dim #drawFab{opacity:1;transform:none;}
 }
+/* ═══════ КРИТИЧНО (усі розміри) — коли відкрита будь-яка велика панель
+   (ціль/список/радар/тиждень/лог/пошук/погода/налаштування), statusBar і
+   плаваючі FAB-кнопки фізично перекривають її вміст (напр. "На карті N"
+   з декоративними кутовими дужками лягав прямо на фото цілі). Ховаємо
+   їх повністю, поки відкрита панель — незалежно від того, бездіяльність
+   зараз чи ні. panel-open виставляється єдиним менеджером панелей нижче
+   для БУДЬ-ЯКОЇ з панелей, а не лише для картки цілі. ═══════ */
+body.panel-open #statusBar{display:none!important;}
+body.panel-open #drawFab,
+body.panel-open #supFab{opacity:0!important;pointer-events:none!important;transform:translateY(8px) scale(.9)!important;}
 #setFab{display:none!important;}
 #setFab i{font-size:13px;color:var(--a);}
 @media(max-height:420px){#setFab{width:28px;height:28px;top:calc(var(--st) + 2px);}#setFab i{font-size:11px;}}
@@ -2744,14 +2749,23 @@ function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
     });
     guard=false;
   }
+  function syncPanelOpenClass(){
+    const anyOpen=PANELS.some(id=>{
+      const el=document.getElementById(id);
+      return el&&isOpen(el,id);
+    });
+    document.body.classList.toggle('panel-open',anyOpen);
+  }
   function watch(id){
     const el=document.getElementById(id);
     if(!el)return;
-    new MutationObserver(()=>{if(isOpen(el,id))onChange(id);})
-      .observe(el,{attributes:true,attributeFilter:id==='wxPnl'?['style']:['class']});
+    new MutationObserver(()=>{
+      if(isOpen(el,id))onChange(id);
+      syncPanelOpenClass();
+    }).observe(el,{attributes:true,attributeFilter:id==='wxPnl'?['style']:['class']});
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>PANELS.forEach(watch));
-  else PANELS.forEach(watch);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{PANELS.forEach(watch);syncPanelOpenClass();});
+  else {PANELS.forEach(watch);syncPanelOpenClass();}
 })();
 
 // ═══════════════════════════
