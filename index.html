@@ -32,10 +32,11 @@
 }
 ::selection{background:rgba(58,140,255,.3);color:#fff;}
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+button,[onclick],.bn-item,.lp-wrap,.dw-tool,.dw-act,.dw-color,.sw,.th-card{touch-action:manipulation;}
 html,body{width:100%;height:100%;height:100dvh;background:#070c14;font-family:'Rajdhani',sans-serif;overflow:hidden;color:#fff;}
 body{background:#070c14;}
 #map{position:absolute;inset:0;z-index:1;background:#070c14;}
-.leaflet-tile-pane{filter:brightness(42%) contrast(100%) saturate(55%) sepia(8%) hue-rotate(174deg);}
+.leaflet-tile-pane{filter:brightness(42%) saturate(55%) sepia(8%) hue-rotate(174deg);}
 #map::after{content:'';position:absolute;inset:0;z-index:390;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(2,4,8,.55) 100%);}
 #map::before{content:'';position:absolute;inset:0;z-index:391;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,190,120,.03) 0 1px,transparent 1px 46px),repeating-linear-gradient(90deg,rgba(255,190,120,.03) 0 1px,transparent 1px 46px);}
 .leaflet-control-attribution{display:none!important;}
@@ -79,12 +80,32 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 #map{transition:filter .85s ease,transform .85s ease;}
 
 /* ═══════ ALERT ZONE GLOW — спокійна підсвітка тривожних полігонів ═══════ */
-.zone-alert{filter:drop-shadow(0 0 2px rgba(255,51,88,.55)) drop-shadow(0 0 7px rgba(255,51,88,.35));animation:zoneGlowPulse 3s ease-in-out infinite;}
+.zone-alert{fill:url(#aegisHazard)!important;stroke-dasharray:7 3 1 3!important;filter:drop-shadow(0 0 2px rgba(255,59,46,.55)) drop-shadow(0 0 8px rgba(255,176,32,.32)) drop-shadow(0 0 16px rgba(58,140,255,.16));animation:zoneGlowPulse 3s ease-in-out infinite;}
+.zone-alert.rayon-alert{fill:url(#aegisHazardSm)!important;}
 @keyframes zoneGlowPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(255,51,88,.5)) drop-shadow(0 0 7px rgba(255,51,88,.3));fill-opacity:.14!important;}
-  50%{filter:drop-shadow(0 0 5px rgba(255,90,120,.75)) drop-shadow(0 0 12px rgba(255,51,88,.5));fill-opacity:.26!important;}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(255,59,46,.5)) drop-shadow(0 0 8px rgba(255,176,32,.28)) drop-shadow(0 0 14px rgba(58,140,255,.14));fill-opacity:.9!important;}
+  50%{filter:drop-shadow(0 0 5px rgba(255,110,60,.8)) drop-shadow(0 0 14px rgba(255,176,32,.5)) drop-shadow(0 0 20px rgba(58,140,255,.22));fill-opacity:1!important;}
 }
 .zone-idle{transition:fill-opacity .2s,stroke-opacity .2s;}
+
+/* ═══════ МОБІЛЬНА ОПТИМІЗАЦІЯ — на сенсорних пристроях анімація трьох
+   drop-shadow filter одразу на всіх тривожних полігонах (може бути десятки
+   областей/районів одночасно) перераховується щокадрово і забиває головний
+   потік — саме це головна причина лагів карти і "зависання" кнопок на
+   телефоні. Тут вимикаємо анімацію filter і лишаємо лише дешеву пульсацію
+   прозорості (fill-opacity), а сам drop-shadow робимо статичним і легшим ═══════ */
+@media (pointer:coarse){
+  .zone-alert{filter:drop-shadow(0 0 5px rgba(255,90,40,.5))!important;animation:zoneGlowPulseMobile 3s ease-in-out infinite;}
+  @keyframes zoneGlowPulseMobile{
+    0%,100%{fill-opacity:.85!important;}
+    50%{fill-opacity:1!important;}
+  }
+}
+
+/* ═══════ TARGET-LOCK MARKER — унікальний елемент, якого немає у конкурентів ═══════ */
+.aegis-lock{width:44px;height:44px;pointer-events:none;filter:drop-shadow(0 0 4px rgba(255,176,32,.6));animation:aegisLockIn .5s cubic-bezier(.2,.8,.3,1.2),aegisLockPulse 2.4s ease-in-out .5s infinite;}
+@keyframes aegisLockIn{0%{transform:scale(1.9);opacity:0;}100%{transform:scale(1);opacity:1;}}
+@keyframes aegisLockPulse{0%,100%{opacity:.8;filter:drop-shadow(0 0 4px rgba(255,176,32,.55));}50%{opacity:1;filter:drop-shadow(0 0 9px rgba(255,176,32,.9));}}
 .ua-mask{fill-rule:evenodd;}
 
 /* ═══════ LAUNCH PIN v2 — оновлений дизайн точки пуску ═══════ */
@@ -243,6 +264,25 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .hud-corner.tr{top:-1px;right:-1px;border-top:2px solid var(--blue);border-right:2px solid var(--blue);}
 .hud-corner.bl{bottom:-1px;left:-1px;border-bottom:2px solid var(--blue);border-left:2px solid var(--blue);}
 .hud-corner.br{bottom:-1px;right:-1px;border-bottom:2px solid var(--blue);border-right:2px solid var(--blue);}
+
+/* ═══════ PERSISTENT BRAND FRAME + WATERMARK ═══════
+   Залишаються видимими завжди, навіть у Observer Mode / на скріншотах без topBar,
+   щоб карту завжди можна було впізнати як SKY DEFENSE. */
+#mapBrandFrame{position:absolute;inset:0;z-index:410;pointer-events:none;}
+#mapBrandFrame span{position:absolute;width:22px;height:22px;opacity:.5;filter:drop-shadow(0 0 4px rgba(110,195,255,.4));}
+#mapBrandFrame .mbf-tl{top:10px;left:10px;border-top:2px solid var(--blue);border-left:2px solid var(--blue);}
+#mapBrandFrame .mbf-tr{top:10px;right:10px;border-top:2px solid var(--blue);border-right:2px solid var(--blue);}
+#mapBrandFrame .mbf-bl{bottom:10px;left:10px;border-bottom:2px solid var(--blue);border-left:2px solid var(--blue);}
+#mapBrandFrame .mbf-br{bottom:10px;right:10px;border-bottom:2px solid var(--blue);border-right:2px solid var(--blue);}
+#mapWatermark{position:absolute;left:14px;bottom:14px;z-index:405;pointer-events:none;
+  font-family:'Orbitron';font-size:10px;font-weight:700;letter-spacing:.22em;
+  color:rgba(255,255,255,.4);text-shadow:0 0 10px rgba(110,195,255,.3);
+  display:flex;align-items:center;gap:6px;}
+#mapWatermark::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px var(--blue);}
+#mapWatermark span{color:var(--blue);text-shadow:0 0 12px rgba(110,195,255,.7);}
+@media(max-width:480px){#mapWatermark{font-size:8px;left:10px;bottom:10px;}#mapBrandFrame span{width:16px;height:16px;}}
+/* у звичайному режимі водяний знак ховається під нижньою навігацією/FAB — це нормально,
+   бо в Observer Mode (де прибираються #bnavWrap і #supFab) він стає єдиним бренд-елементом внизу */
 .cw-row{display:flex;align-items:center;padding:9px 20px;gap:0;}
 .cw-block-time{display:flex;flex-direction:column;align-items:flex-start;padding-right:16px;}
 .cw-time{font-family:'Orbitron';font-weight:700;font-size:20px;color:#fff;letter-spacing:.06em;line-height:1;text-shadow:0 0 14px rgba(110,195,255,.55);white-space:nowrap;}
@@ -1322,6 +1362,26 @@ body.draw-mode .leaflet-container{touch-action:none;}
 <div id="map"></div>
 <div id="mapHud"></div>
 
+<!-- PERSISTENT BRAND FRAME + WATERMARK — видимі завжди, навіть у Observer Mode -->
+<div id="mapBrandFrame">
+  <span class="mbf-tl"></span><span class="mbf-tr"></span><span class="mbf-bl"></span><span class="mbf-br"></span>
+</div>
+<div id="mapWatermark">SKY<span>DEFENSE</span></div>
+
+<!-- AEGIS ZONE SIGNATURE — унікальний патерн тривожних зон, щоб не бути схожими на конкурентів -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <pattern id="aegisHazard" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="16" height="16" fill="#ff3b2e" fill-opacity=".20"/>
+    <rect width="8" height="16" fill="#ffb020" fill-opacity=".15"/>
+  </pattern>
+  <pattern id="aegisHazardSm" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="10" height="10" fill="#ff3b2e" fill-opacity=".17"/>
+    <rect width="5" height="10" fill="#ffb020" fill-opacity=".12"/>
+  </pattern>
+</defs>
+</svg>
+
 <!-- TACTICAL RETICLE -->
 <div id="reticle">
   <svg viewBox="0 0 40 40" fill="none">
@@ -1963,6 +2023,15 @@ let maskLayer=null;
 const oblGeoms={};
 const rayonFeatures={};
 let activeAlertNames=new Set();
+let reticleMarkers={}; // {oblastName: L.Marker} — фірмовий маркер "цілі захоплено" над тривожними областями
+const AEGIS_LOCK_HTML=`<div class="aegis-lock"><svg viewBox="0 0 44 44" fill="none">
+<path d="M4 15V7a3 3 0 0 1 3-3h8" stroke="#ffb020" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M40 15V7a3 3 0 0 0-3-3h-8" stroke="#ffb020" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M4 29v8a3 3 0 0 0 3 3h8" stroke="#ffb020" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M40 29v8a3 3 0 0 1-3 3h-8" stroke="#ffb020" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="22" cy="22" r="8" stroke="#ff3b2e" stroke-width="1.3" stroke-dasharray="2 3"/>
+<circle cx="22" cy="22" r="2.6" fill="#ff3b2e"/>
+</svg></div>`;
 let activeRayonNames=new Set();
 
 // Маппинг район → область
@@ -2018,7 +2087,7 @@ const glowRenderer=L.svg({padding:1});
 function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
   return isAlert
-    ? {color:'#ff3358',weight:1.6,fill:true,fillColor:'#ff3358',fillOpacity:.16,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
+    ? {color:'#ffb020',weight:1.8,fill:true,fillColor:'#ff3b2e',fillOpacity:.9,dashArray:'7 3 1 3',lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
     : {color:'rgba(120,150,190,.28)',weight:.8,fill:true,fillColor:'#000',fillOpacity:.05,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
@@ -2029,7 +2098,7 @@ function rayonStyleFn(name){
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
   if(oblastActive) return {color:'rgba(255,255,255,.04)',weight:.5,fill:true,fillColor:'#000',fillOpacity:0,dashArray:null,lineJoin:'round',lineCap:'round',className:'',renderer:glowRenderer};
   return isAlert
-    ? {color:'#ff3358',weight:1.3,fill:true,fillColor:'#ff3358',fillOpacity:.13,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
+    ? {color:'#ffb020',weight:1.4,fill:true,fillColor:'#ff3b2e',fillOpacity:.85,dashArray:'5 2 1 2',lineJoin:'round',lineCap:'round',className:'zone-alert rayon-alert',renderer:glowRenderer}
     : {color:'rgba(120,150,190,.16)',weight:.4,fill:true,fillColor:'#000',fillOpacity:.03,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
@@ -2278,6 +2347,18 @@ function applyAlertStyles(){
   });
   Object.entries(rayonFeatures).forEach(([name,layer])=>{
     layer.setStyle(rayonStyleFn(name));
+  });
+  updateReticleMarkers();
+}
+
+// Фірмовий маркер "ціль захоплено" — з'являється над кожною тривожною областю.
+// Це елемент, якого немає в жодному з конкурентів (SkyAlert/Neptun/DIMAP/Vartaai/StrikeAlert/Контур).
+function updateReticleMarkers(){
+  // Маркер "захоплення цілі" вимкнено за запитом — очищаємо всі наявні мітки
+  // й більше не створюємо нових.
+  Object.keys(reticleMarkers).forEach(name=>{
+    map.removeLayer(reticleMarkers[name]);
+    delete reticleMarkers[name];
   });
 }
 
