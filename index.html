@@ -1107,6 +1107,49 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 .dw-act.done{background:var(--ar);color:var(--a);border-color:var(--a);}
 @media(max-width:480px){#drawBar{right:8px;bottom:calc(var(--sb) + 134px);width:150px;}}
 
+/* ═══════ TIME MACHINE — повзунок відкату часу ═══════ */
+#tmFab{
+  position:absolute;left:12px;bottom:calc(var(--sb) + 74px);z-index:2650;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--glass2);border:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.7);font-size:16px;cursor:pointer;
+  box-shadow:var(--sh);transition:background .18s,color .18s,transform .12s,border-color .18s;
+}
+#tmFab:active{transform:scale(.92);}
+#tmFab.on{background:var(--ar);color:var(--a);border-color:var(--a);box-shadow:0 0 14px rgba(58,140,255,.5),var(--sh);}
+@media(max-width:480px){#tmFab{left:8px;bottom:calc(var(--sb) + 64px);width:40px;height:40px;font-size:14px;}}
+
+#tmPnl{
+  position:absolute;bottom:calc(var(--sb)+14px);left:12px;right:12px;max-width:420px;margin:0 auto;z-index:5300;
+  background:var(--glass2);border:1px solid var(--brd);border-top:2px solid var(--a);border-radius:12px;
+  padding:12px 14px calc(14px + var(--sb));display:none;flex-direction:column;gap:10px;box-shadow:var(--sh);
+  animation:fadeUp .25s ease;
+}
+#tmPnl.on{display:flex;}
+.tm-head{display:flex;justify-content:space-between;align-items:flex-start;}
+.tm-title{font-family:'Orbitron';font-size:10px;color:#fff;letter-spacing:.1em;font-weight:600;}
+.tm-sub{font-family:'Orbitron';font-size:9px;color:var(--blue);margin-top:3px;letter-spacing:.04em;}
+.tm-x{background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1;}
+.tm-ranges{display:flex;gap:6px;}
+.tm-range{flex:1;padding:6px 4px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.6);font-family:'Orbitron';font-size:8px;letter-spacing:.05em;cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+.tm-range.on{background:var(--ar);color:var(--a);border-color:var(--a);}
+.tm-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,.1);outline:none;cursor:pointer;margin:2px 0;}
+.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px rgba(110,195,255,.7);cursor:pointer;border:2px solid #0a1420;}
+.tm-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px rgba(110,195,255,.7);cursor:pointer;border:2px solid #0a1420;}
+.tm-controls{display:flex;align-items:center;gap:10px;}
+.tm-play{width:36px;height:36px;border-radius:50%;background:var(--ar);border:1px solid var(--a);color:var(--a);
+  display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;flex-shrink:0;}
+.tm-play:active{transform:scale(.92);}
+.tm-speeds{display:flex;gap:4px;}
+.tm-speed{padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.55);font-family:'Orbitron';font-size:8px;cursor:pointer;transition:background .15s,color .15s;}
+.tm-speed.on{background:var(--ar);color:var(--a);border-color:var(--a);}
+.tm-count{margin-left:auto;font-family:'Orbitron';font-size:8px;color:rgba(255,255,255,.4);white-space:nowrap;}
+.tm-dot{font-size:16px;line-height:1;text-align:center;filter:drop-shadow(0 0 3px #000) drop-shadow(0 0 3px #000);transition:opacity .15s;}
+@media(max-width:480px){#tmPnl{left:8px;right:8px;padding:10px 12px calc(12px + var(--sb));}}
+
 #drawHint{
   position:absolute;top:calc(var(--st) + 60px);left:50%;transform:translateX(-50%);z-index:5100;
   display:none;background:var(--glass2);border:1px solid var(--a);border-radius:20px;
@@ -1690,6 +1733,38 @@ body.draw-mode .leaflet-container{touch-action:none;}
   </div>
   <div class="dw-actions">
     <div class="dw-act done" onclick="toggleDrawBar(true)"><i class="fa-solid fa-check"></i>ГОТОВО</div>
+  </div>
+</div>
+
+<!-- TIME MACHINE FAB (кнопка відкриття машини часу) -->
+<div id="tmFab" onclick="toggleTimeMachine()" title="Машина часу">
+  <i class="fa-solid fa-clock-rotate-left"></i>
+</div>
+
+<!-- TIME MACHINE PANEL — повзунок відкату часу по історії цілей -->
+<div id="tmPnl">
+  <div class="tm-head">
+    <div>
+      <div class="tm-title">🕰 МАШИНА ЧАСУ</div>
+      <div class="tm-sub" id="tmTime">--</div>
+    </div>
+    <button class="tm-x" onclick="closeTimeMachine()">×</button>
+  </div>
+  <div class="tm-ranges">
+    <button class="tm-range" onclick="setTMRange(6,this)">6 ГОД</button>
+    <button class="tm-range on" onclick="setTMRange(24,this)">24 ГОД</button>
+    <button class="tm-range" onclick="setTMRange(72,this)">3 ДНІ</button>
+    <button class="tm-range" onclick="setTMRange(168,this)">7 ДНІВ</button>
+  </div>
+  <input type="range" id="tmSlider" class="tm-slider" min="0" max="100" value="100" oninput="onTMSlider(this.value)">
+  <div class="tm-controls">
+    <button class="tm-play" onclick="toggleTMPlay()"><i class="fa-solid fa-play" id="tmPlayIcon"></i></button>
+    <div class="tm-speeds">
+      <button class="tm-speed on" onclick="setTMSpeed(1,this)">1×</button>
+      <button class="tm-speed" onclick="setTMSpeed(4,this)">4×</button>
+      <button class="tm-speed" onclick="setTMSpeed(15,this)">15×</button>
+    </div>
+    <div class="tm-count" id="tmCount">--</div>
   </div>
 </div>
 
@@ -2725,7 +2800,7 @@ function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
 // ═══════════════════════════
 (function(){
   const NAV_BTN={listPnl:'bnList',weekPnl:'bnWeek',radarPnl:'bnRadar',alertLogPnl:'bnAlertLog',searchPnl:'bnSearch'};
-  const PANELS=['trackPnl','radarPnl','listPnl','cityPnl','launchPnl','weekPnl','alertLogPnl','searchPnl','setSh','themeSh','supportPnl','wxPnl'];
+  const PANELS=['trackPnl','radarPnl','listPnl','cityPnl','launchPnl','weekPnl','alertLogPnl','searchPnl','setSh','themeSh','supportPnl','wxPnl','tmPnl'];
   function isOpen(el,id){
     if(id==='wxPnl')return el.style.display==='block';
     if(id==='supportPnl')return el.classList.contains('show');
@@ -2766,6 +2841,20 @@ function bgcl(e,id){if(e.target===document.getElementById(id))cls(id);}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{PANELS.forEach(watch);syncPanelOpenClass();});
   else {PANELS.forEach(watch);syncPanelOpenClass();}
+})();
+
+// Окремий спостерігач саме для tmPnl: запускає/зупиняє логіку "машини часу"
+// (приховати живі маркери, підвантажити історію, повернути живі маркери назад)
+// незалежно від того, чим саме панель була закрита — моєю кнопкою × чи
+// автоматичним forceClose() з менеджера панелей вище, коли відкрили щось інше.
+(function(){
+  const el=document.getElementById('tmPnl');
+  if(!el)return;
+  new MutationObserver(()=>{
+    const isOn=el.classList.contains('on');
+    if(isOn && !tmOpen){enterTM();loadTMData();}
+    if(!isOn && tmOpen){stopTMPlay();exitTM();}
+  }).observe(el,{attributes:true,attributeFilter:['class']});
 })();
 
 // ═══════════════════════════
@@ -3331,6 +3420,7 @@ function doSync(id,d){
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
       [marker,circle,line,trail].forEach(l=>{if(l)map.removeLayer(l);});
     }
+    if(tmOpen){[marker,line,trail].forEach(l=>{if(l)map.removeLayer(l);});}
   }
 }
 function remove(id){
@@ -3445,6 +3535,7 @@ function syncAviaMarkers(data){
       aviaMarkers[k]=L.marker([d.lat,d.lng],{icon:mkAviaIcon(d),zIndexOffset:1200}).addTo(map);
       const airfieldTxt=d.airfield?` · зліт: ${d.airfield}`:'';
       aviaMarkers[k].bindPopup(`<b>${d.name||k}</b><br>Статус: у повітрі${airfieldTxt}`);
+      if(tmOpen)map.removeLayer(aviaMarkers[k]);
     }
   });
 }
@@ -3500,6 +3591,7 @@ function addLaunchMarker(key,d){
   );
   marker.on('click',()=>openLaunchPanel(key));
   launchMarkers[key]={marker,data:d};
+  if(tmOpen)map.removeLayer(marker);
 }
 function removeLaunchMarker(key){
   if(!launchMarkers[key])return;
@@ -4107,6 +4199,144 @@ function renderWeekStats(cityCount){
 
 // Оновлюємо stats кожні 30 сек поки відкрито (з кешу, без запиту)
 setInterval(()=>{if(weekOpen)renderWeekFromHistory();},30000);
+
+// ═══════════════════════════
+// TIME MACHINE — повзунок відкату часу по історії цілей
+// Джерело даних: та сама historyDb, куди logHistory() пише кожну нову
+// ціль (місце й час появи). Повної траєкторії польоту тут немає —
+// тільки точки появи, тож "машина часу" показує, ДЕ І КОЛИ з'являлись
+// цілі за обраний період, а не безперервний рух.
+// ═══════════════════════════
+let tmOpen=false;
+let tmData=[];              // [{lat,lng,type,ts}] відсортовано за часом
+let tmMinTs=0, tmMaxTs=0, tmCurTs=0;
+let tmPlaying=false, tmTimerId=null, tmSpeed=1, tmRangeHours=24;
+let tmLayer=null;
+const TM_FADE_MS=25*60*1000; // ціль лишається видимою на карті ще 25 хв після появи
+
+function toggleTimeMachine(){document.getElementById('tmPnl').classList.toggle('on');}
+function closeTimeMachine(){document.getElementById('tmPnl').classList.remove('on');}
+
+// Приховуємо живі маркери (цілі/авіація/пуски) — залишаємо тільки контекст
+// карти (області, тривоги, малюнки), щоб не плутати "зараз" з "минулим"
+function enterTM(){
+  tmOpen=true;
+  document.getElementById('tmFab').classList.add('on');
+  if(document.getElementById('trackPnl').classList.contains('on'))closeTrack();
+  Object.values(obs).forEach(o=>{
+    [o.marker,o.line,o.trail,o.fcLine].forEach(l=>{if(l&&map.hasLayer(l))map.removeLayer(l);});
+    if(o.fcTicks)o.fcTicks.forEach(m=>{if(map.hasLayer(m))map.removeLayer(m);});
+  });
+  Object.values(aviaMarkers).forEach(m=>{if(map.hasLayer(m))map.removeLayer(m);});
+  Object.values(launchMarkers).forEach(o=>{if(map.hasLayer(o.marker))map.removeLayer(o.marker);});
+  if(!tmLayer)tmLayer=L.layerGroup();
+  tmLayer.addTo(map);
+}
+// Повертаємо живі маркери на карту як були
+function exitTM(){
+  tmOpen=false;
+  document.getElementById('tmFab').classList.remove('on');
+  Object.values(obs).forEach(o=>{
+    [o.marker,o.line,o.trail].forEach(l=>{if(l&&!map.hasLayer(l))l.addTo(map);});
+  });
+  Object.values(aviaMarkers).forEach(m=>{if(!map.hasLayer(m))m.addTo(map);});
+  Object.values(launchMarkers).forEach(o=>{if(!map.hasLayer(o.marker))o.marker.addTo(map);});
+  if(tmLayer){tmLayer.clearLayers();map.removeLayer(tmLayer);}
+}
+
+function loadTMData(){
+  document.getElementById('tmTime').textContent='Завантаження...';
+  const since=Date.now()-tmRangeHours*3600*1000;
+  historyDb.orderByChild('ts').startAt(since).once('value').then(snap=>{
+    tmData=[];
+    snap.forEach(ch=>{
+      const v=ch.val();
+      if(v&&v.lat&&v.lng&&v.ts)tmData.push(v);
+    });
+    tmData.sort((a,b)=>a.ts-b.ts);
+    tmMinTs=tmData.length?tmData[0].ts:since;
+    tmMaxTs=Date.now();
+    tmCurTs=tmMaxTs;
+    const sl=document.getElementById('tmSlider');
+    sl.min=tmMinTs;sl.max=tmMaxTs;sl.value=tmCurTs;
+    renderTMAt(tmCurTs);
+  }).catch(e=>{
+    console.warn('tm load error',e);
+    document.getElementById('tmTime').textContent='Помилка завантаження історії';
+  });
+}
+
+function setTMRange(hours,el){
+  if(tmPlaying)stopTMPlay();
+  tmRangeHours=hours;
+  document.querySelectorAll('.tm-range').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  loadTMData();
+}
+
+function tmEmoji(type){return (TINFO[type]&&TINFO[type].emoji)||TYPE_ICO_FALLBACK[type]||'🎯';}
+function mkTMIcon(type,opac){
+  return L.divIcon({className:'',html:`<div class="tm-dot" style="opacity:${opac.toFixed(2)}">${tmEmoji(type)}</div>`,iconSize:[22,22],iconAnchor:[11,11]});
+}
+
+function renderTMAt(ts){
+  tmCurTs=ts;
+  if(!tmLayer)return;
+  tmLayer.clearLayers();
+  const visible=tmData.filter(e=>e.ts<=ts && e.ts>ts-TM_FADE_MS);
+  visible.forEach(e=>{
+    const ageMs=ts-e.ts;
+    const opac=Math.max(.28,1-ageMs/TM_FADE_MS);
+    const marker=L.marker([e.lat,e.lng],{icon:mkTMIcon(e.type,opac),interactive:true});
+    const info=TINFO[e.type]||{};
+    const typName=(info.name||TYPE_NAME_FALLBACK[e.type]||e.type||'?').split(' ').slice(0,2).join(' ');
+    const city=latLngToCity(e.lat,e.lng);
+    marker.bindTooltip(`<b>${typName}</b><br>${city} · ${fmtClock(e.ts)}`,{direction:'top',offset:[0,-10],className:'ob-tt'});
+    marker.addTo(tmLayer);
+  });
+  document.getElementById('tmTime').textContent=fmtTMLabel(ts);
+  const n=visible.length;
+  document.getElementById('tmCount').textContent=`${n} ціл${n===1?'ь':(n>=2&&n<=4?'і':'ей')} на екрані`;
+}
+
+function fmtClock(ts){const dt=new Date(ts);return `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;}
+function fmtTMLabel(ts){
+  const dt=new Date(ts);
+  const dd=String(dt.getDate()).padStart(2,'0'),mm=String(dt.getMonth()+1).padStart(2,'0');
+  return `${dd}.${mm} · ${fmtClock(ts)}`;
+}
+
+function onTMSlider(v){if(tmPlaying)stopTMPlay();renderTMAt(+v);}
+
+function toggleTMPlay(){if(tmPlaying)stopTMPlay();else startTMPlay();}
+function startTMPlay(){
+  if(!tmData.length)return;
+  tmPlaying=true;
+  document.getElementById('tmPlayIcon').className='fa-solid fa-pause';
+  if(tmCurTs>=tmMaxTs)tmCurTs=tmMinTs; // доїхали до кінця — почати заново
+  tmTimerId=setInterval(()=>{
+    tmCurTs+=3*60*1000*tmSpeed; // крок віртуального часу за тік плюс масштаб швидкості
+    if(tmCurTs>=tmMaxTs){
+      tmCurTs=tmMaxTs;
+      document.getElementById('tmSlider').value=tmCurTs;
+      renderTMAt(tmCurTs);
+      stopTMPlay();
+      return;
+    }
+    document.getElementById('tmSlider').value=tmCurTs;
+    renderTMAt(tmCurTs);
+  },200);
+}
+function stopTMPlay(){
+  tmPlaying=false;
+  document.getElementById('tmPlayIcon').className='fa-solid fa-play';
+  if(tmTimerId){clearInterval(tmTimerId);tmTimerId=null;}
+}
+function setTMSpeed(mult,el){
+  tmSpeed=mult;
+  document.querySelectorAll('.tm-speed').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
 
 // ═══════════════════════════
 // ALERTS LOG
