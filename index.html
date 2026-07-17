@@ -792,11 +792,11 @@ body.panel-open #supFab{opacity:0!important;pointer-events:none!important;transf
 
 /* ═══════ GHOST TRAIL FORECAST ═══════ */
 .gt-tick{
-  font-family:'Orbitron';font-size:7px;letter-spacing:.03em;
+  font-family:'Orbitron';font-size:9px;font-weight:600;letter-spacing:.03em;
   white-space:nowrap;text-shadow:0 0 4px #000,0 0 4px #000;
   pointer-events:none;
-  padding:1px 4px;border-radius:7px;
-  background:rgba(0,0,0,.4);
+  padding:3px 7px;border-radius:8px;
+  background:rgba(0,0,0,.55);
 }
 
 /* ═══════ COORDINATE GRID ═══════ */
@@ -3191,26 +3191,29 @@ function updateTrail(id,lat,lng){
 }
 
 // ═══════════════════════════
-// GHOST TRAIL FORECAST — пунктирна лінія прогнозу курсу
-// з підписами часу (+5/+10/+15/+20 хв)
+// GHOST TRAIL FORECAST — одна лінія курсу до міста, на яке летить ціль
 // ═══════════════════════════
-const FC_STEPS=[5,10,15,20]; // хвилини
 
-function buildForecastPts(d){
-  const ang=+d.angle||0, spd=SPD[d.type]||200;
-  const pts=[[d.lat,d.lng]];
-  const labels=[];
-  FC_STEPS.forEach(min=>{
-    // vect() рахує зміщення за 10 хв при заданій швидкості — масштабуємо пропорційно
-    const v=vect(d.lat,d.lng,ang,spd*(min/10));
-    pts.push([v.lat,v.lng]);
-    labels.push({lat:v.lat,lng:v.lng,min});
+// Знаходить місто, яке лежить по курсу цілі (в межах "конуса" напрямку),
+// найближче до поточної позиції серед тих, що потрапляють під траєкторію
+function findTargetCity(lat,lng,ang){
+  const rad=(+ang||0)*Math.PI/180, ux=Math.sin(rad), uy=Math.cos(rad);
+  const latR=lat*Math.PI/180;
+  let best=null;
+  CITY_ZONES.forEach(z=>{
+    const dx=(z.lng-lng)*111.320*Math.cos(latR); // км на схід
+    const dy=(z.lat-lat)*110.574;                // км на північ
+    const along=dx*ux+dy*uy;   // відстань вперед по курсу
+    if(along<=0)return;        // місто позаду — не рахуємо
+    const cross=Math.abs(dx*uy-dy*ux); // бічне відхилення від лінії курсу
+    const corridor=Math.max(18,along*0.12); // чим далі місто — тим ширший допустимий коридор
+    if(cross>corridor)return;
+    if(!best||along<best.along)best={name:z.name,lat:z.lat,lng:z.lng,along};
   });
-  return {pts,labels};
+  return best;
 }
 
 function renderForecast(id,d){
-  return; // прогнозна стрілка (+5/+10/+15/+20 хв) вимкнена
   const on=document.getElementById('togFc')?.checked!==false;
   const o=obs[id];
   if(!o)return;
@@ -3218,26 +3221,45 @@ function renderForecast(id,d){
   if(o.fcLine){map.removeLayer(o.fcLine);o.fcLine=null;}
   if(o.fcTicks){o.fcTicks.forEach(m=>map.removeLayer(m));o.fcTicks=[];}
   if(!on)return;
+  // Показуємо лінію курсу лише для цілі, на яку натиснули (selId).
+  // Малювати її для ВСІХ цілей одночасно (десятки під час масованої атаки)
+  // саме і викликало лаги карти на телефонах — тому лишаємо тільки одну.
+  if(id!==selId)return;
 
-  const {pts,labels}=buildForecastPts(d);
+  const ang=+d.angle||0, spd=SPD[d.type]||200;
+  const target=findTargetCity(d.lat,d.lng,ang);
+  let endLat,endLng,labelTxt;
+  if(target){
+    endLat=target.lat;endLng=target.lng;
+    const mins=Math.round(target.along/spd*60);
+    labelTxt=`${target.name} · ${Math.round(target.along)} км · ~${fmtMin(mins)}`;
+  }else{
+    // по курсу немає жодного міста в "конусі" — тягнемо коротку лінію напрямку
+    // (15 хв польоту), а не вигадуємо ціль. Раніше тут була помилка:
+    // vect(...,spd*10) рахував зміщення за 10 хв ПРИ швидкості spd*10 —
+    // тобто в 10 разів довше, ніж треба (~300 км замість ~45 км)
+    const v=vect(d.lat,d.lng,ang,spd*1.5);
+    endLat=v.lat;endLng=v.lng;
+    labelTxt=`курс ${dir(ang)} · немає міста попереду`;
+  }
+
   const c=getC(d.type);
-  o.fcLine=L.polyline(pts,{
-    renderer:cvs,color:c,weight:1,opacity:.4,
-    dashArray:'1,6',interactive:false
+  o.fcLine=L.polyline([[d.lat,d.lng],[endLat,endLng]],{
+    renderer:cvs,color:c,weight:1.6,opacity:.65,
+    dashArray:'2,7',interactive:false
   }).addTo(map);
 
-  o.fcTicks=labels.map(lb=>{
-    return L.marker([lb.lat,lb.lng],{
-      icon:L.divIcon({
-        className:'',
-        html:`<div class="gt-tick" style="color:${c}">+${lb.min}хв</div>`,
-        iconSize:[34,12],
-        iconAnchor:[17,6]
-      }),
-      interactive:false
-    }).addTo(map);
-  });
+  o.fcTicks=[L.marker([endLat,endLng],{
+    icon:L.divIcon({
+      className:'',
+      html:`<div class="gt-tick" style="color:${c}">🎯 ${labelTxt}</div>`,
+      iconSize:[140,16],
+      iconAnchor:[70,8]
+    }),
+    interactive:false
+  }).addTo(map)];
 }
+function fmtMin(m){return m<60?`${m} хв`:`${Math.floor(m/60)} год ${m%60} хв`;}
 
 function removeForecast(o){
   if(!o)return;
@@ -3650,6 +3672,12 @@ function showTrack(id,d){
   lnpOpenKey=null;
   document.getElementById('trackPnl').classList.add('on');
   document.body.classList.add('panel-open');
+
+  // Лінія прогнозу курсу (куди летить) — показуємо тільки для щойно обраної
+  // цілі, з усіх інших прибираємо, і малюємо одразу, не чекаючи sync-тіку
+  Object.entries(obs).forEach(([oid,o])=>{if(oid!=id)removeForecast(o);});
+  renderForecast(id,d);
+
   const spd=SPD[d.type]||200, ang=+d.angle||0, info=TINFO[d.type]||{};
 
   // Заголовок
@@ -3712,7 +3740,7 @@ function showTrack(id,d){
     intEl.style.display='none';
   }
 }
-function closeTrack(){document.getElementById('trackPnl').classList.remove('on');document.body.classList.remove('panel-open');selId=null;}
+function closeTrack(){document.getElementById('trackPnl').classList.remove('on');document.body.classList.remove('panel-open');if(selId&&obs[selId])removeForecast(obs[selId]);selId=null;}
 map.on('click',e=>{
   if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}
   closeTrack();
