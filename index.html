@@ -2062,6 +2062,32 @@ setTimeout(()=>{
 },600);
 
 // ═══════════════════════════
+// ПІДПИСИ МІСТ/СЕЛИЩ ПРИ НАБЛИЖЕННІ (окремий шар лейблів з тайлів)
+// Малюється у власній пейні, тому не ловить color-фільтри теми (сепія/hue-rotate),
+// і лишається чітким білим текстом на будь-якій темі
+// ═══════════════════════════
+map.createPane('osmLabelsPane');
+// zIndex нижче за maskLayer (overlayPane, z=400) — тому темна маска "все, крім
+// України" перекриває підписи закордонних міст/областей (Польща, Білорусь,
+// Курська/Брянська/Ростовська обл. РФ тощо), а підписи над Україною лишаються видимими
+map.getPane('osmLabelsPane').style.zIndex=210;
+map.getPane('osmLabelsPane').style.pointerEvents='none';
+const NOLABEL_THEMES=[0,6,9,13]; // теми на "nolabels" тайлах — їм потрібен окремий шар підписів
+let labelTileLayer=null;
+function updateLabelOverlay(i){
+  if(labelTileLayer){map.removeLayer(labelTileLayer);labelTileLayer=null;}
+  if(NOLABEL_THEMES.includes(i)){
+    // minZoom:8 — на оглядовому зумі (весь регіон/декілька областей) той самий
+    // тайл малює і назву області, і назву її головного міста в одній точці —
+    // вони накладаються одне на одне і виглядають "криво"/задвоєно.
+    // Тому підписи вмикаються лише з ближчого наближення, де вже видно окремі
+    // міста, селища й села без конфлікту з обласними підписами.
+    labelTileLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{pane:'osmLabelsPane',updateWhenIdle:true,keepBuffer:2,minZoom:8,maxNativeZoom:20}).addTo(map);
+  }
+}
+updateLabelOverlay(curTheme);
+
+// ═══════════════════════════
 // ЗАВЖДИ ВИДИМІ ПІДПИСИ МІСТ
 // ═══════════════════════════
 map.createPane('labelsPane');
@@ -2129,6 +2155,7 @@ function selTh(i){
   mapEl.style.perspective='';mapEl.style.transform='';
   map.removeLayer(tLayer);
   tLayer=L.tileLayer(TURLS[i],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
+  updateLabelOverlay(i);
   setTimeout(()=>{
     applyThemeFilter(i);
     applyMapTilt(i);
