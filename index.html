@@ -80,11 +80,11 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 #map{transition:filter .85s ease,transform .85s ease;}
 
 /* ═══════ ALERT ZONE GLOW — спокійна підсвітка тривожних полігонів ═══════ */
-.zone-alert{fill:url(#aegisHazard)!important;stroke-dasharray:7 3 1 3!important;filter:drop-shadow(0 0 2px rgba(255,59,46,.55)) drop-shadow(0 0 8px rgba(255,176,32,.32)) drop-shadow(0 0 16px rgba(58,140,255,.16));animation:zoneGlowPulse 3s ease-in-out infinite;}
+.zone-alert{fill:url(#aegisHazard)!important;stroke-dasharray:7 3 1 3!important;filter:drop-shadow(0 0 2px rgba(255,30,30,.6)) drop-shadow(0 0 8px rgba(255,30,30,.4)) drop-shadow(0 0 16px rgba(200,0,0,.22));animation:zoneGlowPulse 3s ease-in-out infinite;}
 .zone-alert.rayon-alert{fill:url(#aegisHazardSm)!important;}
 @keyframes zoneGlowPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(255,59,46,.5)) drop-shadow(0 0 8px rgba(255,176,32,.28)) drop-shadow(0 0 14px rgba(58,140,255,.14));fill-opacity:.9!important;}
-  50%{filter:drop-shadow(0 0 5px rgba(255,110,60,.8)) drop-shadow(0 0 14px rgba(255,176,32,.5)) drop-shadow(0 0 20px rgba(58,140,255,.22));fill-opacity:1!important;}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(255,30,30,.55)) drop-shadow(0 0 8px rgba(255,30,30,.35)) drop-shadow(0 0 14px rgba(200,0,0,.18));fill-opacity:.9!important;}
+  50%{filter:drop-shadow(0 0 5px rgba(255,60,60,.85)) drop-shadow(0 0 14px rgba(255,20,20,.55)) drop-shadow(0 0 20px rgba(200,0,0,.28));fill-opacity:1!important;}
 }
 .zone-idle{transition:fill-opacity .2s,stroke-opacity .2s;}
 
@@ -95,7 +95,7 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
    телефоні. Тут вимикаємо анімацію filter і лишаємо лише дешеву пульсацію
    прозорості (fill-opacity), а сам drop-shadow робимо статичним і легшим ═══════ */
 @media (pointer:coarse){
-  .zone-alert{filter:drop-shadow(0 0 5px rgba(255,90,40,.5))!important;animation:zoneGlowPulseMobile 3s ease-in-out infinite;}
+  .zone-alert{filter:drop-shadow(0 0 5px rgba(255,30,30,.55))!important;animation:zoneGlowPulseMobile 3s ease-in-out infinite;}
   @keyframes zoneGlowPulseMobile{
     0%,100%{fill-opacity:.85!important;}
     50%{fill-opacity:1!important;}
@@ -1160,6 +1160,15 @@ body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) 
 body.draw-mode #map{cursor:crosshair;touch-action:none;}
 body.draw-mode .leaflet-container{touch-action:none;}
 
+/* ═══════ LIGHT / DAYTIME THEME — легка версія без filter:invert() ═══════
+   Попередня версія інвертувала весь HUD через CSS filter на купі елементів —
+   це змушує браузер постійно рендерити весь інтерфейс як один важкий шар
+   (окремий composite-layer + перерахунок піксель-за-пікселем), що особливо
+   боляче для GPU на телефонах і є головною причиною лагів. Тепер світла
+   тема — це просто світліші тайли карти (як у решти тем), а HUD лишається
+   тим самим легким тактичним оверлеєм (він і так добре читається поверх
+   світлої підкладки) — без жодних додаткових filter/backdrop на весь екран. */
+
 </style>
 </head>
 <body oncontextmenu="return false;" class="pre-boot">
@@ -1262,11 +1271,11 @@ body.draw-mode .leaflet-container{touch-action:none;}
     <div class="th-title">MAP LAYER</div>
     <div class="th-grid">
       <div class="th-card" id="tc0" onclick="selTh(0)"><div class="th-prev pv0"></div><div class="th-name">ULTRA DARK</div></div>
-      <div class="th-card sel" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
+      <div class="th-card" id="tc1" onclick="selTh(1)"><div class="th-prev pv1"></div><div class="th-name">SATELLITE</div></div>
       <div class="th-card" id="tc2" onclick="selTh(2)"><div class="th-prev pv2"></div><div class="th-name">NIGHT BLUE</div></div>
       <div class="th-card" id="tc3" onclick="selTh(3)"><div class="th-prev pv3"></div><div class="th-name">TOPO</div></div>
       <div class="th-card" id="tc4" onclick="selTh(4)"><div class="th-prev pv4"><span class="th-badge" style="color:#4fc3f7;text-shadow:0 0 8px #4fc3f7">3D</span></div><div class="th-name">3D RELIEF</div></div>
-      <div class="th-card" id="tc5" onclick="selTh(5)"><div class="th-prev pv5"></div><div class="th-name">LIGHT</div></div>
+      <div class="th-card sel" id="tc5" onclick="selTh(5)"><div class="th-prev pv5"><span class="th-badge" style="color:#333;text-shadow:0 0 6px #fff">DAY</span></div><div class="th-name">LIGHT</div></div>
       <div class="th-card" id="tc6" onclick="selTh(6)"><div class="th-prev pv6"></div><div class="th-name">RED OPS</div></div>
       <div class="th-card" id="tc7" onclick="selTh(7)"><div class="th-prev pv7"><span class="th-badge" style="color:rgba(0,255,136,.8)">NV</span></div><div class="th-name">NIGHT VISION</div></div>
       <div class="th-card" id="tc8" onclick="selTh(8)"><div class="th-prev pv8"></div><div class="th-name">TERRAIN</div></div>
@@ -1453,12 +1462,12 @@ body.draw-mode .leaflet-container{touch-action:none;}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <defs>
   <pattern id="aegisHazard" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <rect width="16" height="16" fill="#ff3b2e" fill-opacity=".20"/>
-    <rect width="8" height="16" fill="#ffb020" fill-opacity=".15"/>
+    <rect width="16" height="16" fill="#ff2020" fill-opacity=".22"/>
+    <rect width="8" height="16" fill="#8b0000" fill-opacity=".22"/>
   </pattern>
   <pattern id="aegisHazardSm" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <rect width="10" height="10" fill="#ff3b2e" fill-opacity=".17"/>
-    <rect width="5" height="10" fill="#ffb020" fill-opacity=".12"/>
+    <rect width="10" height="10" fill="#ff2020" fill-opacity=".19"/>
+    <rect width="5" height="10" fill="#8b0000" fill-opacity=".19"/>
   </pattern>
 </defs>
 </svg>
@@ -2045,9 +2054,12 @@ function revealUI(){
   }));
   toast('SYSTEM READY');
 }
-let curTheme=1;
+let curTheme=5;
 let tLayer=L.tileLayer(TURLS[curTheme],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
-setTimeout(()=>{applyBrt(65);applyThemeFilter(curTheme);applyMapTilt(curTheme);},600);
+setTimeout(()=>{
+  applyBrt(65);applyThemeFilter(curTheme);applyMapTilt(curTheme);
+  document.querySelectorAll('.th-card').forEach((c,j)=>c.classList.toggle('sel',j===curTheme));
+},600);
 
 // ═══════════════════════════
 // ЗАВЖДИ ВИДИМІ ПІДПИСИ МІСТ
@@ -2200,7 +2212,7 @@ const glowRenderer=L.svg({padding:1});
 function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
   return isAlert
-    ? {color:'#ffb020',weight:1.8,fill:true,fillColor:'#ff3b2e',fillOpacity:.9,dashArray:'7 3 1 3',lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
+    ? {color:'#ff2d2d',weight:1.8,fill:true,fillColor:'#ff2020',fillOpacity:.9,dashArray:'7 3 1 3',lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
     : {color:'rgba(120,150,190,.28)',weight:.8,fill:true,fillColor:'#000',fillOpacity:.05,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
@@ -2211,7 +2223,7 @@ function rayonStyleFn(name){
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
   if(oblastActive) return {color:'rgba(255,255,255,.04)',weight:.5,fill:true,fillColor:'#000',fillOpacity:0,dashArray:null,lineJoin:'round',lineCap:'round',className:'',renderer:glowRenderer};
   return isAlert
-    ? {color:'#ffb020',weight:1.4,fill:true,fillColor:'#ff3b2e',fillOpacity:.85,dashArray:'5 2 1 2',lineJoin:'round',lineCap:'round',className:'zone-alert rayon-alert',renderer:glowRenderer}
+    ? {color:'#ff2d2d',weight:1.4,fill:true,fillColor:'#ff2020',fillOpacity:.85,dashArray:'5 2 1 2',lineJoin:'round',lineCap:'round',className:'zone-alert rayon-alert',renderer:glowRenderer}
     : {color:'rgba(120,150,190,.16)',weight:.4,fill:true,fillColor:'#000',fillOpacity:.03,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
