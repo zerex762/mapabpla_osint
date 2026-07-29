@@ -211,12 +211,18 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .lp-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;display:flex;align-items:center;gap:4px;font-family:'Exo 2';font-size:8px;font-weight:600;letter-spacing:.06em;color:#d9ecff;background:linear-gradient(160deg,rgba(6,16,40,.94),rgba(3,8,18,.94));border:1px solid rgba(80,160,255,.5);border-radius:7px;padding:2px 8px;text-shadow:0 0 6px rgba(45,130,255,.75);box-shadow:0 2px 9px rgba(0,0,0,.55);}
 .lp-label::before{content:'';width:5px;height:5px;border-radius:50%;background:#3aa0ff;box-shadow:0 0 5px #3aa0ff;flex-shrink:0;}
 .lp-type{position:absolute;left:50%;top:-4px;transform:translateX(-50%);white-space:nowrap;font-family:'Exo 2';font-size:8px;font-weight:700;letter-spacing:.05em;color:#ffcfc7;background:linear-gradient(160deg,rgba(60,10,4,.95),rgba(30,4,2,.95));border:1px solid rgba(255,59,46,.55);border-radius:7px;padding:2px 7px;text-shadow:0 0 6px rgba(255,59,46,.6);box-shadow:0 2px 9px rgba(0,0,0,.55);}
-.trg-type{position:absolute;top:-15px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:'Exo 2';font-size:7.5px;font-weight:700;letter-spacing:.04em;color:#ffcfc7;background:rgba(20,4,2,.82);border:1px solid rgba(255,59,46,.5);border-radius:6px;padding:1px 6px;text-shadow:0 0 5px rgba(255,59,46,.55);box-shadow:0 1px 6px rgba(0,0,0,.5);pointer-events:none;z-index:2;}
+
+/* ═══════ ПОСТІЙНІ МАЙДАНЧИКИ ПУСКУ (LAUNCH_SITES) — завжди на карті ═══════ */
+.ls-pin{position:relative;display:flex;align-items:center;gap:5px;pointer-events:auto;cursor:pointer;}
+.ls-dot{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8fb8ff,#2f6fce 60%,#123a73 100%);box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 6px rgba(70,140,255,.55);flex-shrink:0;animation:lsIdlePulse 3.2s ease-in-out infinite;}
+@keyframes lsIdlePulse{0%,100%{opacity:.7;transform:scale(1);}50%{opacity:1;transform:scale(1.2);}}
+.ls-tag{font-family:'Exo 2';font-size:8.5px;font-weight:700;letter-spacing:.05em;color:rgba(200,225,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.9);white-space:nowrap;background:rgba(10,20,35,.6);padding:1px 5px;border-radius:4px;border:1px solid rgba(90,150,255,.3);}
+.trg-type{display:none;}
 /* ═══════ КАРТКИ-ІКОНКИ ЗАГРОЗ — кольоровий квадрат за силуетом цілі,
    як на референс-скріні (фіолет = аеро-цілі/дрони, червоний = ракети/
    балістика). Проста рамка з градієнтом і глоу-обідком під color теми. */
 .trg-card{position:absolute;inset:0;border-radius:7px;z-index:0;}
-.trg-card-purple{background:linear-gradient(160deg,var(--purple),var(--purple-deep));border:1.5px solid rgba(255,255,255,.45);box-shadow:var(--glow-p);}
+.trg-card-purple{background:none;border:none;box-shadow:none;}
 .trg-card-red{background:linear-gradient(160deg,#ff5b46,#c41c0e);border:1.5px solid rgba(255,255,255,.45);box-shadow:var(--glow-a);}
 
 /* ═══════ PRIVACY ═══════ */
@@ -1406,7 +1412,6 @@ body.draw-mode .leaflet-container{touch-action:none;}
 
         <div class="ss-card">
           <div class="ss-card-h"><i class="fa-solid fa-route"></i> Траєкторії цілей</div>
-          <div class="ss-row"><span>Курс на маркері</span><label class="tog"><input type="checkbox" id="togCrs" checked onchange="redrawAll()"><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Хвіст-траєкторія</span><label class="tog"><input type="checkbox" id="togTrl" checked><span class="tog-sl"></span></label></div>
           <div class="ss-row"><span>Прогноз курсу (Ghost Trail)</span><label class="tog"><input type="checkbox" id="togFc" checked onchange="toggleForecastAll()"><span class="tog-sl"></span></label></div>
           <div class="ss-row" style="margin-bottom:0"><span>Групувати рої цілей</span><label class="tog"><input type="checkbox" id="togSwarm" onchange="toggleSwarmMode()"><span class="tog-sl"></span></label></div>
@@ -3222,7 +3227,7 @@ function acceptP(){
     setTimeout(forceFinishLoad,3000);
   },300);
 }
-function launch(){locateMe();fetchAlerts();loadOblast();loadHistoryStats();loadLaunchCache();renderCityLabels();renderLiveTicker();}
+function launch(){locateMe();fetchAlerts();loadOblast();loadHistoryStats();loadLaunchCache();renderCityLabels();renderLiveTicker();renderLaunchSitePins();}
 
 // ═══════════════════════════
 // FIREBASE
@@ -3328,8 +3333,6 @@ function vect(lat,lng,ang,spd){const dist=spd/6,R=6371,ar=(+ang)*Math.PI/180;ret
 // ═══════════════════════════
 function mkIcon(d){
   const ang=+d.angle||0, sz=ISZ;
-  const showCrs=document.getElementById('togCrs')?.checked!==false;
-
   const isShahed=(d.type||'').indexOf('shahed')===0;
   // Силует цілі малюємо білим/світлим — колір несе картка під ним (фіолет/червоний)
   const imgFilter='brightness(0) invert(1) drop-shadow(0 0 2px rgba(0,0,0,.5))';
@@ -3338,11 +3341,10 @@ function mkIcon(d){
   // Стабільна розмітка (клас crs-lbl завжди в DOM, лише приховується) —
   // це дозволяє оновлювати курс/кут БЕЗ повного пересворення іконки (setIcon),
   // що і є головним джерелом лагів на слабких телефонах при 15-20+ цілях одночасно.
-  const html=`<div style="position:relative;width:${sz}px;height:${sz}px;">
+  const html=`<div class="icon-wrap" style="position:relative;width:${sz}px;height:${sz}px;">
     ${typeName?`<div class="trg-type">${typeName.toUpperCase()}</div>`:''}
     <div class="trg-card ${cardCls}"></div>
     <img class="drn-img" src="${TYPE_ICONS[d.type]||(d.type+'.png')}" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz*.72}px;height:${sz*.72}px;display:block;margin:${sz*.14}px auto 0;transform:rotate(${ang + 90}deg);filter:${imgFilter};">
-    <div class="crs-lbl" style="display:${showCrs?'block':'none'};position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-family:Inter;font-size:8px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:1px 1px 3px #000,0 0 4px #000;letter-spacing:.04em">${Math.round(ang)}°</div>
   </div>`;
   return L.divIcon({className:'',html,iconSize:[sz,sz+14],iconAnchor:[sz/2,sz/2]});
 }
@@ -3361,13 +3363,17 @@ function updateMarkerIconInPlace(marker,d,prevType){
   if(!img)return false;
   const ang=+d.angle||0;
   img.style.transform=`rotate(${ang+90}deg)`;
-  const lbl=el.querySelector('.crs-lbl');
-  if(lbl){
-    const showCrs=document.getElementById('togCrs')?.checked!==false;
-    lbl.style.display=showCrs?'block':'none';
-    if(showCrs)lbl.textContent=`${Math.round(ang)}°`;
-  }
   return true;
+}
+
+// Точковий зсув іконки на екрані (px) — використовується для розведення
+// пари цілей, що летять поруч (див. updatePairOffsets), без перестворення HTML.
+function applyIconOffset(marker,dx,dy){
+  if(!marker)return;
+  const el=marker.getElement && marker.getElement();
+  if(!el)return;
+  const wrap=el.querySelector('.icon-wrap');
+  if(wrap)wrap.style.transform=`translate(${dx}px,${dy}px)`;
 }
 
 // ═══════════════════════════
@@ -3452,6 +3458,47 @@ function _updateSwarmsImpl(){
     }
   }
 }
+// ═══════════════════════════
+// PAIR SPREAD — якщо 2 цілі одного типу летять близько (≤2 км),
+// розводимо їх іконки на екрані перпендикулярно курсу (одна лівіше, друга
+// правіше лінії польоту), щоб обидві лишались видимими, а не ховались
+// одна за одною. Реальні координати/курс НЕ змінюються — лише піксельний
+// зсув самої іконки-маркера.
+// ═══════════════════════════
+const PAIR_SPREAD_KM=2;
+const PAIR_SPREAD_PX=9; // половина відстані між іконками (px)
+function updatePairOffsets(){
+  const entries=Object.entries(obs).filter(([,o])=>o&&o.data&&o.marker&&!o._inSwarm);
+  const used=new Set();
+  for(let i=0;i<entries.length;i++){
+    const [idA,oA]=entries[i];
+    if(used.has(idA))continue;
+    let bestJ=-1,bestDist=Infinity;
+    for(let j=0;j<entries.length;j++){
+      if(i===j)continue;
+      const [idB,oB]=entries[j];
+      if(used.has(idB))continue;
+      if(oB.data.type!==oA.data.type)continue;
+      const distKm=map.distance([oA.data.lat,oA.data.lng],[oB.data.lat,oB.data.lng])/1000;
+      if(distKm<=PAIR_SPREAD_KM&&distKm<bestDist){bestDist=distKm;bestJ=j;}
+    }
+    if(bestJ!==-1){
+      const [idB,oB]=entries[bestJ];
+      used.add(idA);used.add(idB);
+      const ang=((+oA.data.angle||0)+(+oB.data.angle||0))/2;
+      const perp=(ang+90)*Math.PI/180;
+      const dx=Math.sin(perp)*PAIR_SPREAD_PX, dy=-Math.cos(perp)*PAIR_SPREAD_PX;
+      // Стабільний розподіл сторін за id, щоб маркери не "мигали" місцями кожен тік
+      const [leftId,rightId]=[idA,idB].sort();
+      applyIconOffset(obs[leftId].marker,-dx,-dy);
+      applyIconOffset(obs[rightId].marker,dx,dy);
+    } else {
+      used.add(idA);
+      applyIconOffset(oA.marker,0,0);
+    }
+  }
+}
+
 function toggleSwarmMode(){
   swarmMode=document.getElementById('togSwarm')?.checked;
   if(swarmMode){
@@ -3591,6 +3638,7 @@ function flush(){
   scheduleRecompute();
   if(regionMode&&regionFilter)applyRegionFilter();
   if(swarmMode)updateSwarms();
+  updatePairOffsets();
   saveOfflineCache();
 }
 function doSync(id,d){
@@ -3764,11 +3812,52 @@ let launchCache=[];     // плаский кеш для таблиці "пуск
 // Компактна векторна іконка (замість розмитого растру) — стилізований
 // силует дрона-камікадзе (дельтоподібне крило), завжди чітка на будь-якому масштабі.
 const ICON_LAUNCH_SVG='<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHkAAACzCAYAAACtibObAAAf4UlEQVR4nO2deVhUZd/477PODMPMADKAgLJLgQYCimIkuTz6JGWZ6fOomJprrrGo5NqemqampvZkhVnmUj76mpq9pIkihKCG7AyrIAKzMcPMmbP9/pD5vWQoMMwwM3I+1+U/MteZM+dzvvd+f28AODg4ODg4ODi6AAzDAIZha9+GXWOzTw+CIODs7AzFxcU5BwQEYNa+Hw4zA0EQcHNzg1esWBGWkZHx+cyZM30xjPNsKqi1b+Bh+Hw+iI+P946MjAyNj49fnJWVdSorK+suSZLWvjW7xaYki8ViaMmSJdHJycnf8Pl8CU3ThsuXL39P0zRr7XvjMAMikQjavHlznEajaWDboGmarK2tzXn33XfHeHl5Ida+Rw4TgSAIODk5Qe++++6Y1tbWZvYhaJoma2pqsjds2BDbv39/m20ocjwCYwv6k08+eVGv16seFtxedFVVVWZqaupId3d3TrS9AEEQ6NevH/Tpp5++3FEEdyS6oqLiSlJSUpRUKuVE2zpGwfv27fuXwWDQdibYCEVRRHl5+aVVq1YNdXV15UTbKhAEAalUCh84cGDW44rox0V0eXn5pWXLlj3j4uICWfv3cDwEBEHAw8MDTktLW0RRFNFdwe0juri4+MLixYtDnJycONG2AgRBwNXVFU5LS1vUnSK6M9ELFix4SiwWc6JtARRFwciRI0UymexyTwW3F33nzp3Tc+fODRKJRJzoR9CrjRccx5GWlpb7DMNQ5rgegiB4cHDwhNWrV+985ZVX/IVCoTkuy2EKxv7wO++887xCoag0VyS3j+jbt2+fnDFjhq9AILD2z+2bwDAMfHx80BMnTiSTJKkzt2SWZVmDwaD9888/f5o2bdoAHo9n7Z/c90BRFIwaNUqcnZ39tSUEtxedm5v73auvvurFie5leDwemDp1qndDQ8MdS0o2ir558+axyZMne3Bz0A+weMMLgiDA5/Mhf39/LwzDLF5hYhjmEBISMmndunUfT5gwwZ2L6F7AOADy1VdfvUEQRIulI7l9ROfk5ByeOHGiK47j1n4MVqVXulAYhkFOTk5SFEX5vfF9bd/pEBoaGr9+/fr3Ro8e3a8vi+4VyTAMW2Wggs/nO0VFRc3YtGnT+6NGjXJGUZtaCNNr9EqdjOM4JBAIRJb+ro7g8XjiyMjIf7399ttrY2JiJH05oi0Gj8cDr776qldVVVVmb9XHHaHVahsvXry4JSYmRtTXIrpXIlkikQglEomXpb/rcTg4OLjGxMTMW7t27cqIiAhhR6L5fD7w8fFBPT09EQjihsK7DI7jYPHixSFqtbrOmpFsRKvVNp4+fXp9ZGSkQ3vRGIaBF154QXr+/PkPfvnll4+HDx8u5ER3AeOY9UcffTShK0t8egOGYWi1Wl33ww8/rAoLCxMYRfP5fLBw4cKnlUplNUVRRG5u7ndDhgzptd6A3QLDMAgODsYvXry4xdpy29Ne9JAhQ/gwDAMURcHYsWNdbty4cYSiKEKn0yl+/PHHNX5+fn2rAu8uMAyDkJAQ3rVr1w5aW+zDMAxDq1Sq2v3798/09PREAHjQSJwyZYrnrVu3jpMkqautrc3Zu3fvdOPf7RWLN7xQFIVwHLfJ+T+GYSiDwUAwDMMCAABBEODs2bN1H330UVJxcfEFqVQaPG7cuHkJCQnDuPVkjwDHcTBlyhTPysrKq9aO3PYwDEMrlcrqAwcOzAoODv5LxxlBEODm5gbPnz8/uLi4+IJer1dlZ2d//e9//9vHXhclWLS+QVEUBAQEeEul0kGW/J7uwLIso1Kpao4cObJ6586dP5WVlZEAPGhdC4VCaPjw4S6TJk0ardFoWjIyMo56eHiEhoaGTpo3b16Dk5NT2qlTpwrv3bvHsCy3PQsA8GB/04YNG2JtqWUtl8tlu3fvnurv748B8ECui4sLNGHCBNddu3ZNyc3N/U6n0ynUanWdTCa7fPfu3dz6+vpber1eVVdXl/fTTz+tHThwIMp1r9oQiUTQpk2bRut0OoW1BbPsg5mp9PT0HVFRUUJHR0fIxcUFevHFF90PHjyYkJOTc5ggiBaapsmHP79jx47J5eXll2iaJimKIq5evbrf29vbbhpjFu8ewDAMsyzLWPp7ugKKovygoKBnV6xYMUupVDYLhUJRTEzMVD8/v2d5PJ64o88/88wz8bdv375y8ODBtYsXL97m4+MTM3z48Nf37t1bs3Dhwo8aGhps4rdZhfYDIb05j9wVSJLUEQTRQpKkrn3kdoTBYNB+++23S/z9/bHly5eHVVVVZTIMQ2s0moakpKQoexgHt9gdti0WwKOjoyf05jxyV+jq/TAMQ9XW1uZkZmZm3Lt3j0xLS7uNoujSVatW7cUwjK9WqzWWvldzYDHJCIIAX19fsa+vbyQMw7b/uncAQRDqy5cvp/30008Fra2tAIIg9uuvv84jCGKBm5ub65kzZ0ooyixLyC2KxR4+juPgqaeeGmDt2SdToShKf/fu3bzMzMxrzc3NtPH/lUole+jQoXwEQYBWq7XmLXYZi414wTAMDRw4cKBYLLY7ySzLMgqFonLv3r0px48fLzIYDMDNzQ0eNmyYUCwWQ3q93m4EA2AhyRAEAQzDAI/H49tjUc0wDCWTya5dvXq1RKlUsl5eXsjChQtjdu3atXPOnDlhzs7OdtVJtogAlmUBTT8o4RiGoexJNMuyTENDw53Dhw/vLCkpafXy8kIWLFjw3Lx587b0798/zNvbO4ym6flHjhz5U6FQ2MWwlyUjGcJxnGdPgo3o9Xp1Y2OjUiqVogsXLhw9f/787d7e3sMQBMG9vLwiU1JSDkyfPv1piURiVxFtVmAYBuHh4YLr169/2SsdXzOj1Wobv/rqqze2bdsWf/fu3dyH/05RFFFZWXn1jTfeGNRnRWMYBiZOnOhaU1OTbQ1JPYVhGLqhoeGOUqmsftRnKIoiZDLZ5T67NxrDMDBt2rQBTU1NJb0pp7ehKIooKio6N2PGDF9bFm2ROtnR0RGKjo4eKhAInC1xfVsBQRA8MDBwzPr16/dMmjRpgK3ON5tdMgRBAEEQSCqV9sdx3NHc17c1EATBg4KCxqampm4fP358f1sUbZFIhmEY4Dhul31kU0BRlB8SEhK/adOmT8eNG+dha9kOLCK5bV2XTU1KWJo20ZPefvvtD+Pi4qS2JNoixbW7uzvu6ek5qK9EshEcxx3Dw8NfW79+/XvPPfecqy2JNisIgoCpU6d637t3709rt36tBUEQLb///vueuLg4Jz7f+gWa2SMZhmEgEAjwJ71l/ThwHHeMjo5+fePGjRtHjBjhZO1sB2aXzOPxIG9vb/e+VlQ/DI7jjiNHjpybmpq6OiIiQmRt0WYDQRAQERHhcObMmY2WSuVkbxAE0XLu3Ln3Ro4cKbL7RDUQBIGhQ4cK0tLSFqlUqlprP1xbQqfTKc6cObNx2LBhQrsVjSAIGDp0qODw4cOLa2trc1paWu5Z+8HaGgRBtJw6dSr14S2zvUGP62QIgsDAgQPRVatWJYSEhMSePHnyw5qamhxz5c98UsBx3HH8+PGJa9asWRQaGipAkN5btm2WhpeLiwvO5/MdDh48+EFZWVm5q6trQF9veHWEg4OD64svvrhxzZo1b4SGhvJ7U3SPMOaxjoyMdJBKpfBbb70VodVqG61dPNoyWq228fDhw4sHDx7M741zKHscbSzLgubmZkYul7diGAZQe1htbmUcHBxcp0yZ8h5FUeS2bdu+LSwsJFgLbqAzy2vEsixgmAe7RWjj4i6Ox9Im+p3ExMR/BQUF4ZbcQGfWskIikcCBgYFBXH3cNcRisdf06dO3JCYmvhYQEIC1F22TuyYhCAKhoaE8S6c7fhJRqVS1e/fune7v74+1DQsDZ2dnyFwNM7NGHI7jMJ/Pt0rmPXtGLBZ7zZ49e5fBYCAOHTp0PjY2NtDZ2Vny+eefX5PL5T2urM0mGcMw8NRTT7m5ubnZTFYBe8LR0dF9zpw5OyMiIk77+PhEXrhw4XMEQTIBAD2WbLY6GUVR4O/v7y0SiTzMdc2+hpOTk09sbOxSCILg9PT03xUKhVn2Ppu74eVka9tU7QmWZRm5XF7+888/787Kyqoz145JsxXXMAxDEARBnGTTUSgUFceOHdv48ccfn6itrTXbsLDZIhnHceDs7NyPG7M2DZqmDbdv3z6zZ8+en2praynjuIM5MItkCIJAYGCgQ3R09MtcJJsGwzBUaWlpblVVFWFOwQCYMZIdHBwwsVjMNbpMgKIo/bFjx5LXrFnzrSX2PZulTkZRFLi7u4txHHcwx/X6EiRJtp46dWr90qVL96tUKosMYJslklEUBUOGDBnEdZ+6B0mSrV999dWiBQsW7LSUYADMF8mQu7u7p0AgcDHH9foCBEGov//++8TExESLFNHtMVudjCAIyrWsuwZBEOo9e/bMWrZs2Ze9kXvELJHM5/MhoVAo5mafOoZtl5FQr9crDx06tGT9+vVn9Hp9r3x/j6WIxWLopZdeCoyIiIjnJP9VKMuyDE3TBoVCUalWq+sRBMG++eabjVu2bLncW4IB6KFksVgMTZs2bVBKSspuX1/fUea6KXuFYRiqqampRKfTKZVK5d2mpqaqkpKSGzKZrDwnJ6dUr9dTOTk5GntI8AYAAMDJyQlatGhRSHFx8QVuIf3/UV9ff+uDDz4Y//zzzzsHBQVhEokEsoX9UN1GLBZDS5cuHVJRUXGFE/xXaJomy8rK0hMSEvwdHR1tcHlHF5BIJNDy5cvDKioqrlAURVj7odoiNE2TBQUF/zN16lRvuxMtkUigFStWhFVXV1/nBD8emqbJ/Pz8U1OmTPF0cLCTgUBnZ2coMTExsrKy8irDMLS1H6I9QJKkLjc397v4+Hh3mxctkUig5OTkYbW1tTmc4O5BkqTujz/+SJs0aZKbzYru168ftGbNmhHV1dXXOcGmQZKkLjMz84uxY8e62FxLG0VRkJCQ4N/TIlqr1TZ2dgzAkw5JkrorV67stYbox45du7q6wjExMdHu7u4hEASZNM599+7dG1evXv2ytbW12bRbfDJAUZQ/fPjw2evWrVsfFRUl7k3RjxTn6uoKv/7668NffvnltR2dtNIZDMNQ9fX1N0+ePPkhTdMkj8fr8+uxcRx3jI2NXbJ58+YNUVFRYqueyg7DMJg4caJreXn5JVOKaZqmyerq6us7d+585Ycfflj1uESkfRGCIFrOnz//wYgRIxx7Q3SHkezs7AxFREQMcnFx8e1uMd0WwbeOHTv2gbu7u/eoUaNmIQhixVfW9sBx3HHs2LGJGzZsSA4PD+/wVHZz8jeBMAyDYcOG9UtISFgnkUgGdOdixiN2/vOf/yR7eXn5PvXUU6NOnDjxQVVV1XVurvmvoCjKHzNmzMrU1NTlYWFhFk0x8TfJxlNgvLy8hnYnig0Gg6a2tjZn69atC3/99ddcBEHQAwcOvFtSUlIqlUq5nY4dwOfznV544YV1a9euXTJkyBBBr23tlkqlcFpa2iKDwaDtah1TVFR07osvvpg9d+7cIGdnZ8iYecDFxQVavnx5GJco5vHodDrF0aNHV4aFhQkskXngb6+Og4MD7OXlFdSV9dMMw1CFhYVnP/zww1Xp6enVSqWSIQgCAABYuVzeCsMwQBDE8vkS7Bw+n+80efLkzRRFGbZs2fLVnTt39OZce/03yTAMAx6P99ikzRRF6VUqVY1MJru2c+fOzWfOnKnSaDQs2y4lAsuyAIZhQNN03z2wshvw+Xynl19+eTNFUeSWLVsOFxcXm22R/d8kq9VqmqIoQ0cfZhiGIkmytaCg4OyePXs2l5SU3MvLy1O3trYCtoOcFxKJBAoMDAyAYdhO0txYF6FQ6DZt2rQtNE3T27ZtO1JSUmIwioYgqMNnbBIQBIFnnnmGf+PGjSMURRE0TZMkSeqUSmV1VlbWoYMHDyb885//lIpEok53wg8aNAi/du3aQW7Mu3toNJqGAwcOzBo0aBBuzDzg4uJicuaBv0Uyy7IgPz9fP3fu3DeSkpIuA/DgDOSbN2/mZGZmFstkMq2x7mU7ebN4PB7M5/Of+CMKzI1QKHRLSEjYRZKk4eDBg6dHjRoVIJVK++3bty+jqanJjDvhYBj069cPkkqlsIeHBywWiyEMw7qcsARFUfDaa695d3SuEkfXUCqV1ZcvX95dVVWV+eWXX8718PAwqRH7yI4ZwzCgLV8FCwDodn2Aoijw8/Pz4rbOmI5EIhkQGxu7tK6uLu+33367JJfLTYrix/a+uyv2YZycnCQoij4hiZ57H/bB6a8VP//8867MzMxakiRNuo7FhliMnXpuv7LpqFSqmhMnTmz++OOPj1ZXV1OmBp3FBiowDIOcnZ37se12FHB0HYZhqPz8/LN79+49UV1dTfUk0aHFJAcGBgqio6NfxDDMRhc22TZtmQduVFVVET3NZGkxyQKBAOUyD5gGRVH6kydPrl2zZs3X5ti3bJE6uS3zgIjH43F95G5CUZT+9OnTG5ctW/aZufrEljrhDQwePDhQLBZ7mro2rC9CUZQ+LS3tzYULF35izkEPi0QygiDA3d29f18+G6q7GAwGzbFjx1KSkpK+ViqVZk0tYanj7iEYhhFuNUjXMBgMms8//3z2smXLDphbMAAWimQejwccHR25zAOPgH0o80BaWtqK9evXn9JoNBZJDmN2CSKRCIqPj/ePjIyM5wZC/grDMBRFUXqlUlltzDxw5MiRd7ds2ZJuKcEAmFmySCSCpk6dGpicnLw9ICAgrq81uozVU0clmE6nk9+5c+dsbm7uL2VlZSU5OTmlOp2OzM3N1RgMHU7f2x4SiQSaP39+8J07d053Z33Yk4Jx3v1RfydJUnf69On1zz77rNgWT0vvFJFIBC1evDiktLT0176aeYCmabKz/V4ajabh0KFD80JDQ3l2cyYUAA8ieMmSJaF9WXB30Gg0DQcPHkx4+umn7UO0RCKBli5dOkQmk13mBHcdpVJZvW/fvn8FBwfjvXH4l8k4OTlBK1asCCsrK0vv69tSTUGpVFZ/9tlnrwUFBWE2KVosFkOrVq0aWllZedUcgkmS1PXFF0Uul8u2b9/+ks2JdnFxgZKTk4fJZLLLPRHT2NhYfPPmzWNZWVmHjhw5srSpqamkL67qbG5uLtu6deskPz8/1CZEoygKZsyY4VtaWvprTwQ3NDTceeedd54PCwsThISE8CZPnuxRWFh4ti9KZtkHL/z7778/ziZEe3h4wLt3756q0WgaTP1Bd+/ezV23bt0oDw8PuG0bDXjppZc86uvrb/VVySz74MXfvHlznI+Pj/VEu7q6wsnJycNqamqyTd2YXl9ff+vtt9+O6devH2Rc2gvDMEhISPDv65JZ9kHKxnXr1o0aMGAA0uuiYRgG48eP71dUVHTOlCRtNE2TNTU12WvXrh3h5uYGt1+77ezsDL3//vvj1Gp1nSUenL1RV1eXl5qaOtLLy6t3Rbu4uECrV6+ObmxsLO5utNE0Td69ezc3JSVlePsIBuDBbNX06dMH5ufnn+L62f9HXV1d3urVq6P79+8P94poYxTfvn37ZHej2Jg7JCkpKcrV1fUvESwUCsHMmTN9b9y4cUSv16ss9cDsldra2pzk5ORh7u7ulhfN4/HAsmXLnmlubi7rThQbDAZtdXX19ZUrV4Z3FMGzZs3yy8vLO3r9+vUvKyoqrvTFfnJnVFdXX1+xYkWYVCqFe3KecqdTjSKRCA4PDx8qEAicuzp1WFJS8ktGRsbRa9euXf3vf/9bJpfLWbbdwvCAgADetGnTZpaWlmZlZ2dnzJs3b5PJv+AJZsCAAdGJiYn7WJZ98+jRo382NTUxrAkL7DuV3JZ5ILAr66cZhqGKiorObd269a2LFy9WKhQKWq/X/227jV6vZzIyMi5evHjxdlRUlI9UKg3qa3PPXcXHxycmOTl5P0VR848dO1bwcMCYBV9fXzQ9PX3H4+pjkiR1zc3NZX/88Ufa7NmzA5ycnKDHFS88Hg+IxWKIz+eDZcuWPSOXy2V9vfvUGaWlpb8uXrw45OGqryt0GslqtZomSbLDUzGMmQeKioou7Nu3b1NhYWFdXl6eWqvVsuxj3jaCIABBECyKosBgMJDcgr/O8ff3H52SkrKPoqhFx48fL1Gr1Y99xt0CgiAQGhrKy8zM/MI4kWDMPJCdnf31F198MTs+Pt5dIpF0eyc8j8cDSUlJUVwkdw2apsmioqJzc+fODZJIJF2O6E4jmWVZUFhYSCxYsGD5qlWrMjAM40EQBN2+fTu3LfOARqFQdCnzwMN4enqiI0eOjBMKhVKuTu4cGIbRoKCgcampqXsZhlny448/yjQaDQtBEEAQBFAU1bPtxjAMAxcXF8jV1dWkzAMdERQUhGVkZHzOHXXQPYxHH8ycOdNXIpFAgwcP5o8ZM8b5UWvHurxak2EYoFAoTM480BFSqZQvFAq73DXjeAAMw2hwcPCEdevW7fHz8/s4PDx8BEVRZH19/f6OUkN1a0muOcQawTAMhISEePbv3z+Uk9x9UBTlBwcHT0hJSQkHAIBPP/10Vn19vaEjR1Z7uBAEAW9v7/58Pl9irXuwd2AYRoVCobSkpCQ9MzMzv7W1le1IstW2sSAIAliWZTEME3CRbBoURelv3bp1YseOHRsyMzObH5VTxKp7lYRCoSPLpZswmfLy8kvbtm1bd+7cuZqWlpYOoxgAKxbXHh4eaGBg4GAcx7mN6ibQlls8Pysrq+5xggGwomQ3Nzd+UFDQCC6rffdhWZZRqVQ1u3bt+qS2trbTrEBWkQzDMHB0dMQxDON2PXYTlmWZ+vr6W2+88caz58+fb+jKMb1WqZMxDAMBAQHuIpHInWt0dR2j4Dlz5oz/7bffmrt6DrPVInnQoEFcTpFuwLIsI5PJLs+dO7dbggGwUiSjKAphGIZ1e86sj8IwDFVRUXFl9uzZk7Oyslq6m9fLKlHEMAzL4/EEXLqJzjEuxJg7d+4r2dnZ3RYMgBUiGYZhEBwc7ODp6enHSf4rLMsyLMsyNE0bDAaDhmVZViaTXZkzZ87s27dv60zNzNfrDzk8PNwhMTHx9djY2Pl9rY9slAgAADRNG2iaNpAkqcMwTEAQRItWq21qamoqr6qqulVQUHCDJEnDsWPHrhYUFOh7knqx1+pEGIZBZGSkMDExcd7EiROTJBLJgCet0WWMQmMJxTAMRRCEum1NOdPS0tKgUChqCILQVFVV/VleXl6g1Wq1AABA0zRdXV1dX1pa2nj//n2isbGRIkkSmCOfSK9Ibjs1zjE5OXnRP/7xj7dEIlF/exTcfgiWZVmGJMnW1tbWZpqmSRRFeeXl5Vfu379fAcMwgqIortPpWrKzs39TKpVqg8FAKhSKlvLy8maNRkNptVpapVIxOp2ObRvHBwzDgO60mruKxSXDMAxGjBghSk5OfnPcuHErHR0dbbpvTFGU3nh/DMNQer1epdPpFHq9Xi2Tya6r1eomlmUZGIaR5ubm+oyMjCsajUaP4zgqk8maampqWmmaZhmGYWEYhuRyOd1+4sASEjvDopJhGAYxMTHi1atXrxgzZsxyBwcHV1sQzDAMxTAMpVKparRabbOxiFUoFDX5+fmXCILQYRjGo2maKisrKyooKKggSZIuLy9XKhQKimVZAEEQoGkaqFQqxlhfmvPALnNiMckwDIPY2FinlJSUlXFxcW/2pmCSJFtpmjZQFEXcv3+/CMMwvlQqDebz+U4EQahzcnK+y8vLSy8oKCgoKSmpJ0mSpiiKMRgMTEVFRStBEACGYQDDMCAIgm07tc5mJXaGRVrXMAyD0aNHO69evTpx9OjRb/L5fCdzCdZqtffbX0sul1c0NDQUMwxDG/8/Ly/vYlVVlcxgMJDFxcXVo0ePHj5nzpwdAACQnp6+a/v27bvy8vKUGo2GNfVcB3vC7JIRBAFxcXEuycnJb8XGxi40VbCxUYMgCF5ZWZmpVCrrtFqtMiMj45xcLlfiOI4xDMPcu3dPnp+ff5+iKLZtUzt07949g1arZSEIArGxsf3i4uKm83g80a+//vrp9u3bd1+/fl2p13e4lPyJxKySYRgG0dHRopSUlKTnnntucU8E//LLL1svXLhwSqvV6goLC+vv37+vpyiKbWxspCiKAgzDAARBAE3TgKbpDtefoSgKXF1dRRRFEWfPnv3os88+O5STk6PuS4LNjkAgAKmpqSMbGhrumLpYXq/Xq06cOJEcExMjcnBwACiKAgiC/v+/7gDDMPD19UWfffZZcVBQEMbjcacX9QgejwcmTJjg+vvvv+8hCKLFVMHHjx9PGj58uBDDMGv/JI6HiYqKEl66dGmXTqdTmCK4tbW1+fvvv18eFRXFCbZFBAIBmDFjhq+pm8n1er3qu+++WxYREeHACbZBYBgGQ4YM4Z87d+49U6K4tbW1OS0tbREn2IZBURTMmjXLr7q6+np3o1ir1TZ+8803C8PDwwWcYMvR4y6Uo6MjFBoaOkgkEnl0tbuk0Wgaqqqqrl++fPn7AwcO/LegoEBvjTHdvkKPJQuFQjgoKGgIn8+XdEWyQqGoOHz4cPKJEyf+t7KyUlNXV0f39Jg6jsfTY8kwDAMej+fQ2SoPkiRbVSpV7TfffJO8f//+85WVleSjBjE4zEuPJZMkyYpEon6PkswwDNXY2Fh09uzZHXl5eTd+/vnnwqqqKpKLXjsCgiDw0ksvedTV1eUZR7mMKSfu379fmJub+92aNWtG+Pn5oQKBAFg88RjH3zDLVCOKouCVV17xXrly5ToHBwcJwzB0aWlp9u+//56em5tbJZPJWpubmxl7naqzd8w2n4yiKPDx8cF4PB6MIAikUqkouVxO63Q6lmEYru61ImZdNNB+EoFlWU4sBwcHBwcHB0c7/h/P/qsjZD897wAAAABJRU5ErkJggg==" alt="">';
+const ICON_BALLISTIC_SVG='<img src="data:image/png;base64,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" alt="">';
+// Мапа: який тип цілі показувати у пусковому маркері (.lp-core) — за
+// замовчуванням дрон (ICON_LAUNCH_SVG), для балістики — силует ПУ.
+const LAUNCH_CORE_ICON_BY_TYPE={
+  'pu-iskander-standart': ICON_BALLISTIC_SVG,
+  'iskander-m-standart':  ICON_BALLISTIC_SVG,
+};
 
-function mkLaunchIcon(count,cityName,typeName){
+// ═══════ ПОСТІЙНІ МАРКЕРИ ВІДОМИХ МАЙДАНЧИКІВ ПУСКУ ═══════
+// Завжди присутні на карті (спокійна синя крапка), навіть якщо
+// зараз немає активного пуску. Коли з launches/ приходить запис,
+// координати якого збігаються з відомим майданчиком — той самий
+// маркер перемикається на "бойову" анімовану іконку (мигає) на
+// весь час дії запису, і повертається у спокійний стан, коли
+// запис зникає (TTL) — див. addLaunchMarker/removeLaunchMarker.
+const LAUNCH_SITE_MATCH_KM=10; // допуск співставлення координат пуску з майданчиком
+let launchSitePins={}; // {siteKey: {marker,lat,lng,label}}
+
+function mkSiteIdleIcon(label){
+  const html=`<div class="ls-pin"><div class="ls-dot"></div><div class="ls-tag">${label.toUpperCase()}</div></div>`;
+  return L.divIcon({className:'',html,iconSize:[130,22],iconAnchor:[6,6]});
+}
+
+function renderLaunchSitePins(){
+  Object.entries(LAUNCH_SITES).forEach(([key,c])=>{
+    const label=key.charAt(0).toUpperCase()+key.slice(1);
+    const marker=L.marker([c.lat,c.lng],{icon:mkSiteIdleIcon(label),zIndexOffset:300}).addTo(map);
+    marker.bindTooltip(`<b>МАЙДАНЧИК ПУСКУ</b><br>${label}`,{direction:'top',offset:[0,-8],className:'ob-tt'});
+    launchSitePins[key]={marker,lat:c.lat,lng:c.lng,label};
+  });
+}
+
+function findLaunchSite(lat,lng){
+  let best=null,bestDist=Infinity;
+  Object.entries(launchSitePins).forEach(([key,o])=>{
+    const d=haversineKm(lat,lng,o.lat,o.lng);
+    if(d<bestDist){bestDist=d;best=key;}
+  });
+  return bestDist<=LAUNCH_SITE_MATCH_KM?best:null;
+}
+
+function mkLaunchIcon(count,cityName,typeName,typeKey){
   const badge=count>1?`<div class="lp-badge">×${count}</div>`:'';
   const label=cityName?`<div class="lp-label">${cityName.toUpperCase()}</div>`:'';
   const typeChip=typeName?`<div class="lp-type">${typeName.toUpperCase()}</div>`:'';
+  const coreIcon=LAUNCH_CORE_ICON_BY_TYPE[typeKey]||ICON_LAUNCH_SVG;
   const html=`<div class="lp-wrap">
     ${typeChip}
     <div class="lp-halo"></div>
@@ -3776,7 +3865,7 @@ function mkLaunchIcon(count,cityName,typeName){
     <div class="lp-ring d2"></div>
     <div class="lp-lock"></div>
     <div class="lp-tick"></div>
-    <div class="lp-core">${ICON_LAUNCH_SVG}</div>
+    <div class="lp-core">${coreIcon}</div>
     ${badge}
     ${label}
   </div>`;
@@ -3787,12 +3876,35 @@ function addLaunchMarker(key,d){
   if(!d||!d.lat||!d.lng)return;
   const cityName=d.city||latLngToCity(d.lat,d.lng);
   const typeName=(TINFO[d.type]&&TINFO[d.type].name)||TYPE_NAME_FALLBACK[d.type]||d.type||'Ціль';
-  if(launchMarkers[key]){ // вже є — просто оновлюємо лічильник/іконку
-    launchMarkers[key].data=d;
-    launchMarkers[key].marker.setIcon(mkLaunchIcon(d.count||1,cityName,typeName));
+
+  // Якщо це вже відомий постійний майданчик — координати збігаються з
+  // одним із LAUNCH_SITES (той самий пункт бере й бекенд для push_launch).
+  // Перемикаємо ЙОГО Ж маркер на "бойову" анімовану іконку, замість
+  // створення окремого плаваючого маркера поруч.
+  const siteKey=(!launchMarkers[key]||!launchMarkers[key].siteKey)
+    ? findLaunchSite(d.lat,d.lng)
+    : launchMarkers[key].siteKey;
+
+  if(siteKey && launchSitePins[siteKey]){
+    const site=launchSitePins[siteKey];
+    site.marker.setIcon(mkLaunchIcon(d.count||1,site.label,typeName,d.type));
+    site.marker.setZIndexOffset(1500);
+    site.marker.off('click').on('click',()=>openLaunchPanel(key));
+    if(site.marker.getTooltip())site.marker.unbindTooltip();
+    site.marker.bindTooltip(
+      `<b>ПУСК · ${site.label.toUpperCase()}</b><br>${typeName}${d.count>1?` ×${d.count}`:''}<br>${age(d.ts)}<br><i class="fa-solid fa-hand-pointer"></i> Натисніть — час підльоту до міст`,
+      {direction:'top',offset:[0,-46],className:'ob-tt'}
+    );
+    launchMarkers[key]={marker:site.marker,data:d,siteKey};
     return;
   }
-  const marker=L.marker([d.lat,d.lng],{icon:mkLaunchIcon(d.count||1,cityName,typeName),zIndexOffset:1500}).addTo(map);
+
+  if(launchMarkers[key]){ // вже є (звичайний плаваючий) — просто оновлюємо лічильник/іконку
+    launchMarkers[key].data=d;
+    launchMarkers[key].marker.setIcon(mkLaunchIcon(d.count||1,cityName,typeName,d.type));
+    return;
+  }
+  const marker=L.marker([d.lat,d.lng],{icon:mkLaunchIcon(d.count||1,cityName,typeName,d.type),zIndexOffset:1500}).addTo(map);
   marker.bindTooltip(
     `<b>ПУСК · ${cityName.toUpperCase()}</b><br>${typeName}${d.count>1?` ×${d.count}`:''}<br>${age(d.ts)}<br><i class="fa-solid fa-hand-pointer"></i> Натисніть — час підльоту до міст`,
     {direction:'top',offset:[0,-46],className:'ob-tt'}
@@ -3803,7 +3915,19 @@ function addLaunchMarker(key,d){
 }
 function removeLaunchMarker(key){
   if(!launchMarkers[key])return;
-  map.removeLayer(launchMarkers[key].marker);
+  const entry=launchMarkers[key];
+  if(entry.siteKey && launchSitePins[entry.siteKey]){
+    // Це постійний майданчик — не видаляємо маркер з карти, а
+    // повертаємо його у спокійний (idle) стан.
+    const site=launchSitePins[entry.siteKey];
+    site.marker.setIcon(mkSiteIdleIcon(site.label));
+    site.marker.setZIndexOffset(300);
+    site.marker.off('click');
+    if(site.marker.getTooltip())site.marker.unbindTooltip();
+    site.marker.bindTooltip(`<b>МАЙДАНЧИК ПУСКУ</b><br>${site.label}`,{direction:'top',offset:[0,-8],className:'ob-tt'});
+  } else {
+    map.removeLayer(entry.marker);
+  }
   delete launchMarkers[key];
   if(lnpOpenKey===key)cls('launchPnl');
 }
