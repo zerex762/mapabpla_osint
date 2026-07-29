@@ -48,13 +48,16 @@ body{background:#000;}
 /* Leaflet за замовчуванням малює .leaflet-container з фоном #ddd (світло-сірий) —
    саме це "просвічувало" крізь майже прозору заливку суходолу. Примусово чорний. */
 .leaflet-container{background:#000!important;}
+/* ═══════ БІЛА ТЕМА КАРТИ (перемикач #bwFab) ═══════ */
+body.map-light,body.map-light #map,body.map-light .leaflet-container{background:#eef0f4!important;}
+body.map-light .leaflet-tile-pane{filter:none;}
 
 /* ═══════ МІНІМАЛЬНИЙ UI — на прохання користувача ═══════
    Лишаємо тільки карту, лічильник "На карті N" (#cntRow всередині
    statusBar) і кнопку "ПРОЄКТ" (#supFab, разом з панеллю підтримки, яку
    вона відкриває). Все інше ховаємо через CSS (не видаляємо з DOM —
    легко повернути назад, якщо знадобиться). */
-#setFab,#searchPnl,#drawFab,#drawBar,#drawHint,#tmFab,#tmPnl,
+#setFab,#drawFab,#drawBar,#drawHint,#tmFab,#tmPnl,
 #bnavWrap,#alertBanner,#obsExit,#liveTicker,#mapBrandFrame{
   display:none!important;
 }
@@ -422,7 +425,7 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
    купою елементів. Дока (нижня навігація) залишається як є — це основна
    навігація. Будь-який дотик миттєво повертає повну яскравість. ═══════ */
 @media(pointer:coarse){
-  #topBar,#statusBar,#drawFab,#supFab,#mapBrandFrame,#mapWatermark{
+  #topBar,#statusBar,#drawFab,#supFab,#searchFab,#bwFab,#mapBrandFrame,#mapWatermark{
     transition:opacity .5s ease, transform .5s ease;
   }
   body.chrome-dim #topBar{opacity:.5;}
@@ -1072,6 +1075,16 @@ body.observer-mode #obsExit{display:block;}
 /* ═══════ SUPPORT BUTTON + PANEL ═══════ */
 #bnavWrap{display:none!important;}
 #supFab{position:absolute;left:12px;bottom:calc(var(--sb)+14px);z-index:2600;display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--brd);border-radius:22px;padding:10px 16px;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;transition:opacity .2s,transform .2s;}
+#searchFab,#bwFab{position:absolute;right:12px;z-index:2600;width:46px;height:46px;border-radius:50%;
+  background:var(--glass);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.75);font-size:16px;cursor:pointer;box-shadow:var(--sh);pointer-events:auto;
+  transition:opacity .2s,transform .2s,background .18s,color .18s;}
+#searchFab{bottom:calc(var(--sb)+80px);}
+#bwFab{bottom:calc(var(--sb)+14px);}
+#searchFab:active,#bwFab:active{transform:scale(.92);}
+#searchPnl.on ~ #searchFab,body.chrome-dim #searchFab,body.chrome-dim #bwFab{opacity:.5;}
+body.panel-open #searchFab,body.panel-open #bwFab{opacity:0!important;pointer-events:none!important;transform:translateY(8px) scale(.9)!important;}
+@media(max-width:480px){#searchFab,#bwFab{width:42px;height:42px;font-size:14px;right:8px;}#searchFab{bottom:calc(var(--sb)+68px);}#bwFab{bottom:calc(var(--sb)+10px);}}
 body.panel-open #supFab{opacity:0;pointer-events:none;transform:translateY(8px) scale(.9);}
 #supFab i{font-size:15px;color:var(--red-glow);}
 #supFab span{font-family:'Exo 2';font-size:9.5px;letter-spacing:.08em;color:#fff;}
@@ -1877,6 +1890,13 @@ body.draw-mode .leaflet-container{touch-action:none;}
   <span>ПРОЄКТ</span>
 </button>
 
+<button id="searchFab" onclick="toggleSearch()" title="Пошук населеного пункту">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+<button id="bwFab" onclick="quickThemeToggle()" title="Чорна / біла карта">
+  <i class="fa-solid fa-circle-half-stroke"></i>
+</button>
+
 <!-- SUPPORT / DONATE / SOCIAL / PRIVACY -->
 <div id="supportPnl">
   <div class="sup-box">
@@ -2160,11 +2180,15 @@ function revealUI(){
   }));
   toast('SYSTEM READY');
 }
-let curTheme=0; // ULTRA DARK — єдина тема карти (чорна), за проханням користувача
+let curTheme=0; // власний ULTRA DARK шар за замовчуванням (реальний фон керує mapTheme/body.map-light)
+let mapTheme='dark';
+try{const _mt0=localStorage.getItem('mapTheme'); if(_mt0==='light'||_mt0==='dark')mapTheme=_mt0;}catch(e){}
 let tLayer=L.tileLayer(TURLS[curTheme],{updateWhenIdle:true,keepBuffer:2}).addTo(map);
 setTimeout(()=>{
   applyBrt(52);applyThemeFilter(curTheme);applyMapTilt(curTheme);
   document.querySelectorAll('.th-card').forEach((c,j)=>c.classList.toggle('sel',j===curTheme));
+  document.body.classList.toggle('map-light', mapTheme==='light');
+  updateBwFabIcon();
 },600);
 
 // ═══════════════════════════
@@ -2188,7 +2212,10 @@ function updateLabelOverlay(i){
     // вони накладаються одне на одне і виглядають "криво"/задвоєно.
     // Тому підписи вмикаються лише з ближчого наближення, де вже видно окремі
     // міста, селища й села без конфлікту з обласними підписами.
-    labelTileLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{pane:'osmLabelsPane',updateWhenIdle:true,keepBuffer:2,minZoom:8,maxNativeZoom:20}).addTo(map);
+    const labelUrl = mapTheme==='light'
+      ? 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png';
+    labelTileLayer=L.tileLayer(labelUrl,{pane:'osmLabelsPane',updateWhenIdle:true,keepBuffer:2,minZoom:8,maxNativeZoom:20}).addTo(map);
   }
 }
 updateLabelOverlay(curTheme);
@@ -2269,6 +2296,38 @@ function selTh(i){
   document.querySelectorAll('.th-card').forEach((c,j)=>c.classList.toggle('sel',j===i));
   toast(['ULTRA DARK','SATELLITE','NIGHT BLUE','TOPO','3D RELIEF','LIGHT','RED OPS','NIGHT VISION','TERRAIN','NAVY BLUE','MILITARY','MINIMAL','SIGNAL AMBER','AEGIS PRIME'][i]);
 }
+// ═══════════════════════════
+// ШВИДКИЙ ПЕРЕМИКАЧ ЧОРНА/БІЛА КАРТА — кнопка #bwFab.
+// Карта тепер малюється власним GeoJSON-шаром (без чужих тайлів), тому
+// перемикання теми — це не заміна tile URL, а перефарбування меж
+// областей/районів і фонової "маски" моря/закордону.
+// ═══════════════════════════
+function quickThemeToggle(){
+  mapTheme = (mapTheme==='light') ? 'dark' : 'light';
+  try{localStorage.setItem('mapTheme', mapTheme);}catch(e){}
+  document.body.classList.toggle('map-light', mapTheme==='light');
+  if(oblastLayer) oblastLayer.setStyle(f=>oblStyleFn(f.properties?.region||''));
+  if(rayonLayer) rayonLayer.setStyle(f=>rayonStyleFn(f.properties?.rayon||''));
+  if(maskLayer) maskLayer.setStyle({
+    fillColor: mapTheme==='light' ? '#e9ecf2' : '#02040a',
+    fillOpacity: mapTheme==='light' ? .9 : .58
+  });
+  updateLabelOverlay(curTheme);
+  updateBwFabIcon();
+  toast(mapTheme==='light' ? 'БІЛА КАРТА' : 'ЧОРНА КАРТА');
+}
+function updateBwFabIcon(){
+  const btn=document.getElementById('bwFab');
+  if(!btn)return;
+  const i=btn.querySelector('i');
+  if(mapTheme==='light'){
+    i.className='fa-solid fa-moon';
+    btn.title='Перемкнути на чорну карту';
+  }else{
+    i.className='fa-solid fa-sun';
+    btn.title='Перемкнути на білу карту';
+  }
+}
 function setBr(v){
   brightness=+v;document.getElementById('brV').textContent=v+'%';
   const p=((v-10)/130*100).toFixed(0);
@@ -2346,10 +2405,12 @@ function normName(s){
 // на тривожних зонах працював — за замовчуванням карта малює канвасом)
 const glowRenderer=L.svg({padding:1});
 
+// mapTheme оголошено раніше (перед tLayer), тут лише використовується
 function oblStyleFn(name){
   const isAlert=activeAlertNames.has(normName(name));
-  return isAlert
-    ? {color:'#c41c0e',weight:2,fill:true,fillColor:'#ff3b2e',fillOpacity:.4,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer}
+  if(isAlert) return {color:'#c41c0e',weight:2,fill:true,fillColor:'#ff3b2e',fillOpacity:.16,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert',renderer:glowRenderer};
+  return mapTheme==='light'
+    ? {color:'rgba(20,30,45,.55)',weight:1,fill:true,fillColor:'#fff',fillOpacity:.02,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer}
     : {color:'rgba(55,232,255,.45)',weight:1,fill:true,fillColor:'#000',fillOpacity:.02,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
@@ -2359,8 +2420,9 @@ function rayonStyleFn(name){
   const oblast=RAYON_TO_OBLAST[name];
   const oblastActive=oblast && activeAlertNames.has(normName(oblast));
   if(oblastActive) return {color:'rgba(20,20,30,.06)',weight:.5,fill:true,fillColor:'#000',fillOpacity:0,dashArray:null,lineJoin:'round',lineCap:'round',className:'',renderer:glowRenderer};
-  return isAlert
-    ? {color:'#c41c0e',weight:1.6,fill:true,fillColor:'#ff3b2e',fillOpacity:.36,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert rayon-alert',renderer:glowRenderer}
+  if(isAlert) return {color:'#c41c0e',weight:1.6,fill:true,fillColor:'#ff3b2e',fillOpacity:.13,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-alert rayon-alert',renderer:glowRenderer};
+  return mapTheme==='light'
+    ? {color:'rgba(20,30,45,.32)',weight:.6,fill:true,fillColor:'#fff',fillOpacity:.02,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer}
     : {color:'rgba(55,232,255,.28)',weight:.6,fill:true,fillColor:'#000',fillOpacity:.02,dashArray:null,lineJoin:'round',lineCap:'round',className:'zone-idle',renderer:glowRenderer};
 }
 
@@ -2420,7 +2482,7 @@ async function loadOblast(){
           });
         });
         maskLayer=L.polygon([worldRing,...holeRings],{
-          stroke:false,fill:true,fillColor:'#02040a',fillOpacity:.58,
+          stroke:false,fill:true,fillColor:(mapTheme==='light'?'#e9ecf2':'#02040a'),fillOpacity:(mapTheme==='light'?.9:.58),
           interactive:false,className:'ua-mask',renderer:glowRenderer
         });
         maskLayer.addTo(map);
