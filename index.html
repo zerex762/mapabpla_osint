@@ -107,6 +107,32 @@ body.map-light .leaflet-tile-pane{filter:none;}
 .sp-ring3{stroke:rgba(55,232,255,.32);}
 .sp-radar::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,210,122,.55),rgba(55,232,255,.18) 18%,transparent 32%,transparent 100%);animation:spSweep 2.1s linear infinite;mix-blend-mode:screen;opacity:.7;-webkit-mask-image:radial-gradient(circle,#000 96%,transparent 100%);mask-image:radial-gradient(circle,#000 96%,transparent 100%);}
 @keyframes spSweep{to{transform:rotate(360deg);}}
+.radar-spin-dec{display:inline-block;animation:radarSpinDec 2.4s linear infinite;transform-origin:50% 50%;}
+@keyframes radarSpinDec{to{transform:rotate(360deg);}}
+#centerRadarDec{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;z-index:1500;pointer-events:none;}
+.radar-ring{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;
+  border:2px solid rgba(57,255,140,.85);box-shadow:0 0 12px rgba(57,255,140,.5);opacity:0;
+  animation:radarPing 3.6s cubic-bezier(.2,.6,.35,1) infinite;}
+.radar-ring:nth-child(2){animation-delay:1.2s;}
+.radar-ring:nth-child(3){animation-delay:2.4s;}
+@keyframes radarPing{
+  0%{width:16px;height:16px;margin:-8px 0 0 -8px;opacity:.9;border-width:2.5px;}
+  70%{opacity:.25;}
+  100%{width:280px;height:280px;margin:-140px 0 0 -140px;opacity:0;border-width:1px;}
+}
+.radar-sweep{position:absolute;top:50%;left:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(57,255,140,.6),rgba(57,255,140,.12) 20%,transparent 38%,transparent 100%);
+  animation:radarSpinDec 2.4s linear infinite;mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(circle,#000 97%,transparent 100%);
+  mask-image:radial-gradient(circle,#000 97%,transparent 100%);}
+.radar-grid{position:absolute;top:50%;left:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;
+  border:1px solid rgba(57,255,140,.22);}
+.radar-grid::before,.radar-grid::after{content:'';position:absolute;background:rgba(57,255,140,.15);}
+.radar-grid::before{top:50%;left:0;right:0;height:1px;}
+.radar-grid::after{left:50%;top:0;bottom:0;width:1px;}
+.radar-core{position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;
+  background:#39ff8c;box-shadow:0 0 10px #39ff8c,0 0 22px rgba(57,255,140,.8);}
+.cw-radar-dec{position:absolute;top:6px;right:8px;font-size:11px;color:var(--ok);opacity:.85;filter:drop-shadow(0 0 5px var(--ok));z-index:2;}
 .sp-dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 0 rgba(255,255,255,.5),0 0 10px var(--blue);animation:spPulse 1.6s ease-out infinite;}
 @keyframes spPulse{
   0%{box-shadow:0 0 0 0 rgba(255,210,122,.5),0 0 10px var(--blue);}
@@ -1267,6 +1293,14 @@ body.draw-mode .leaflet-container{touch-action:none;}
 </style>
 </head>
 <body oncontextmenu="return false;" class="pre-boot">
+<div id="centerRadarDec">
+  <span class="radar-grid"></span>
+  <span class="radar-sweep"></span>
+  <span class="radar-ring"></span>
+  <span class="radar-ring"></span>
+  <span class="radar-ring"></span>
+  <span class="radar-core"></span>
+</div>
 <!-- NO CONNECTION BANNER -->
 <div id="noConnBanner">
   <i class="fa-solid fa-wifi" style="opacity:.8;font-size:14px"></i>
@@ -3493,8 +3527,18 @@ function _updateSwarmsImpl(){
       swarmMarker.on('click',e=>{
         if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}
         L.DomEvent.stopPropagation(e);
-        toast(`Рій · ${group.length} цілей · ${(TINFO[dA.type]||{}).name||dA.type}`);
-        selId=group[0][0];showTrack(group[0][0],group[0][1].data);
+        // Клік по груповому маркеру — той самий попап: найраніший час першої
+        // появи, сума реальних підтверджень з бекенду по всіх цілях групи,
+        // і перший відомий канал-джерело.
+        const ts=group.reduce((mn,[,o])=>{const t=o.data.first_seen||o.data.timestamp||Infinity;return Math.min(mn,t);},Infinity);
+        const tsFinal=Number.isFinite(ts)?ts:Date.now();
+        const hh=String(new Date(tsFinal).getHours()).padStart(2,'0');
+        const mm=String(new Date(tsFinal).getMinutes()).padStart(2,'0');
+        const ss=String(new Date(tsFinal).getSeconds()).padStart(2,'0');
+        const cnt=group.reduce((s,[,o])=>s+(o.data.confirms||1),0);
+        const chFirst=group.map(([,o])=>o.data.source_channel).find(Boolean);
+        const ch=chFirst?`@${chFirst}`:'невідомо';
+        swarmMarker.bindPopup(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`,{closeButton:true,autoClose:true}).openPopup();
       });
       group.forEach(([,o])=>{o.swarmMarker=swarmMarker;});
     } else {
@@ -3691,6 +3735,21 @@ function flush(){
   updatePairOffsets();
   saveOfflineCache();
 }
+// Спільний мінімальний попап для будь-якого кліку по цілі — час першої
+// появи цілі, кількість підтверджень і канал-джерело з бекенду (а не
+// клієнтський лічильник тіків руху, який раніше рахував кожен апдейт
+// позиції як "нове підтвердження" — звідси й були абсурдні числа).
+function showSimplePopup(id){
+  const o=obs[id];if(!o)return;
+  const d=o.data;
+  const ts=d.first_seen||d.timestamp||Date.now();
+  const hh=String(new Date(ts).getHours()).padStart(2,'0');
+  const mm=String(new Date(ts).getMinutes()).padStart(2,'0');
+  const ss=String(new Date(ts).getSeconds()).padStart(2,'0');
+  const cnt=d.confirms||1;
+  const ch=d.source_channel?`@${d.source_channel}`:'невідомо';
+  o.marker.bindPopup(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`,{closeButton:true,autoClose:true}).openPopup();
+}
 function doSync(id,d){
   const ang=+d.angle||0;
   const rad=(ang+180-90)*Math.PI/180;
@@ -3701,7 +3760,7 @@ function doSync(id,d){
     const okInPlace=updateMarkerIconInPlace(obs[id].marker,d,obs[id].iconType);
     if(!okInPlace){obs[id].marker.setIcon(mkIcon(d));obs[id].iconType=d.type;}
     if(obs[id].line)obs[id].line.setLatLngs([[d.lat,d.lng],tail]);
-    obs[id].data=d;if(selId===id)showTrack(id,d);
+    obs[id].data=d;
     renderForecast(id,d);
   } else {
     if(!d._offline){
@@ -3717,7 +3776,12 @@ function doSync(id,d){
     const line=L.polyline([[d.lat,d.lng],tail],{renderer:cvs,color:c,weight:.8,opacity:.35,dashArray:'2,8'}).addTo(map);
     // Слід дрона (trail) вимкнено на прохання користувача — не створюємо полілінію.
     const trail=null;
-    // Клік по дрону більше нічого не відкриває — на прохання користувача.
+    // Клік по цілі — маленький попап: час, підтвердження і канал з реальних даних бекенду.
+    marker.on('click',e=>{
+      if(drawMode)return;if(measureMode){handleMeasureClick(e);return;}
+      L.DomEvent.stopPropagation(e);
+      showSimplePopup(id);
+    });
     obs[id]={marker,circle,line,trail,data:d,fcLine:null,fcTicks:[],swarmMarker:null,iconType:d.type};
     renderForecast(id,d);
     if(regionMode&&regionFilter&&!isInSelectedRegion(d.lat,d.lng)){
@@ -4288,7 +4352,7 @@ function buildListUI(){
     <div class="lt-body"><div class="lt-type">${(info.name||d.type||'?').split(' ').slice(0,2).join(' ')}</div>
     <div class="lt-meta">${Math.round(d.angle||0)}° ${dir(d.angle||0)} · ${km}</div></div>
     <div class="lt-eta">${eta}</div>`;
-    el.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    el.onclick=()=>{map.panTo([d.lat,d.lng]);showSimplePopup(id);};
     body.appendChild(el);
   });
 }
@@ -4299,7 +4363,8 @@ function buildListUI(){
 function toggleRadar(){
   radarOpen=!radarOpen;
   document.getElementById('radarPnl').classList.toggle('on',radarOpen);
-  document.getElementById('bnRadar').classList.toggle('on',radarOpen);
+  document.getElementById('bnRadar')?.classList.toggle('on',radarOpen);
+  document.getElementById('radarFab')?.classList.toggle('on',radarOpen);
   if(radarOpen){if(!radarRAF)startRdAnim();}else stopRdAnim();
 }
 function startRdAnim(){
@@ -4348,7 +4413,7 @@ function buildRdList(){
     const d=o.data,km=map.distance(userPos,[d.lat,d.lng])/1000,spd=SPD[d.type]||200,eta=Math.round(km/spd*60);
     const row=document.createElement('div');row.className='rd-item';
     row.innerHTML=`<span>${id.substring(0,5)} · ${(d.type||'?').split('-')[0].toUpperCase()}</span><span class="rd-eta">${km.toFixed(1)}км ~${eta}хв</span>`;
-    row.onclick=()=>{selId=id;showTrack(id,d);map.panTo([d.lat,d.lng]);};
+    row.onclick=()=>{map.panTo([d.lat,d.lng]);showSimplePopup(id);};
     lst.appendChild(row);
   });
 }
