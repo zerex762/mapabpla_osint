@@ -3538,7 +3538,10 @@ function _updateSwarmsImpl(){
         const cnt=group.reduce((s,[,o])=>s+(o.data.confirms||1),0);
         const chFirst=group.map(([,o])=>o.data.source_channel).find(Boolean);
         const ch=chFirst?`@${chFirst}`:'невідомо';
-        swarmMarker.bindPopup(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`,{closeButton:true,autoClose:true}).openPopup();
+        L.popup({closeButton:true,autoClose:true})
+          .setLatLng(swarmMarker.getLatLng())
+          .setContent(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`)
+          .openOn(map);
       });
       group.forEach(([,o])=>{o.swarmMarker=swarmMarker;});
     } else {
@@ -3748,7 +3751,17 @@ function showSimplePopup(id){
   const ss=String(new Date(ts).getSeconds()).padStart(2,'0');
   const cnt=d.confirms||1;
   const ch=d.source_channel?`@${d.source_channel}`:'невідомо';
-  o.marker.bindPopup(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`,{closeButton:true,autoClose:true}).openPopup();
+  // ВАЖЛИВО: НЕ використовуємо marker.bindPopup() — Leaflet при першому
+  // виклику bindPopup() сам додає СВІЙ ПРИХОВАНИЙ click-обробник на
+  // маркер, який теж переключає (toggle) попап. Разом з нашим власним
+  // click-обробником це давало 2 спрацювання на клік: наш відкриває,
+  // вбудований одразу перемикає назад і закриває — тому попап показувався
+  // тільки на непарних кліках. L.popup() відкривається напряму на карті,
+  // без прив'язки до маркера — жодних прихованих обробників.
+  L.popup({closeButton:true,autoClose:true})
+    .setLatLng(o.marker.getLatLng())
+    .setContent(`<div style="font:600 12px 'Exo 2',sans-serif;line-height:1.5;">Час: ${hh}:${mm}:${ss}<br>Підтверджень: ${cnt}<br>Канал: ${ch}</div>`)
+    .openOn(map);
 }
 function doSync(id,d){
   const ang=+d.angle||0;
