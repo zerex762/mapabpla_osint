@@ -253,6 +253,10 @@ body.pre-boot #map{filter:brightness(.42) saturate(.6);transform:scale(1.025);}
 .trg-card{position:absolute;inset:0;border-radius:7px;z-index:0;}
 .trg-card-purple{background:none;border:none;box-shadow:none;}
 .trg-card-red{background:linear-gradient(160deg,#ff5b46,#c41c0e);border:1.5px solid rgba(255,255,255,.45);box-shadow:var(--glow-a);}
+.trg-card-arrived{background:linear-gradient(160deg,#39ff8c,#0e9e4a);border:1.5px solid rgba(255,255,255,.45);box-shadow:0 0 10px rgba(57,255,140,.55);}
+.icon-wrap.is-arrived{opacity:.45;transition:opacity .4s ease;}
+.icon-wrap.is-arrived::after{content:'';position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid rgba(57,255,140,.85);animation:arrivedPing 1.6s ease-out infinite;pointer-events:none;}
+@keyframes arrivedPing{0%{width:14px;height:14px;margin:-7px 0 0 -7px;opacity:.9;}100%{width:52px;height:52px;margin:-26px 0 0 -26px;opacity:0;}}
 
 /* ═══════ PRIVACY ═══════ */
 #priv{position:fixed;inset:0;background:rgba(2,4,6,.92);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -3420,12 +3424,13 @@ function mkIcon(d){
   const isShahed=(d.type||'').indexOf('shahed')===0;
   // Силует цілі малюємо білим/світлим — колір несе картка під ним (фіолет/червоний)
   const imgFilter='brightness(0) invert(1) drop-shadow(0 0 2px rgba(0,0,0,.5))';
-  const cardCls=isShahed?'trg-card-purple':'trg-card-red';
+  const arrived=!!d.arrived;
+  const cardCls=arrived?'trg-card-arrived':(isShahed?'trg-card-purple':'trg-card-red');
   const typeName=(TINFO[d.type]&&TINFO[d.type].name)||TYPE_NAME_FALLBACK[d.type]||d.type||'';
   // Стабільна розмітка (клас crs-lbl завжди в DOM, лише приховується) —
   // це дозволяє оновлювати курс/кут БЕЗ повного пересворення іконки (setIcon),
   // що і є головним джерелом лагів на слабких телефонах при 15-20+ цілях одночасно.
-  const html=`<div class="icon-wrap" style="position:relative;width:${sz}px;height:${sz}px;">
+  const html=`<div class="icon-wrap${arrived?' is-arrived':''}" style="position:relative;width:${sz}px;height:${sz}px;">
     ${typeName?`<div class="trg-type">${typeName.toUpperCase()}</div>`:''}
     <div class="trg-card ${cardCls}"></div>
     <img class="drn-img" src="${TYPE_ICONS[d.type]||(d.type+'.png')}" onerror="this.src='${FB2}'" style="position:relative;z-index:1;width:${sz*.72}px;height:${sz*.72}px;display:block;margin:${sz*.14}px auto 0;transform:rotate(${ang + 90}deg);filter:${imgFilter};">
@@ -3447,6 +3452,26 @@ function updateMarkerIconInPlace(marker,d,prevType){
   if(!img)return false;
   const ang=+d.angle||0;
   img.style.transform=`rotate(${ang+90}deg)`;
+  // Перемикаємо вигляд "долетів" (зелена картка + напівпрозорість) без
+  // повного перестворення іконки — щойно бекенд ставить arrived:true.
+  const wrap=el.querySelector('.icon-wrap');
+  const card=el.querySelector('.trg-card');
+  const wasArrived=wrap&&wrap.classList.contains('is-arrived');
+  const nowArrived=!!d.arrived;
+  if(nowArrived!==wasArrived){
+    if(wrap)wrap.classList.toggle('is-arrived',nowArrived);
+    if(card){
+      card.classList.toggle('trg-card-arrived',nowArrived);
+      const isShahed=(type||'').indexOf('shahed')===0;
+      card.classList.toggle('trg-card-red',!nowArrived&&!isShahed);
+      card.classList.toggle('trg-card-purple',!nowArrived&&isShahed);
+    }
+    const typeEl=el.querySelector('.trg-type');
+    if(typeEl){
+      const typeName=(TINFO[type]&&TINFO[type].name)||TYPE_NAME_FALLBACK[type]||type||'';
+      typeEl.textContent=typeName?typeName.toUpperCase():'';
+    }
+  }
   return true;
 }
 
